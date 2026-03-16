@@ -1,0 +1,8 @@
+@media print {
+  nav, button, .no-print, .tab-nav { display: none !important; }
+  .print-section { page-break-before: always; }
+  .trip-header { page-break-before: avoid; }
+  .recipe-card { display: block !important; }
+  body { color: #000; background: #fff; }
+  .print-qr { display: block !important; }
+}

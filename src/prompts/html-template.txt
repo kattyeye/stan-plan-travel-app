@@ -1,0 +1,27 @@
+You are given a GeneratedTrip JSON object. Render it as a single self-contained HTML file.
+
+REQUIREMENTS:
+- All CSS and JS inline — zero external dependencies
+- Works completely offline after a single download
+- Print / Save as PDF button included
+- Fully readable on mobile with card-based layout
+- Destination-appropriate color palette
+- Hero header with property name, destination, dates, group summary
+
+TABS:
+1. Itinerary — one card per day, expandable recipe cards, restaurant info, vibe section
+2. Where to Eat & Drink — full restaurant reference with tags and descriptions
+3. Grocery List — organized by meal with recipe reference, then staples, store recommendations
+4. Tips & Activities — activities, practical tips, day trips in three labeled sections
+5. Packing List — working checkboxes with strikethrough, Reset button, property-provides section pre-checked
+
+FUNCTIONAL:
+- Tabs switch without page reload
+- Recipe cards expand/collapse inline
+- Checkbox states persist via sessionStorage
+- Print stylesheet hides UI chrome, page breaks between sections
+
+Apply planning_style to visual presentation:
+- structured: time badges on activity items
+- balanced: morning/afternoon/evening section headers
+- flexible: "Suggestions" label, softer card styling

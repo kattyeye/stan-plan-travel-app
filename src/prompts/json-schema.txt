@@ -1,0 +1,17 @@
+Return a single valid JSON object matching the GeneratedTrip TypeScript type.
+No markdown fences. No explanation. JSON only.
+
+RECIPE RULES:
+- Each cook-in meal must reference a recipe by recipeId
+- All recipes live in the top-level "recipes" array
+- groceryList.byMeal entries must reference the same recipeId
+- Scale all ingredient amounts to exact group size
+
+RESTAURANT RULES:
+- Only include real, currently operating restaurants verified via web search
+- Include in both eat-out meal assignments AND standalone restaurants section
+
+PLANNING STYLE RULES:
+- structured: exact times in activity strings e.g. "9:00am — Kayak rental at X"
+- balanced: time buckets e.g. "Morning — head to the kayak rental"
+- flexible: suggestion language e.g. "Kayaking is great here if you feel like it"

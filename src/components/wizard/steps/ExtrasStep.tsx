@@ -1,5 +1,9 @@
 "use client";
-import { WizardData } from "@/types/trip";
+import { TripSection, WizardData } from "@/types/trip";
+import StepCard from "../ui/StepCard";
+import StepNav from "../ui/StepNav";
+import FieldLabel from "../ui/FieldLabel";
+import TextInput from "../ui/TextInput";
 
 interface Props {
   data: Partial<WizardData>;
@@ -8,10 +12,149 @@ interface Props {
   onBack?: () => void;
 }
 
-export default function ExtrasStep({ data, onUpdate, onNext, onBack }: Props) {
+const SECTIONS: { value: TripSection; label: string; desc: string; emoji: string }[] = [
+  { value: "itinerary", label: "Daily itinerary", desc: "Day-by-day activity plan", emoji: "📅" },
+  { value: "meals", label: "Meal plan", desc: "Breakfast, lunch & dinner", emoji: "🍴" },
+  { value: "grocery", label: "Grocery list", desc: "Organized shopping list", emoji: "🛒" },
+  { value: "restaurants", label: "Restaurant picks", desc: "Local spots to try", emoji: "🍜" },
+  { value: "activities", label: "Activities & tips", desc: "Things to do & local intel", emoji: "🎯" },
+  { value: "packing", label: "Packing list", desc: "Tailored to your trip", emoji: "🧳" },
+];
+
+const AMENITIES = [
+  "Full kitchen", "Gas grill", "Pool", "Hot tub", "Beach access",
+  "Washer/dryer", "Fire pit", "Game room", "Outdoor shower", "Kayaks/paddleboards",
+];
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <div>
-      <h2 className="text-2xl font-semibold">{/* TODO: ExtrasStep */}</h2>
-    </div>
+    <p style={{ fontWeight: 600, color: "var(--color-tea-green-800)", fontSize: "0.9375rem", marginBottom: "0.625rem" }}>
+      {children}
+    </p>
+  );
+}
+
+export default function ExtrasStep({ data, onUpdate, onNext, onBack }: Props) {
+  const sections = data.sections ?? (["itinerary", "meals", "grocery", "restaurants", "activities", "packing"] as TripSection[]);
+  const amenities = data.propertyAmenities ?? [];
+
+  function toggleSection(s: TripSection) {
+    const next = sections.includes(s) ? sections.filter((x) => x !== s) : [...sections, s];
+    onUpdate({ sections: next });
+  }
+
+  function toggleAmenity(a: string) {
+    const next = amenities.includes(a) ? amenities.filter((x) => x !== a) : [...amenities, a];
+    onUpdate({ propertyAmenities: next });
+  }
+
+  const canContinue = sections.length > 0;
+
+  return (
+    <StepCard>
+      <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.08em", color: "var(--color-tea-green-500)", textTransform: "uppercase", marginBottom: "0.5rem" }}>
+        Step 5 of 6
+      </p>
+      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", color: "var(--color-tea-green-950)", marginBottom: "0.375rem", lineHeight: 1.2 }}>
+        What do you want in your plan?
+      </h2>
+      <p style={{ color: "var(--color-tea-green-700)", fontSize: "0.9375rem", marginBottom: "1.75rem" }}>
+        Choose what to include and tell us about your property.
+      </p>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "1.75rem" }}>
+        {/* Sections */}
+        <div>
+          <SectionTitle>Include in my plan</SectionTitle>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.625rem" }}>
+            {SECTIONS.map((s) => {
+              const selected = sections.includes(s.value);
+              return (
+                <button
+                  key={s.value}
+                  type="button"
+                  onClick={() => toggleSection(s.value)}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "0.75rem",
+                    padding: "0.875rem 1rem",
+                    borderRadius: "10px",
+                    border: selected ? "2px solid var(--color-tea-green-600)" : "1.5px solid var(--color-tea-green-200)",
+                    background: selected ? "var(--color-tea-green-100)" : "transparent",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    transition: "all 0.12s",
+                  }}
+                >
+                  <span style={{ fontSize: "1.25rem", lineHeight: 1.2 }}>{s.emoji}</span>
+                  <div>
+                    <div style={{ fontWeight: 600, color: "var(--color-tea-green-900)", fontSize: "0.875rem" }}>{s.label}</div>
+                    <div style={{ color: "var(--color-tea-green-600)", fontSize: "0.78125rem", marginTop: "0.125rem" }}>{s.desc}</div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Property description */}
+        <div>
+          <FieldLabel htmlFor="propertyDesc">Property description <span style={{ fontWeight: 400, color: "var(--color-tea-green-500)" }}>(optional)</span></FieldLabel>
+          <textarea
+            id="propertyDesc"
+            placeholder="e.g. 4BR beachfront house in Outer Banks with private pool and full kitchen"
+            value={data.propertyDescription ?? ""}
+            onChange={(e) => onUpdate({ propertyDescription: e.target.value })}
+            rows={3}
+            style={{
+              width: "100%",
+              padding: "0.625rem 0.875rem",
+              borderRadius: "10px",
+              border: "1px solid var(--color-tea-green-200)",
+              background: "#ffffff",
+              color: "var(--color-tea-green-950)",
+              fontSize: "0.9375rem",
+              outline: "none",
+              resize: "vertical",
+              boxSizing: "border-box",
+              fontFamily: "inherit",
+            }}
+          />
+        </div>
+
+        {/* Amenities */}
+        <div>
+          <SectionTitle>Property amenities <span style={{ fontWeight: 400, color: "var(--color-tea-green-500)" }}>(optional)</span></SectionTitle>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+            {AMENITIES.map((a) => {
+              const selected = amenities.includes(a);
+              return (
+                <button
+                  key={a}
+                  type="button"
+                  onClick={() => toggleAmenity(a)}
+                  style={{
+                    padding: "0.375rem 0.875rem",
+                    borderRadius: "999px",
+                    border: selected ? "1.5px solid var(--color-tea-green-600)" : "1.5px solid var(--color-tea-green-200)",
+                    background: selected ? "var(--color-tea-green-100)" : "transparent",
+                    color: selected ? "var(--color-tea-green-800)" : "var(--color-tea-green-700)",
+                    fontSize: "0.875rem",
+                    fontWeight: selected ? 600 : 400,
+                    cursor: "pointer",
+                    transition: "all 0.12s",
+                  }}
+                >
+                  {a}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <StepNav onBack={onBack} onNext={onNext} nextDisabled={!canContinue} />
+    </StepCard>
   );
 }

@@ -2,13 +2,110 @@
 @import "../styles/print.css";
 
 :root {
-  --color-sand: #f5f0e8;
-  --color-ocean: #2a6f8f;
-  --color-coral: #e07a5f;
-  --color-forest: #3d6b4f;
-  --color-dusk: #6b5b8a;
-  --color-text: #1a1a1a;
-  --color-muted: #6b7280;
+  /* Tea Green */
+  --color-tea-green-50: #f4f6ee;
+  --color-tea-green-100: #eaeedd;
+  --color-tea-green-200: #d5dcbc;
+  --color-tea-green-300: #c0cb9a;
+  --color-tea-green-400: #aaba78;
+  --color-tea-green-500: #95a857;
+  --color-tea-green-600: #778745;
+  --color-tea-green-700: #5a6534;
+  --color-tea-green-800: #3c4323;
+  --color-tea-green-900: #1e2211;
+  --color-tea-green-950: #15180c;
+
+  /* Beige */
+  --color-beige-50: #f7f9ec;
+  --color-beige-100: #eff2d9;
+  --color-beige-200: #e0e6b3;
+  --color-beige-300: #d0d98c;
+  --color-beige-400: #c0cc66;
+  --color-beige-500: #b0bf40;
+  --color-beige-600: #8d9933;
+  --color-beige-700: #6a7326;
+  --color-beige-800: #474d19;
+  --color-beige-900: #23260d;
+  --color-beige-950: #191b09;
+
+  /* Cornsilk */
+  --color-cornsilk-50: #fefbe6;
+  --color-cornsilk-100: #fdf7ce;
+  --color-cornsilk-200: #fcef9c;
+  --color-cornsilk-300: #fae76b;
+  --color-cornsilk-400: #f9df39;
+  --color-cornsilk-500: #f7d708;
+  --color-cornsilk-600: #c6ac06;
+  --color-cornsilk-700: #948105;
+  --color-cornsilk-800: #635603;
+  --color-cornsilk-900: #312b02;
+  --color-cornsilk-950: #231e01;
+
+  /* Papaya Whip */
+  --color-papaya-whip-50: #fdf7e8;
+  --color-papaya-whip-100: #faefd1;
+  --color-papaya-whip-200: #f6dea2;
+  --color-papaya-whip-300: #f1ce74;
+  --color-papaya-whip-400: #edbd45;
+  --color-papaya-whip-500: #e8ad17;
+  --color-papaya-whip-600: #ba8a12;
+  --color-papaya-whip-700: #8b680e;
+  --color-papaya-whip-800: #5d4509;
+  --color-papaya-whip-900: #2e2305;
+  --color-papaya-whip-950: #201803;
+
+  /* Light Bronze */
+  --color-light-bronze-50: #f9f2eb;
+  --color-light-bronze-100: #f3e6d8;
+  --color-light-bronze-200: #e7ccb1;
+  --color-light-bronze-300: #dbb38a;
+  --color-light-bronze-400: #cf9963;
+  --color-light-bronze-500: #c3803c;
+  --color-light-bronze-600: #9c6630;
+  --color-light-bronze-700: #754d24;
+  --color-light-bronze-800: #4e3318;
+  --color-light-bronze-900: #271a0c;
+  --color-light-bronze-950: #1b1208;
+
+  /* Typography */
+  --font-display: "DM Serif Display", Georgia, serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+
+  /* Semantic tokens — light mode */
+  --color-bg: var(--color-tea-green-50);
+  --color-bg-subtle: var(--color-beige-50);
+  --color-surface: #ffffff;
+  --color-border: var(--color-tea-green-200);
+  --color-text: var(--color-tea-green-950);
+  --color-text-muted: var(--color-tea-green-700);
+  --color-accent: var(--color-light-bronze-500);
+  --color-accent-hover: var(--color-light-bronze-600);
+  --color-highlight: var(--color-cornsilk-300);
+
   --radius: 0.75rem;
   --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Dark mode semantic tokens */
+.dark {
+  --color-bg: var(--color-tea-green-950);
+  --color-bg-subtle: var(--color-tea-green-900);
+  --color-surface: var(--color-tea-green-900);
+  --color-border: var(--color-tea-green-800);
+  --color-text: var(--color-tea-green-50);
+  --color-text-muted: var(--color-tea-green-300);
+  --color-accent: var(--color-light-bronze-400);
+  --color-accent-hover: var(--color-light-bronze-300);
+  --color-highlight: var(--color-cornsilk-800);
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
 }

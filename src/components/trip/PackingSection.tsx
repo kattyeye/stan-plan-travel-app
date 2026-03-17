@@ -51,12 +51,13 @@ export default function PackingSection({ trip }: Props) {
           <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", color: "var(--color-text)", marginBottom: "0.25rem" }}>
             Packing List
           </h2>
-          <p style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>
+          <p aria-live="polite" aria-atomic="true" style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>
             {done} of {total} packed
           </p>
         </div>
         <button
           onClick={reset}
+          aria-label="Reset all items to unchecked"
           style={{ padding: "0.5rem 1rem", borderRadius: "8px", border: "1px solid var(--color-tea-green-300)", background: "transparent", color: "var(--color-text-muted)", fontSize: "0.875rem", cursor: "pointer" }}
         >
           Reset
@@ -64,7 +65,14 @@ export default function PackingSection({ trip }: Props) {
       </div>
 
       {/* Progress bar */}
-      <div style={{ height: "6px", background: "var(--color-border)", borderRadius: "999px", marginBottom: "1.75rem", overflow: "hidden" }}>
+      <div
+        role="progressbar"
+        aria-valuenow={done}
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-label={`${done} of ${total} items packed`}
+        style={{ height: "6px", background: "var(--color-border)", borderRadius: "999px", marginBottom: "1.75rem", overflow: "hidden" }}
+      >
         <div style={{ height: "100%", background: "var(--color-text-muted)", borderRadius: "999px", width: `${(done / total) * 100}%`, transition: "width 0.2s" }} />
       </div>
 

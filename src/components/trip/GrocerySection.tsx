@@ -41,11 +41,12 @@ export default function GrocerySection({ trip }: Props) {
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", color: "var(--color-text)" }}>
           Grocery List
         </h2>
-        <div style={{ display: "flex", gap: "0.375rem", background: "var(--color-border)", borderRadius: "8px", padding: "0.25rem" }}>
+        <div role="group" aria-label="Grocery list view" style={{ display: "flex", gap: "0.375rem", background: "var(--color-border)", borderRadius: "8px", padding: "0.25rem" }}>
           {(["by-meal", "master"] as const).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
+              aria-pressed={view === v}
               style={{
                 padding: "0.375rem 0.75rem",
                 borderRadius: "6px",
@@ -106,7 +107,13 @@ export default function GrocerySection({ trip }: Props) {
           <h3 style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem", marginBottom: "0.625rem" }}>Where to shop</h3>
           {groceryList.stores.map((s, i) => (
             <div key={i} style={{ marginBottom: "0.5rem" }}>
-              <span style={{ fontWeight: 500, color: "var(--color-tea-green-900)", fontSize: "0.875rem" }}>{s.name}</span>
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name)}`}
+                target="_blank" rel="noopener noreferrer"
+                style={{ fontWeight: 500, color: "var(--color-brand)", fontSize: "0.875rem", textDecoration: "underline" }}
+              >
+                {s.name} <span aria-label="opens in new tab">↗</span>
+              </a>
               {s.note && <span style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}> — {s.note}</span>}
             </div>
           ))}

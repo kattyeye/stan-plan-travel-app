@@ -29,7 +29,10 @@ export default function TipsSection({ trip }: Props) {
                 <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", fontSize: "0.8125rem", color: "var(--color-text-muted)" }}>
                   {a.duration && <span>⏱ {a.duration}</span>}
                   {a.cost && <span>💵 {a.cost}</span>}
-                  {a.link && <a href={a.link} target="_blank" rel="noopener noreferrer" style={{ color: "var(--color-text-muted)", textDecoration: "underline" }}>More info ↗</a>}
+                  {a.link
+                    ? <a href={a.link} target="_blank" rel="noopener noreferrer" aria-label={`More info about ${a.name} (opens in new tab)`} style={{ color: "var(--color-brand)", textDecoration: "underline", fontWeight: 500 }}>More info <span aria-hidden="true">↗</span></a>
+                    : <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a.name)}`} target="_blank" rel="noopener noreferrer" aria-label={`${a.name} on Google Maps (opens in new tab)`} style={{ color: "var(--color-brand)", textDecoration: "underline", fontWeight: 500 }}>Google Maps <span aria-hidden="true">↗</span></a>
+                  }
                 </div>
               </div>
             ))}
@@ -62,7 +65,14 @@ export default function TipsSection({ trip }: Props) {
             {tips.dayTrips.map((dt, i) => (
               <div key={i} style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "10px", padding: "1rem 1.25rem" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.375rem" }}>
-                  <span style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem" }}>{dt.destination}</span>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dt.destination)}`}
+                    target="_blank" rel="noopener noreferrer"
+                    aria-label={`${dt.destination} on Google Maps (opens in new tab)`}
+                    style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem", textDecoration: "none" }}
+                  >
+                    {dt.destination} <span aria-hidden="true">↗</span>
+                  </a>
                   <span style={{ fontSize: "0.8125rem", color: "var(--color-text-muted)" }}>~{dt.distanceMinutes} min away</span>
                 </div>
                 <p style={{ color: "var(--color-text-muted)", fontSize: "0.875rem", lineHeight: 1.5, marginBottom: "0.5rem" }}>{dt.description}</p>

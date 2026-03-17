@@ -6,9 +6,8 @@ export function deduplicateIngredients(ingredients: RecipeIngredient[]): RecipeI
 }
 
 export function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    weekday: "long", month: "long", day: "numeric",
-  });
+  const [y, m, d] = dateStr.split("-");
+  return `${m}-${d}-${y}`;
 }
 
 export function calcNights(start: string, end: string): number {

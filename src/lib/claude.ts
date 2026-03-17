@@ -83,6 +83,33 @@ SECTIONS TO INCLUDE: ${sectionsLine}
 Generate a complete, specific, and genuinely useful trip plan for this group. Use web search to verify all restaurants are real and currently operating at this destination. Scale all recipes to serve ${totalPeople} people exactly.`;
 }
 
+async function fetchPlaceWebsite(name: string, address: string): Promise<string | undefined> {
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+  if (!apiKey) return undefined;
+  try {
+    const query = encodeURIComponent(`${name} ${address}`);
+    const res = await fetch(
+      `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${query}&inputtype=textquery&fields=website,formatted_address&key=${apiKey}`
+    );
+    const data = await res.json();
+    return data?.candidates?.[0]?.website ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+async function enrichRestaurants(trip: GeneratedTrip): Promise<GeneratedTrip> {
+  if (!process.env.GOOGLE_MAPS_API_KEY) return trip;
+  const enriched = await Promise.all(
+    trip.restaurants.map(async (r) => {
+      if (r.link) return r; // already has a website, skip
+      const website = await fetchPlaceWebsite(r.name, r.address ?? "");
+      return website ? { ...r, link: website } : r;
+    })
+  );
+  return { ...trip, restaurants: enriched };
+}
+
 export async function generateTripJSON(wizardData: WizardData): Promise<GeneratedTrip> {
   const [systemPrompt, schemaPrompt] = await Promise.all([
     loadPrompt("system.txt"),
@@ -114,7 +141,7 @@ export async function generateTripJSON(wizardData: WizardData): Promise<Generate
     throw new Error("Claude returned malformed JSON");
   }
 
-  return parsed;
+  return enrichRestaurants(parsed);
 }
 
 export async function generateTripHTML(trip: GeneratedTrip): Promise<string> {

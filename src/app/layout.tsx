@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Serif_Display, Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Navbar from "@/components/Navbar";
+import SkipLink from "@/components/SkipLink";
 import "./globals.css";
 
 const dmSerifDisplay = DM_Serif_Display({
@@ -27,8 +28,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body className={`${dmSerifDisplay.variable} ${inter.variable} antialiased`}>
         <ThemeProvider>
+          <SkipLink />
           <Navbar />
-          {children}
+          <main id="main-content">
+            {children}
+          </main>
         </ThemeProvider>
       </body>
     </html>

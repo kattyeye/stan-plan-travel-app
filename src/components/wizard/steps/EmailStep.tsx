@@ -97,7 +97,7 @@ export default function EmailStep({ data, onUpdate, onBack }: Props) {
 
       <div style={{ marginTop: "2rem" }}>
         {error && (
-          <p style={{ color: "var(--color-error-text)", fontSize: "0.875rem", marginBottom: "0.75rem", padding: "0.625rem 0.875rem", background: "var(--color-error-bg)", borderRadius: "8px", border: "1px solid var(--color-error-border)" }}>
+          <p role="alert" style={{ color: "var(--color-error-text)", fontSize: "0.875rem", marginBottom: "0.75rem", padding: "0.625rem 0.875rem", background: "var(--color-error-bg)", borderRadius: "8px", border: "1px solid var(--color-error-border)" }}>
             {error}
           </p>
         )}
@@ -105,6 +105,8 @@ export default function EmailStep({ data, onUpdate, onBack }: Props) {
           type="button"
           onClick={handleSubmit}
           disabled={!canSubmit || loading}
+          aria-disabled={!canSubmit || loading}
+          aria-busy={loading}
           style={{
             width: "100%", padding: "0.875rem",
             borderRadius: "var(--radius-input)",

@@ -35,11 +35,20 @@ export default function RestaurantSection({ trip }: Props) {
             </div>
 
             <div style={{ display: "flex", gap: "1.25rem", flexWrap: "wrap", fontSize: "0.8125rem", color: "var(--color-text-muted)" }}>
-              {r.address && <span>📍 {r.address}</span>}
-              {r.hours && <span>🕐 {r.hours}</span>}
+              {r.address && (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${r.name} ${r.address}`)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  aria-label={`Map directions to ${r.name} (opens in new tab)`}
+                  style={{ color: "var(--color-text-muted)", textDecoration: "none" }}
+                >
+                  <span aria-hidden="true">📍 </span>{r.address} <span aria-hidden="true">↗</span>
+                </a>
+              )}
+              {r.hours && <span><span aria-hidden="true">🕐 </span>{r.hours}</span>}
               {r.link && (
-                <a href={r.link} target="_blank" rel="noopener noreferrer" style={{ color: "var(--color-text-muted)", textDecoration: "underline" }}>
-                  Website ↗
+                <a href={r.link} target="_blank" rel="noopener noreferrer" aria-label={`${r.name} website (opens in new tab)`} style={{ color: "var(--color-brand)", textDecoration: "underline", fontWeight: 500 }}>
+                  Website <span aria-hidden="true">↗</span>
                 </a>
               )}
             </div>

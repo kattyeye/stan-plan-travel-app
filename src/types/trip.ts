@@ -13,7 +13,9 @@ export type TripVibe =
   | "foodie"
   | "nature"
   | "cultural"
-  | "family-fun";
+  | "family-fun"
+  | "nightlife"
+  | "live-music";
 
 export type TripSection =
   | "itinerary"

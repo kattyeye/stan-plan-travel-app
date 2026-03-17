@@ -28,7 +28,7 @@ function formatDisplay(start: string, end: string) {
   const s = parseYMD(start);
   const e = parseYMD(end);
   if (!s && !e) return "";
-  const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const fmt = (d: Date) => `${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}-${d.getFullYear()}`;
   if (s && !e) return fmt(s) + " →";
   if (s && e) return `${fmt(s)} – ${fmt(e)}`;
   return "";
@@ -122,6 +122,9 @@ export default function DateRangePicker({ startDate, endDate, onChange }: Props)
       {/* Trigger */}
       <button
         type="button"
+        aria-label={startDate ? `Travel dates: ${formatDisplay(startDate, endDate)}. Press to change` : "Select travel dates"}
+        aria-expanded={open}
+        aria-haspopup="dialog"
         onClick={() => { setOpen(v => !v); if (!open) setPicking(startDate && !endDate ? "start" : null); }}
         style={{
           width: "100%",
@@ -159,11 +162,11 @@ export default function DateRangePicker({ startDate, endDate, onChange }: Props)
         }}>
           {/* Header */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
-            <button type="button" onClick={prevMonth} style={navBtnStyle}>‹</button>
+            <button type="button" aria-label="Previous month" onClick={prevMonth} style={navBtnStyle}><span aria-hidden="true">‹</span></button>
             <span style={{ color: "var(--color-tea-green-800)", fontWeight: 600, fontSize: "0.9375rem" }}>
               {MONTHS[months[0].month]} {months[0].year} – {MONTHS[months[1].month]} {months[1].year}
             </span>
-            <button type="button" onClick={nextMonth} style={navBtnStyle}>›</button>
+            <button type="button" aria-label="Next month" onClick={nextMonth} style={navBtnStyle}><span aria-hidden="true">›</span></button>
           </div>
 
           {/* Two-month grid */}
@@ -182,7 +185,7 @@ export default function DateRangePicker({ startDate, endDate, onChange }: Props)
           </div>
 
           {/* Footer hint */}
-          <p style={{ marginTop: "0.875rem", color: "var(--color-tea-green-500)", fontSize: "0.8125rem", textAlign: "center" }}>
+          <p aria-live="polite" aria-atomic="true" style={{ marginTop: "0.875rem", color: "var(--color-tea-green-500)", fontSize: "0.8125rem", textAlign: "center" }}>
             {!startDate ? "Click your arrival date" : !endDate ? "Now click your departure date" : `${endDate ? `${Math.round((parseYMD(endDate)!.getTime() - parseYMD(startDate)!.getTime()) / 86400000)} nights selected` : ""}`}
           </p>
         </div>
@@ -264,11 +267,18 @@ function MonthGrid({ year, month, today, getDayState, onDayClick, onDayHover }: 
           if (isEnd) borderRadius = "0 7px 7px 0";
           if (isStart && isEnd) borderRadius = "7px";
 
+          const dayDate = new Date(year, month, parseInt(ymd.split("-")[2]));
+          const dayLabel = dayDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+          const stateLabel = isStart ? " (selected start)" : isEnd ? " (selected end)" : inRange ? " (in range)" : isPast ? " (unavailable)" : "";
+
           return (
             <button
               key={ymd}
               type="button"
               disabled={isPast}
+              aria-label={`${dayLabel}${stateLabel}`}
+              aria-disabled={isPast}
+              aria-pressed={!!(isStart || isEnd)}
               onClick={() => onDayClick(ymd)}
               onMouseEnter={() => onDayHover(ymd)}
               onMouseLeave={() => onDayHover(null)}
@@ -286,7 +296,7 @@ function MonthGrid({ year, month, today, getDayState, onDayClick, onDayHover }: 
                 opacity: isPast ? 0.4 : 1,
               }}
             >
-              {new Date(year, month, parseInt(ymd.split("-")[2])).getDate()}
+              {dayDate.getDate()}
             </button>
           );
         })}

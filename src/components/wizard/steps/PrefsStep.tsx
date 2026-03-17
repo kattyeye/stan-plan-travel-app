@@ -18,6 +18,8 @@ const VIBES: { value: TripVibe; label: string; emoji: string }[] = [
   { value: "nature", label: "Nature", emoji: "🌿" },
   { value: "cultural", label: "Cultural", emoji: "🏛️" },
   { value: "family-fun", label: "Family fun", emoji: "🎡" },
+  { value: "nightlife", label: "Nightlife", emoji: "🍸" },
+  { value: "live-music", label: "Live music", emoji: "🎶" },
 ];
 
 const PLANNING: { value: PlanningStyle; label: string; desc: string }[] = [
@@ -47,10 +49,13 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-function RadioCard({ selected, onClick, children }: { selected: boolean; onClick: () => void; children: React.ReactNode }) {
+function RadioCard({ selected, onClick, label, children }: { selected: boolean; onClick: () => void; label: string; children: React.ReactNode }) {
   return (
     <button
       type="button"
+      role="radio"
+      aria-checked={selected}
+      aria-label={label}
       onClick={onClick}
       style={{
         flex: 1,
@@ -102,9 +107,9 @@ export default function PrefsStep({ data, onUpdate, onNext, onBack }: Props) {
 
         <div>
           <SectionTitle>Planning style</SectionTitle>
-          <div style={{ display: "flex", gap: "0.75rem" }}>
+          <div role="radiogroup" aria-label="Planning style" style={{ display: "flex", gap: "0.75rem" }}>
             {PLANNING.map((p) => (
-              <RadioCard key={p.value} selected={data.planningStyle === p.value} onClick={() => onUpdate({ planningStyle: p.value })}>
+              <RadioCard key={p.value} label={`${p.label} — ${p.desc}`} selected={data.planningStyle === p.value} onClick={() => onUpdate({ planningStyle: p.value })}>
                 <div style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem" }}>{p.label}</div>
                 <div style={{ color: "var(--color-text-muted)", fontSize: "0.8125rem", marginTop: "0.125rem" }}>{p.desc}</div>
               </RadioCard>
@@ -114,10 +119,10 @@ export default function PrefsStep({ data, onUpdate, onNext, onBack }: Props) {
 
         <div>
           <SectionTitle>Budget</SectionTitle>
-          <div style={{ display: "flex", gap: "0.75rem" }}>
+          <div role="radiogroup" aria-label="Budget" style={{ display: "flex", gap: "0.75rem" }}>
             {BUDGET.map((b) => (
-              <RadioCard key={b.value} selected={data.budget === b.value} onClick={() => onUpdate({ budget: b.value })}>
-                <div style={{ fontSize: "1.25rem", marginBottom: "0.25rem" }}>{b.emoji}</div>
+              <RadioCard key={b.value} label={`${b.label} — ${b.desc}`} selected={data.budget === b.value} onClick={() => onUpdate({ budget: b.value })}>
+                <div aria-hidden="true" style={{ fontSize: "1.25rem", marginBottom: "0.25rem" }}>{b.emoji}</div>
                 <div style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem" }}>{b.label}</div>
                 <div style={{ color: "var(--color-text-muted)", fontSize: "0.8125rem", marginTop: "0.125rem" }}>{b.desc}</div>
               </RadioCard>

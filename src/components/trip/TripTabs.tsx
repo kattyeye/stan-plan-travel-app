@@ -24,53 +24,106 @@ type TabId = typeof TABS[number]["id"];
 export default function TripTabs({ trip }: Props) {
   const [active, setActive] = useState<TabId>("itinerary");
 
+  function handleKeyDown(e: React.KeyboardEvent, index: number) {
+    if (e.key === "ArrowRight") {
+      const next = TABS[(index + 1) % TABS.length];
+      setActive(next.id);
+      document.getElementById(`tab-${next.id}`)?.focus();
+    } else if (e.key === "ArrowLeft") {
+      const prev = TABS[(index - 1 + TABS.length) % TABS.length];
+      setActive(prev.id);
+      document.getElementById(`tab-${prev.id}`)?.focus();
+    } else if (e.key === "Home") {
+      setActive(TABS[0].id);
+      document.getElementById(`tab-${TABS[0].id}`)?.focus();
+    } else if (e.key === "End") {
+      setActive(TABS[TABS.length - 1].id);
+      document.getElementById(`tab-${TABS[TABS.length - 1].id}`)?.focus();
+    }
+  }
+
   return (
     <div style={{ background: "var(--color-bg)", minHeight: "60vh" }}>
-      <div style={{
-        position: "sticky", top: 0, zIndex: 10,
-        background: "var(--color-bg-card)",
-        borderBottom: "1px solid var(--color-border)",
-        overflowX: "auto",
-      }} className="trip-tab-bar">
-        <div style={{ display: "flex", maxWidth: "800px", margin: "0 auto", padding: "0 1rem" }}>
-          {TABS.map((tab) => (
+      <style>{`
+        .trip-tab-bar::-webkit-scrollbar { display: none; }
+        .tab-label { display: inline; }
+        @media (max-width: 480px) { .tab-label { display: none; } }
+        @media print {
+          .trip-tab-bar { display: none !important; }
+          [role="tabpanel"] { display: block !important; }
+        }
+        [role="tab"]:focus-visible {
+          outline: 2px solid var(--color-brand);
+          outline-offset: -2px;
+          border-radius: 4px;
+        }
+      `}</style>
+
+      <div
+        role="tablist"
+        aria-label="Trip sections"
+        style={{
+          position: "sticky", top: 0, zIndex: 10,
+          background: "var(--color-bg-card)",
+          borderBottom: "1px solid var(--color-border)",
+          overflowX: "auto",
+          scrollbarWidth: "none",
+        }}
+        className="trip-tab-bar"
+      >
+        <div style={{ display: "flex", maxWidth: "800px", margin: "0 auto", padding: "0 0.25rem" }}>
+          {TABS.map((tab, index) => (
             <button
               key={tab.id}
+              id={`tab-${tab.id}`}
+              role="tab"
+              aria-selected={active === tab.id}
+              aria-controls={`panel-${tab.id}`}
+              tabIndex={active === tab.id ? 0 : -1}
               onClick={() => setActive(tab.id)}
+              onKeyDown={(e) => handleKeyDown(e, index)}
               style={{
-                display: "flex", alignItems: "center", gap: "0.375rem",
-                padding: "0.875rem 1rem",
+                flex: 1,
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                gap: "0.2rem",
+                padding: "0.75rem 0.25rem",
                 border: "none",
                 borderBottom: active === tab.id ? "2px solid var(--color-brand)" : "2px solid transparent",
                 background: "transparent",
                 color: active === tab.id ? "var(--color-text)" : "var(--color-text-muted)",
-                fontSize: "0.875rem",
+                fontSize: "0.75rem",
                 fontWeight: active === tab.id ? 600 : 400,
                 cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.12s",
+                minWidth: 0,
               }}
             >
-              <span>{tab.emoji}</span>
-              <span>{tab.label}</span>
+              <span aria-hidden="true" style={{ fontSize: "1.25rem", lineHeight: 1 }}>{tab.emoji}</span>
+              <span className="tab-label">{tab.label}</span>
+              <span className="sr-only" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap" }}>
+                {/* visible on mobile where .tab-label is hidden */}
+              </span>
             </button>
           ))}
         </div>
       </div>
 
-      <div style={{ maxWidth: "800px", margin: "0 auto", padding: "2rem 1rem" }}>
-        <style>{`
-          .trip-section { display: none; }
-          .trip-section.active { display: block; }
-          @media print {
-            .trip-section { display: block !important; }
-            .trip-tab-bar { display: none !important; }
-          }
-        `}</style>
-        <div className={`trip-section${active === "itinerary" ? " active" : ""}`}><ItinerarySection trip={trip} /></div>
-        <div className={`trip-section${active === "meals" ? " active" : ""}`}><MealPlanSection trip={trip} /></div>
-        <div className={`trip-section${active === "grocery" ? " active" : ""}`}><GrocerySection trip={trip} /></div>
-        <div className={`trip-section${active === "restaurants" ? " active" : ""}`}><RestaurantSection trip={trip} /></div>
-        <div className={`trip-section${active === "tips" ? " active" : ""}`}><TipsSection trip={trip} /></div>
-        <div className={`trip-section${active === "packing" ? " active" : ""}`}><PackingSection trip={trip} /></div>
+      <div style={{ maxWidth: "800px", margin: "0 auto", padding: "1.5rem 1rem" }}>
+        {TABS.map((tab) => (
+          <div
+            key={tab.id}
+            id={`panel-${tab.id}`}
+            role="tabpanel"
+            aria-labelledby={`tab-${tab.id}`}
+            hidden={active !== tab.id}
+          >
+            {tab.id === "itinerary" && <ItinerarySection trip={trip} />}
+            {tab.id === "meals" && <MealPlanSection trip={trip} />}
+            {tab.id === "grocery" && <GrocerySection trip={trip} />}
+            {tab.id === "restaurants" && <RestaurantSection trip={trip} />}
+            {tab.id === "tips" && <TipsSection trip={trip} />}
+            {tab.id === "packing" && <PackingSection trip={trip} />}
+          </div>
+        ))}
       </div>
     </div>
   );

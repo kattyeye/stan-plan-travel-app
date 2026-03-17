@@ -99,8 +99,8 @@ export async function generateTripJSON(wizardData: WizardData): Promise<Generate
   }).finalMessage();
 
   const raw = response.content
-    .filter((b: { type: string }) => b.type === "text")
-    .map((b: { type: string; text: string }) => b.text)
+    .filter((b) => b.type === "text")
+    .map((b) => (b as { type: "text"; text: string }).text)
     .join("");
 
   // Strip markdown fences if Claude wraps in them despite instructions
@@ -136,8 +136,8 @@ export async function generateTripHTML(trip: GeneratedTrip): Promise<string> {
   }).finalMessage();
 
   const html = response.content
-    .filter((b: { type: string }) => b.type === "text")
-    .map((b: { type: string; text: string }) => b.text)
+    .filter((b) => b.type === "text")
+    .map((b) => (b as { type: "text"; text: string }).text)
     .join("");
 
   return html.trim();

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Serif_Display, Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import Navbar from "@/components/Navbar";
 import "./globals.css";
 
 const dmSerifDisplay = DM_Serif_Display({
@@ -17,7 +18,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Irie — Custom Travel Planning",
+  title: "Irie — Personalized Trip Planning",
   description: "Personalized trip plans built for your group, your vibe, and your budget.",
 };
 
@@ -25,7 +26,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${dmSerifDisplay.variable} ${inter.variable} antialiased`}>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <Navbar />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

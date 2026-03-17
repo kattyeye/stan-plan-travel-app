@@ -3,7 +3,6 @@ import { useState } from "react";
 import { WizardData } from "@/types/trip";
 import StepCard from "../ui/StepCard";
 import FieldLabel from "../ui/FieldLabel";
-// StepNav not used here — custom submit button handles both back and submit
 import TextInput from "../ui/TextInput";
 
 interface Props {
@@ -36,7 +35,6 @@ export default function EmailStep({ data, onUpdate, onBack }: Props) {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Something went wrong");
-      // Redirect to Stripe Checkout
       window.location.href = json.url;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
@@ -46,13 +44,13 @@ export default function EmailStep({ data, onUpdate, onBack }: Props) {
 
   return (
     <StepCard>
-      <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.08em", color: "var(--color-tea-green-500)", textTransform: "uppercase", marginBottom: "0.5rem" }}>
+      <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.08em", color: "var(--color-text-faint)", textTransform: "uppercase", marginBottom: "0.5rem" }}>
         Step 6 of 6
       </p>
-      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", color: "var(--color-tea-green-950)", marginBottom: "0.375rem", lineHeight: 1.2 }}>
+      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", color: "var(--color-text)", marginBottom: "0.375rem", lineHeight: 1.2 }}>
         Almost there!
       </h2>
-      <p style={{ color: "var(--color-tea-green-700)", fontSize: "0.9375rem", marginBottom: "1.75rem" }}>
+      <p style={{ color: "var(--color-text-muted)", fontSize: "0.9375rem", marginBottom: "1.75rem" }}>
         Give your trip a name and drop your email — we'll send your plan here when it's ready.
       </p>
 
@@ -76,22 +74,13 @@ export default function EmailStep({ data, onUpdate, onBack }: Props) {
             value={data.email ?? ""}
             onChange={(e) => onUpdate({ email: e.target.value })}
           />
-          <p style={{ color: "var(--color-tea-green-600)", fontSize: "0.8125rem", marginTop: "0.375rem" }}>
+          <p style={{ color: "var(--color-text-faint)", fontSize: "0.8125rem", marginTop: "0.375rem" }}>
             We'll send your trip plan here. No spam, ever.
           </p>
         </div>
 
-        {/* Summary box */}
-        <div style={{
-          padding: "1.25rem",
-          borderRadius: "10px",
-          background: "var(--color-tea-green-50)",
-          border: "1px solid var(--color-tea-green-200)",
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.5rem",
-        }}>
-          <p style={{ fontWeight: 600, color: "var(--color-tea-green-800)", fontSize: "0.875rem", marginBottom: "0.25rem" }}>Your trip summary</p>
+        <div style={{ padding: "1.25rem", borderRadius: "var(--radius-input)", background: "var(--color-bg)", border: "1px solid var(--color-border)", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          <p style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.875rem", marginBottom: "0.25rem" }}>Your trip summary</p>
           {data.destination && <SummaryRow emoji="📍" label={data.destination} />}
           {data.startDate && data.endDate && (
             <SummaryRow emoji="📅" label={`${data.startDate} → ${data.endDate}${data.nights ? ` (${data.nights} nights)` : ""}`} />
@@ -106,7 +95,7 @@ export default function EmailStep({ data, onUpdate, onBack }: Props) {
 
       <div style={{ marginTop: "2rem" }}>
         {error && (
-          <p style={{ color: "#b91c1c", fontSize: "0.875rem", marginBottom: "0.75rem", padding: "0.625rem 0.875rem", background: "#fef2f2", borderRadius: "8px", border: "1px solid #fecaca" }}>
+          <p style={{ color: "var(--color-error-text)", fontSize: "0.875rem", marginBottom: "0.75rem", padding: "0.625rem 0.875rem", background: "var(--color-error-bg)", borderRadius: "8px", border: "1px solid var(--color-error-border)" }}>
             {error}
           </p>
         )}
@@ -115,22 +104,19 @@ export default function EmailStep({ data, onUpdate, onBack }: Props) {
           onClick={handleSubmit}
           disabled={!canSubmit || loading}
           style={{
-            width: "100%",
-            padding: "0.875rem",
-            borderRadius: "10px",
+            width: "100%", padding: "0.875rem",
+            borderRadius: "var(--radius-input)",
             border: "none",
-            background: canSubmit && !loading ? "var(--color-tea-green-600)" : "var(--color-tea-green-300)",
-            color: "var(--color-tea-green-50)",
-            fontSize: "1rem",
-            fontWeight: 700,
+            background: canSubmit && !loading ? "var(--color-brand)" : "var(--color-brand-disabled)",
+            color: "var(--color-text-inverse)",
+            fontSize: "1rem", fontWeight: 700,
             cursor: canSubmit && !loading ? "pointer" : "not-allowed",
-            letterSpacing: "0.01em",
-            transition: "background 0.15s",
+            letterSpacing: "0.01em", transition: "background 0.15s",
           }}
         >
           {loading ? "Redirecting to checkout…" : "Build my trip plan →"}
         </button>
-        <p style={{ textAlign: "center", color: "var(--color-tea-green-600)", fontSize: "0.8125rem", marginTop: "0.75rem" }}>
+        <p style={{ textAlign: "center", color: "var(--color-text-faint)", fontSize: "0.8125rem", marginTop: "0.75rem" }}>
           $19 · Your plan will be ready in a few minutes.
         </p>
       </div>
@@ -139,14 +125,7 @@ export default function EmailStep({ data, onUpdate, onBack }: Props) {
         <button
           type="button"
           onClick={onBack}
-          style={{
-            background: "none",
-            border: "none",
-            color: "var(--color-tea-green-600)",
-            fontSize: "0.875rem",
-            cursor: "pointer",
-            padding: 0,
-          }}
+          style={{ background: "none", border: "none", color: "var(--color-brand)", fontSize: "0.875rem", cursor: "pointer", padding: 0 }}
         >
           ← Back
         </button>
@@ -158,7 +137,7 @@ export default function EmailStep({ data, onUpdate, onBack }: Props) {
 function SummaryRow({ emoji, label }: { emoji: string; label: string | undefined }) {
   if (!label) return null;
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-tea-green-700)", fontSize: "0.875rem" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-text-muted)", fontSize: "0.875rem" }}>
       <span>{emoji}</span>
       <span>{label}</span>
     </div>

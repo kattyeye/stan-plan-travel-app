@@ -14,10 +14,10 @@ export default function StepNav({ onNext, onBack, nextLabel = "Continue", nextDi
           onClick={onBack}
           style={{
             padding: "0.625rem 1.25rem",
-            borderRadius: "10px",
-            border: "1px solid var(--color-tea-green-200)",
+            borderRadius: "var(--radius-input)",
+            border: "1px solid var(--color-border)",
             background: "transparent",
-            color: "var(--color-tea-green-700)",
+            color: "var(--color-text-muted)",
             fontSize: "0.9375rem",
             fontWeight: 500,
             cursor: "pointer",
@@ -35,10 +35,10 @@ export default function StepNav({ onNext, onBack, nextLabel = "Continue", nextDi
           disabled={nextDisabled}
           style={{
             padding: "0.625rem 1.75rem",
-            borderRadius: "10px",
+            borderRadius: "var(--radius-input)",
             border: "none",
-            background: nextDisabled ? "var(--color-tea-green-300)" : "var(--color-tea-green-600)",
-            color: "var(--color-tea-green-50)",
+            background: nextDisabled ? "var(--color-brand-disabled)" : "var(--color-brand)",
+            color: "var(--color-text-inverse)",
             fontSize: "0.9375rem",
             fontWeight: 600,
             cursor: nextDisabled ? "not-allowed" : "pointer",

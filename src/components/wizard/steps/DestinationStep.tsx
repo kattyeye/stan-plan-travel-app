@@ -29,13 +29,13 @@ export default function DestinationStep({ data, onUpdate, onNext }: Props) {
 
   return (
     <StepCard>
-      <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.08em", color: "var(--color-tea-green-500)", textTransform: "uppercase", marginBottom: "0.5rem" }}>
+      <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.08em", color: "var(--color-text-faint)", textTransform: "uppercase", marginBottom: "0.5rem" }}>
         Step 1 of 6
       </p>
-      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", color: "var(--color-tea-green-950)", marginBottom: "0.375rem", lineHeight: 1.2 }}>
+      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", color: "var(--color-text)", marginBottom: "0.375rem", lineHeight: 1.2 }}>
         Where are you headed?
       </h2>
-      <p style={{ color: "var(--color-tea-green-700)", fontSize: "0.9375rem", marginBottom: "1.75rem" }}>
+      <p style={{ color: "var(--color-text-muted)", fontSize: "0.9375rem", marginBottom: "1.75rem" }}>
         Tell us your destination and travel dates so we can plan around your trip.
       </p>
 
@@ -56,7 +56,7 @@ export default function DestinationStep({ data, onUpdate, onNext }: Props) {
             onChange={handleDates}
           />
           {data.nights !== undefined && data.nights > 0 && (
-            <p style={{ color: "var(--color-tea-green-600)", fontSize: "0.875rem", fontWeight: 500, marginTop: "0.5rem" }}>
+            <p style={{ color: "var(--color-brand)", fontSize: "0.875rem", fontWeight: 500, marginTop: "0.5rem" }}>
               🌙 {data.nights} night{data.nights !== 1 ? "s" : ""}
             </p>
           )}

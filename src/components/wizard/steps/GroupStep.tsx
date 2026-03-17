@@ -21,13 +21,13 @@ function Counter({ value, min = 0, onChange }: { value: number; min?: number; on
         onClick={() => onChange(Math.max(min, value - 1))}
         style={{
           width: "2rem", height: "2rem", borderRadius: "50%",
-          border: "1.5px solid var(--color-tea-green-300)",
-          background: "transparent", color: "var(--color-tea-green-700)",
+          border: "1.5px solid var(--color-border)",
+          background: "transparent", color: "var(--color-text-muted)",
           fontSize: "1.125rem", cursor: "pointer", lineHeight: 1,
           display: "flex", alignItems: "center", justifyContent: "center",
         }}
       >−</button>
-      <span style={{ minWidth: "1.5rem", textAlign: "center", fontWeight: 600, fontSize: "1.0625rem", color: "var(--color-tea-green-950)" }}>
+      <span style={{ minWidth: "1.5rem", textAlign: "center", fontWeight: 600, fontSize: "1.0625rem", color: "var(--color-text)" }}>
         {value}
       </span>
       <button
@@ -35,8 +35,8 @@ function Counter({ value, min = 0, onChange }: { value: number; min?: number; on
         onClick={() => onChange(value + 1)}
         style={{
           width: "2rem", height: "2rem", borderRadius: "50%",
-          border: "1.5px solid var(--color-tea-green-300)",
-          background: "transparent", color: "var(--color-tea-green-700)",
+          border: "1.5px solid var(--color-border)",
+          background: "transparent", color: "var(--color-text-muted)",
           fontSize: "1.125rem", cursor: "pointer", lineHeight: 1,
           display: "flex", alignItems: "center", justifyContent: "center",
         }}
@@ -48,46 +48,39 @@ function Counter({ value, min = 0, onChange }: { value: number; min?: number; on
 export default function GroupStep({ data, onUpdate, onNext, onBack }: Props) {
   const numAdults = data.numAdults ?? 2;
   const numKids = data.numKids ?? 0;
-  const [kidAgesInput, setKidAgesInput] = useState(
-    (data.kidAges ?? []).join(", ")
-  );
+  const [kidAgesInput, setKidAgesInput] = useState((data.kidAges ?? []).join(", "));
 
   function handleKidAges(val: string) {
     setKidAgesInput(val);
-    const ages = val
-      .split(",")
-      .map((s) => parseInt(s.trim()))
-      .filter((n) => !isNaN(n) && n >= 0);
+    const ages = val.split(",").map((s) => parseInt(s.trim())).filter((n) => !isNaN(n) && n >= 0);
     onUpdate({ kidAges: ages });
   }
 
-  const canContinue = numAdults >= 1;
-
   return (
     <StepCard>
-      <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.08em", color: "var(--color-tea-green-500)", textTransform: "uppercase", marginBottom: "0.5rem" }}>
+      <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.08em", color: "var(--color-text-faint)", textTransform: "uppercase", marginBottom: "0.5rem" }}>
         Step 2 of 6
       </p>
-      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", color: "var(--color-tea-green-950)", marginBottom: "0.375rem", lineHeight: 1.2 }}>
+      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", color: "var(--color-text)", marginBottom: "0.375rem", lineHeight: 1.2 }}>
         Who's coming?
       </h2>
-      <p style={{ color: "var(--color-tea-green-700)", fontSize: "0.9375rem", marginBottom: "1.75rem" }}>
+      <p style={{ color: "var(--color-text-muted)", fontSize: "0.9375rem", marginBottom: "1.75rem" }}>
         We'll tailor activities, meals, and packing lists for your exact group.
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.25rem", borderRadius: "10px", border: "1px solid var(--color-tea-green-200)", background: "var(--color-tea-green-50)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.25rem", borderRadius: "var(--radius-input)", border: "1px solid var(--color-border)", background: "var(--color-bg)" }}>
           <div>
-            <div style={{ fontWeight: 600, color: "var(--color-tea-green-900)", fontSize: "0.9375rem" }}>Adults</div>
-            <div style={{ color: "var(--color-tea-green-600)", fontSize: "0.8125rem" }}>Age 18+</div>
+            <div style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem" }}>Adults</div>
+            <div style={{ color: "var(--color-text-faint)", fontSize: "0.8125rem" }}>Age 18+</div>
           </div>
           <Counter value={numAdults} min={1} onChange={(n) => onUpdate({ numAdults: n })} />
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.25rem", borderRadius: "10px", border: "1px solid var(--color-tea-green-200)", background: "var(--color-tea-green-50)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.25rem", borderRadius: "var(--radius-input)", border: "1px solid var(--color-border)", background: "var(--color-bg)" }}>
           <div>
-            <div style={{ fontWeight: 600, color: "var(--color-tea-green-900)", fontSize: "0.9375rem" }}>Kids</div>
-            <div style={{ color: "var(--color-tea-green-600)", fontSize: "0.8125rem" }}>Under 18</div>
+            <div style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem" }}>Kids</div>
+            <div style={{ color: "var(--color-text-faint)", fontSize: "0.8125rem" }}>Under 18</div>
           </div>
           <Counter value={numKids} min={0} onChange={(n) => onUpdate({ numKids: n })} />
         </div>
@@ -101,20 +94,20 @@ export default function GroupStep({ data, onUpdate, onNext, onBack }: Props) {
               value={kidAgesInput}
               onChange={(e) => handleKidAges(e.target.value)}
             />
-            <p style={{ color: "var(--color-tea-green-600)", fontSize: "0.8125rem", marginTop: "0.375rem" }}>
+            <p style={{ color: "var(--color-text-faint)", fontSize: "0.8125rem", marginTop: "0.375rem" }}>
               Helps us recommend kid-appropriate activities and meals.
             </p>
           </div>
         )}
 
-        <div style={{ padding: "0.875rem 1.25rem", borderRadius: "10px", background: "var(--color-cornsilk-50)", border: "1px solid var(--color-cornsilk-200)" }}>
-          <span style={{ color: "var(--color-tea-green-700)", fontSize: "0.9375rem" }}>
+        <div style={{ padding: "0.875rem 1.25rem", borderRadius: "var(--radius-input)", background: "var(--color-bg-selected)", border: "1px solid var(--color-border)" }}>
+          <span style={{ color: "var(--color-text-muted)", fontSize: "0.9375rem" }}>
             👥 {numAdults} adult{numAdults !== 1 ? "s" : ""}{numKids > 0 ? ` + ${numKids} kid${numKids !== 1 ? "s" : ""}` : ""} &nbsp;·&nbsp; {numAdults + numKids} total
           </span>
         </div>
       </div>
 
-      <StepNav onBack={onBack} onNext={onNext} nextDisabled={!canContinue} />
+      <StepNav onBack={onBack} onNext={onNext} nextDisabled={numAdults < 1} />
     </StepCard>
   );
 }

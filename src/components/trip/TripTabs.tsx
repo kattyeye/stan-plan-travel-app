@@ -25,14 +25,11 @@ export default function TripTabs({ trip }: Props) {
   const [active, setActive] = useState<TabId>("itinerary");
 
   return (
-    <div style={{ background: "var(--color-tea-green-50)", minHeight: "60vh" }}>
-      {/* Tab bar */}
+    <div style={{ background: "var(--color-bg)", minHeight: "60vh" }}>
       <div style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 10,
-        background: "var(--color-cornsilk-50)",
-        borderBottom: "1px solid var(--color-tea-green-200)",
+        position: "sticky", top: 0, zIndex: 10,
+        background: "var(--color-bg-card)",
+        borderBottom: "1px solid var(--color-border)",
         overflowX: "auto",
       }} className="trip-tab-bar">
         <div style={{ display: "flex", maxWidth: "800px", margin: "0 auto", padding: "0 1rem" }}>
@@ -41,19 +38,15 @@ export default function TripTabs({ trip }: Props) {
               key={tab.id}
               onClick={() => setActive(tab.id)}
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.375rem",
+                display: "flex", alignItems: "center", gap: "0.375rem",
                 padding: "0.875rem 1rem",
                 border: "none",
-                borderBottom: active === tab.id ? "2px solid var(--color-tea-green-600)" : "2px solid transparent",
+                borderBottom: active === tab.id ? "2px solid var(--color-brand)" : "2px solid transparent",
                 background: "transparent",
-                color: active === tab.id ? "var(--color-tea-green-800)" : "var(--color-tea-green-600)",
+                color: active === tab.id ? "var(--color-text)" : "var(--color-text-muted)",
                 fontSize: "0.875rem",
                 fontWeight: active === tab.id ? 600 : 400,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                transition: "all 0.12s",
+                cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.12s",
               }}
             >
               <span>{tab.emoji}</span>
@@ -63,7 +56,6 @@ export default function TripTabs({ trip }: Props) {
         </div>
       </div>
 
-      {/* Tab content — all sections rendered, inactive ones hidden via CSS so print gets everything */}
       <div style={{ maxWidth: "800px", margin: "0 auto", padding: "2rem 1rem" }}>
         <style>{`
           .trip-section { display: none; }

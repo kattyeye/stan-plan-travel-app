@@ -16,7 +16,7 @@ export default function TripHeader({ trip }: Props) {
   return (
     <header style={{
       background: "var(--color-tea-green-900)",
-      color: "var(--color-tea-green-50)",
+      color: "var(--color-text-inverse)",
       padding: "3rem 1.5rem 2.5rem",
     }}>
       <div style={{ maxWidth: "800px", margin: "0 auto" }}>
@@ -41,18 +41,14 @@ export default function TripHeader({ trip }: Props) {
           <MetaPill emoji="👥" label={`${meta.group.totalPeople} people`} />
           {meta.group.kids > 0 && <MetaPill emoji="👶" label={`${meta.group.kids} kids`} />}
           {meta.property && <MetaPill emoji="🏠" label={meta.property} />}
-          {badge && <MetaPill
-            emoji="✦"
-            label={badge}
-            style={{ background: "var(--color-tea-green-700)", border: "1px solid var(--color-tea-green-600)" }}
-          />}
+          {badge && <MetaPill emoji="✦" label={badge} highlight />}
         </div>
       </div>
     </header>
   );
 }
 
-function MetaPill({ emoji, label, style: extraStyle }: { emoji: string; label: string; style?: React.CSSProperties }) {
+function MetaPill({ emoji, label, highlight }: { emoji: string; label: string; highlight?: boolean }) {
   return (
     <span style={{
       display: "inline-flex",
@@ -60,11 +56,10 @@ function MetaPill({ emoji, label, style: extraStyle }: { emoji: string; label: s
       gap: "0.375rem",
       padding: "0.3125rem 0.75rem",
       borderRadius: "999px",
-      background: "rgba(255,255,255,0.08)",
-      border: "1px solid rgba(255,255,255,0.12)",
+      background: highlight ? "var(--color-tea-green-700)" : "var(--color-bg-overlay)",
+      border: highlight ? "1px solid var(--color-tea-green-600)" : "1px solid rgba(255,255,255,0.12)",
       fontSize: "0.875rem",
       color: "var(--color-tea-green-100)",
-      ...extraStyle,
     }}>
       <span>{emoji}</span>
       <span>{label}</span>

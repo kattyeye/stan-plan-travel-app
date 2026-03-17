@@ -41,7 +41,7 @@ const TRAVEL: { value: TravelMethod; label: string; emoji: string }[] = [
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <p style={{ fontWeight: 600, color: "var(--color-tea-green-800)", fontSize: "0.9375rem", marginBottom: "0.625rem" }}>
+    <p style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem", marginBottom: "0.625rem" }}>
       {children}
     </p>
   );
@@ -55,9 +55,9 @@ function RadioCard({ selected, onClick, children }: { selected: boolean; onClick
       style={{
         flex: 1,
         padding: "0.75rem 1rem",
-        borderRadius: "10px",
-        border: selected ? "2px solid var(--color-tea-green-600)" : "1.5px solid var(--color-tea-green-200)",
-        background: selected ? "var(--color-tea-green-100)" : "transparent",
+        borderRadius: "var(--radius-input)",
+        border: selected ? "2px solid var(--color-brand)" : "1.5px solid var(--color-border)",
+        background: selected ? "var(--color-bg-selected)" : "transparent",
         cursor: "pointer",
         textAlign: "left",
         transition: "all 0.12s",
@@ -80,18 +80,17 @@ export default function PrefsStep({ data, onUpdate, onNext, onBack }: Props) {
 
   return (
     <StepCard>
-      <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.08em", color: "var(--color-tea-green-500)", textTransform: "uppercase", marginBottom: "0.5rem" }}>
+      <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.08em", color: "var(--color-text-faint)", textTransform: "uppercase", marginBottom: "0.5rem" }}>
         Step 3 of 6
       </p>
-      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", color: "var(--color-tea-green-950)", marginBottom: "0.375rem", lineHeight: 1.2 }}>
+      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", color: "var(--color-text)", marginBottom: "0.375rem", lineHeight: 1.2 }}>
         What's your vibe?
       </h2>
-      <p style={{ color: "var(--color-tea-green-700)", fontSize: "0.9375rem", marginBottom: "1.75rem" }}>
+      <p style={{ color: "var(--color-text-muted)", fontSize: "0.9375rem", marginBottom: "1.75rem" }}>
         This shapes the whole feel of your plan.
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1.75rem" }}>
-        {/* Vibes */}
         <div>
           <SectionTitle>Trip vibe (pick all that apply)</SectionTitle>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
@@ -101,34 +100,31 @@ export default function PrefsStep({ data, onUpdate, onNext, onBack }: Props) {
           </div>
         </div>
 
-        {/* Planning style */}
         <div>
           <SectionTitle>Planning style</SectionTitle>
           <div style={{ display: "flex", gap: "0.75rem" }}>
             {PLANNING.map((p) => (
               <RadioCard key={p.value} selected={data.planningStyle === p.value} onClick={() => onUpdate({ planningStyle: p.value })}>
-                <div style={{ fontWeight: 600, color: "var(--color-tea-green-900)", fontSize: "0.9375rem" }}>{p.label}</div>
-                <div style={{ color: "var(--color-tea-green-600)", fontSize: "0.8125rem", marginTop: "0.125rem" }}>{p.desc}</div>
+                <div style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem" }}>{p.label}</div>
+                <div style={{ color: "var(--color-text-muted)", fontSize: "0.8125rem", marginTop: "0.125rem" }}>{p.desc}</div>
               </RadioCard>
             ))}
           </div>
         </div>
 
-        {/* Budget */}
         <div>
           <SectionTitle>Budget</SectionTitle>
           <div style={{ display: "flex", gap: "0.75rem" }}>
             {BUDGET.map((b) => (
               <RadioCard key={b.value} selected={data.budget === b.value} onClick={() => onUpdate({ budget: b.value })}>
                 <div style={{ fontSize: "1.25rem", marginBottom: "0.25rem" }}>{b.emoji}</div>
-                <div style={{ fontWeight: 600, color: "var(--color-tea-green-900)", fontSize: "0.9375rem" }}>{b.label}</div>
-                <div style={{ color: "var(--color-tea-green-600)", fontSize: "0.8125rem", marginTop: "0.125rem" }}>{b.desc}</div>
+                <div style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem" }}>{b.label}</div>
+                <div style={{ color: "var(--color-text-muted)", fontSize: "0.8125rem", marginTop: "0.125rem" }}>{b.desc}</div>
               </RadioCard>
             ))}
           </div>
         </div>
 
-        {/* Travel method */}
         <div>
           <SectionTitle>Getting there</SectionTitle>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>

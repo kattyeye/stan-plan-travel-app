@@ -6,7 +6,7 @@ export default function FieldLabel({ children, htmlFor }: { children: React.Reac
         display: "block",
         fontSize: "0.875rem",
         fontWeight: 600,
-        color: "var(--color-tea-green-800)",
+        color: "var(--color-text)",
         marginBottom: "0.375rem",
       }}
     >

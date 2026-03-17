@@ -17,19 +17,12 @@ const COOK_RATIO: { value: CookInRatio; label: string; desc: string; emoji: stri
   { value: "mostly-out", label: "Mostly eat out", desc: "Restaurants & takeout", emoji: "🍽️" },
 ];
 
-const DIETARY = [
-  "Vegetarian", "Vegan", "Gluten-free", "Dairy-free",
-  "Nut allergy", "Halal", "Kosher", "Shellfish-free",
-];
-
-const CUISINES = [
-  "American", "Italian", "Mexican", "Asian", "Mediterranean",
-  "BBQ", "Seafood", "Farm-to-table", "Comfort food", "Brunch",
-];
+const DIETARY = ["Vegetarian", "Vegan", "Gluten-free", "Dairy-free", "Nut allergy", "Halal", "Kosher", "Shellfish-free"];
+const CUISINES = ["American", "Italian", "Mexican", "Asian", "Mediterranean", "BBQ", "Seafood", "Farm-to-table", "Comfort food", "Brunch"];
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <p style={{ fontWeight: 600, color: "var(--color-tea-green-800)", fontSize: "0.9375rem", marginBottom: "0.625rem" }}>
+    <p style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem", marginBottom: "0.625rem" }}>
       {children}
     </p>
   );
@@ -49,22 +42,19 @@ export default function MealStep({ data, onUpdate, onNext, onBack }: Props) {
     onUpdate({ cuisinePreferences: next });
   }
 
-  const canContinue = !!data.cookInRatio;
-
   return (
     <StepCard>
-      <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.08em", color: "var(--color-tea-green-500)", textTransform: "uppercase", marginBottom: "0.5rem" }}>
+      <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.08em", color: "var(--color-text-faint)", textTransform: "uppercase", marginBottom: "0.5rem" }}>
         Step 4 of 6
       </p>
-      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", color: "var(--color-tea-green-950)", marginBottom: "0.375rem", lineHeight: 1.2 }}>
+      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", color: "var(--color-text)", marginBottom: "0.375rem", lineHeight: 1.2 }}>
         Let's talk food
       </h2>
-      <p style={{ color: "var(--color-tea-green-700)", fontSize: "0.9375rem", marginBottom: "1.75rem" }}>
+      <p style={{ color: "var(--color-text-muted)", fontSize: "0.9375rem", marginBottom: "1.75rem" }}>
         We'll build a meal plan, grocery list, and restaurant picks around your preferences.
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1.75rem" }}>
-        {/* Cook vs eat out */}
         <div>
           <SectionTitle>How will you eat?</SectionTitle>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
@@ -74,32 +64,26 @@ export default function MealStep({ data, onUpdate, onNext, onBack }: Props) {
                 type="button"
                 onClick={() => onUpdate({ cookInRatio: r.value })}
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "1rem",
+                  display: "flex", alignItems: "center", gap: "1rem",
                   padding: "0.875rem 1.125rem",
-                  borderRadius: "10px",
-                  border: data.cookInRatio === r.value ? "2px solid var(--color-tea-green-600)" : "1.5px solid var(--color-tea-green-200)",
-                  background: data.cookInRatio === r.value ? "var(--color-tea-green-100)" : "transparent",
-                  cursor: "pointer",
-                  textAlign: "left",
-                  transition: "all 0.12s",
-                  width: "100%",
+                  borderRadius: "var(--radius-input)",
+                  border: data.cookInRatio === r.value ? "2px solid var(--color-brand)" : "1.5px solid var(--color-border)",
+                  background: data.cookInRatio === r.value ? "var(--color-bg-selected)" : "transparent",
+                  cursor: "pointer", textAlign: "left", transition: "all 0.12s", width: "100%",
                 }}
               >
                 <span style={{ fontSize: "1.375rem" }}>{r.emoji}</span>
                 <div>
-                  <div style={{ fontWeight: 600, color: "var(--color-tea-green-900)", fontSize: "0.9375rem" }}>{r.label}</div>
-                  <div style={{ color: "var(--color-tea-green-600)", fontSize: "0.8125rem" }}>{r.desc}</div>
+                  <div style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem" }}>{r.label}</div>
+                  <div style={{ color: "var(--color-text-muted)", fontSize: "0.8125rem" }}>{r.desc}</div>
                 </div>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Dietary restrictions */}
         <div>
-          <SectionTitle>Dietary needs <span style={{ fontWeight: 400, color: "var(--color-tea-green-500)" }}>(optional)</span></SectionTitle>
+          <SectionTitle>Dietary needs <span style={{ fontWeight: 400, color: "var(--color-text-faint)" }}>(optional)</span></SectionTitle>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
             {DIETARY.map((d) => (
               <Chip key={d} label={d} selected={dietary.includes(d)} onClick={() => toggleDietary(d)} />
@@ -107,9 +91,8 @@ export default function MealStep({ data, onUpdate, onNext, onBack }: Props) {
           </div>
         </div>
 
-        {/* Cuisine preferences */}
         <div>
-          <SectionTitle>Cuisine preferences <span style={{ fontWeight: 400, color: "var(--color-tea-green-500)" }}>(optional)</span></SectionTitle>
+          <SectionTitle>Cuisine preferences <span style={{ fontWeight: 400, color: "var(--color-text-faint)" }}>(optional)</span></SectionTitle>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
             {CUISINES.map((c) => (
               <Chip key={c} label={c} selected={cuisines.includes(c)} onClick={() => toggleCuisine(c)} />
@@ -118,7 +101,7 @@ export default function MealStep({ data, onUpdate, onNext, onBack }: Props) {
         </div>
       </div>
 
-      <StepNav onBack={onBack} onNext={onNext} nextDisabled={!canContinue} />
+      <StepNav onBack={onBack} onNext={onNext} nextDisabled={!data.cookInRatio} />
     </StepCard>
   );
 }

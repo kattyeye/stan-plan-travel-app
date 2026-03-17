@@ -5,7 +5,7 @@ import { WizardData, GeneratedTrip } from "@/types/trip";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const MODEL = "claude-sonnet-4-20250514";
+const MODEL = "claude-haiku-4-5-20251001"; // dev: swap to claude-sonnet-4-20250514 for production
 
 async function loadPrompt(filename: string): Promise<string> {
   const filePath = path.join(process.cwd(), "src", "prompts", filename);
@@ -19,21 +19,23 @@ export function buildUserPrompt(wizardData: WizardData): string {
     endDate,
     nights,
     tripType,
-    numAdults,
-    numKids,
-    kidAges,
     planningStyle,
     budget,
-    vibes,
     travelMethod,
     cookInRatio,
-    dietaryRestrictions,
-    cuisinePreferences,
     propertyDescription,
-    propertyAmenities,
-    sections,
     tripNickname,
   } = wizardData;
+
+  // Safe defaults for optional/array fields so .join() never throws
+  const numAdults = wizardData.numAdults ?? 2;
+  const numKids = wizardData.numKids ?? 0;
+  const kidAges = wizardData.kidAges ?? [];
+  const vibes = wizardData.vibes ?? [];
+  const dietaryRestrictions = wizardData.dietaryRestrictions ?? [];
+  const cuisinePreferences = wizardData.cuisinePreferences ?? [];
+  const propertyAmenities = wizardData.propertyAmenities ?? [];
+  const sections = wizardData.sections ?? ["itinerary", "meals", "grocery", "restaurants", "activities", "packing"];
 
   const totalPeople = numAdults + numKids;
   const kidsLine = numKids > 0
@@ -89,16 +91,16 @@ export async function generateTripJSON(wizardData: WizardData): Promise<Generate
 
   const userPrompt = buildUserPrompt(wizardData);
 
-  const response = await client.messages.create({
+  const response = await client.messages.stream({
     model: MODEL,
-    max_tokens: 16000,
+    max_tokens: 32000,
     system: `${systemPrompt}\n\n${schemaPrompt}`,
     messages: [{ role: "user", content: userPrompt }],
-  });
+  }).finalMessage();
 
   const raw = response.content
-    .filter((b) => b.type === "text")
-    .map((b) => (b as { type: "text"; text: string }).text)
+    .filter((b: { type: string }) => b.type === "text")
+    .map((b: { type: string; text: string }) => b.text)
     .join("");
 
   // Strip markdown fences if Claude wraps in them despite instructions
@@ -121,7 +123,7 @@ export async function generateTripHTML(trip: GeneratedTrip): Promise<string> {
     loadPrompt("html-template.txt"),
   ]);
 
-  const response = await client.messages.create({
+  const response = await client.messages.stream({
     model: MODEL,
     max_tokens: 16000,
     system: `${systemPrompt}\n\n${htmlTemplate}\n\nReturn valid HTML only. No markdown, no preamble, no explanation. Start with <!DOCTYPE html>.`,
@@ -131,11 +133,11 @@ export async function generateTripHTML(trip: GeneratedTrip): Promise<string> {
         content: `Render this trip plan as a self-contained HTML file:\n\n${JSON.stringify(trip, null, 2)}`,
       },
     ],
-  });
+  }).finalMessage();
 
   const html = response.content
-    .filter((b) => b.type === "text")
-    .map((b) => (b as { type: "text"; text: string }).text)
+    .filter((b: { type: string }) => b.type === "text")
+    .map((b: { type: string; text: string }) => b.text)
     .join("");
 
   return html.trim();

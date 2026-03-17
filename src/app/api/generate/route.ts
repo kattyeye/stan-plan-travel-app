@@ -5,14 +5,17 @@ import { generateSlug } from "@/lib/slug";
 import { verifyStripeSession } from "@/lib/stripe";
 import { WizardData } from "@/types/trip";
 
+export const maxDuration = 300; // 5 min — Vercel Pro allows up to 300s
+
 export async function POST(req: NextRequest) {
   let slug: string | undefined;
 
   try {
     const body = await req.json();
-    const { wizardData, stripeSessionId } = body as {
+    const { wizardData, stripeSessionId, slug: existingSlug } = body as {
       wizardData: WizardData;
       stripeSessionId?: string;
+      slug?: string;
     };
 
     if (!wizardData?.destination || !wizardData?.email) {
@@ -27,43 +30,38 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Create the trip record immediately so we have a slug to redirect to
-    slug = generateSlug();
-    await createTrip({
-      slug,
-      email: wizardData.email,
-      tripNickname: wizardData.tripNickname || wizardData.destination,
-      wizardData,
-      stripeSessionId,
-    });
+    if (existingSlug) {
+      slug = existingSlug;
+    } else {
+      slug = generateSlug();
+      await createTrip({
+        slug,
+        email: wizardData.email,
+        tripNickname: wizardData.tripNickname || wizardData.destination,
+        wizardData,
+        stripeSessionId,
+      });
+    }
 
-    // Mark as generating — client can poll /api/trip?slug= and wait
     await updateTripStatus(slug, "generating");
 
-    // Run generation async so we can return the slug right away
-    // The client will poll for status changes
-    generateAndSave(slug, wizardData).catch((err) => {
-      console.error(`Generation failed for slug ${slug}:`, err);
-      updateTripStatus(slug!, "error").catch(() => {});
-    });
+    // Run generation synchronously — Next.js serverless kills the process
+    // once the response returns, so fire-and-forget doesn't work reliably.
+    // The client polls for status; this request stays open until done.
+    try {
+      const generatedData = await generateTripJSON(wizardData);
+      const htmlBlob = await generateTripHTML(generatedData);
+      await saveTripData(slug, generatedData, htmlBlob);
+    } catch (genErr) {
+      console.error(`Generation failed for slug ${slug}:`, genErr);
+      await updateTripStatus(slug, "error");
+      return NextResponse.json({ error: "Generation failed", slug }, { status: 500 });
+    }
 
     return NextResponse.json({ slug });
   } catch (error) {
     console.error("Generate route error:", error);
-    if (slug) {
-      await updateTripStatus(slug, "error").catch(() => {});
-    }
+    if (slug) await updateTripStatus(slug, "error").catch(() => {});
     return NextResponse.json({ error: "Generation failed" }, { status: 500 });
   }
-}
-
-async function generateAndSave(slug: string, wizardData: WizardData) {
-  // Step 1: Generate structured JSON from Claude
-  const generatedData = await generateTripJSON(wizardData);
-
-  // Step 2: Generate self-contained HTML from the JSON
-  const htmlBlob = await generateTripHTML(generatedData);
-
-  // Step 3: Save both to DB and mark ready
-  await saveTripData(slug, generatedData, htmlBlob);
 }

@@ -1,15 +1,104 @@
-Return a single valid JSON object matching the GeneratedTrip TypeScript type.
-No markdown fences. No explanation. JSON only.
+Return a single valid JSON object. No markdown fences. No explanation. JSON only. Start with { and end with }.
+
+The JSON must exactly match this structure — all field names must be identical:
+
+{
+  "meta": {
+    "title": "string — catchy trip name",
+    "destination": "string",
+    "dates": { "start": "YYYY-MM-DD", "end": "YYYY-MM-DD", "nights": number },
+    "group": { "adults": number, "kids": number, "kidAges": [number], "totalPeople": number },
+    "property": "string — property description",
+    "tripType": "string"
+  },
+  "preferences": {
+    "planningStyle": "structured" | "balanced" | "flexible",
+    "budget": "budget" | "moderate" | "splurge",
+    "vibes": ["string"],
+    "cookInRatio": "mostly-in" | "mix" | "mostly-out",
+    "dietaryRestrictions": ["string"]
+  },
+  "recipes": [
+    {
+      "id": "string — unique e.g. rec-1",
+      "name": "string",
+      "mealType": "breakfast" | "lunch" | "dinner" | "snack",
+      "day": number,
+      "servings": number,
+      "prepTime": "string e.g. 15 min",
+      "cookTime": "string e.g. 30 min",
+      "difficulty": "easy" | "medium" | "hard",
+      "tip": "string",
+      "ingredients": [
+        { "item": "string", "amount": "string", "unit": "string", "category": "produce" | "meat" | "seafood" | "dairy" | "pantry" | "drinks" | "supplies" | "frozen" | "bakery" }
+      ],
+      "steps": [{ "step": number, "instruction": "string" }],
+      "tags": ["string"]
+    }
+  ],
+  "itinerary": [
+    {
+      "day": number,
+      "date": "YYYY-MM-DD",
+      "theme": "string",
+      "meals": {
+        "breakfast": { "type": "cook-in" | "eat-out", "name": "string", "recipeId": "string if cook-in, omit if eat-out" },
+        "lunch": { "type": "cook-in" | "eat-out", "name": "string", "recipeId": "string if cook-in, omit if eat-out" },
+        "dinner": { "type": "cook-in" | "eat-out", "name": "string", "recipeId": "string if cook-in, omit if eat-out" }
+      },
+      "activities": ["string"],
+      "vibe": ["string"]
+    }
+  ],
+  "restaurants": [
+    {
+      "id": "string e.g. rest-1",
+      "name": "string",
+      "address": "string",
+      "hours": "string",
+      "tags": ["string"],
+      "description": "string",
+      "priceRange": "$" | "$$" | "$$$" | "$$$$"
+    }
+  ],
+  "groceryList": {
+    "byMeal": [
+      { "mealName": "string", "day": number, "mealType": "breakfast" | "lunch" | "dinner", "recipeId": "string", "ingredients": [{ "item": "string", "amount": "string", "unit": "string", "category": "produce" | "meat" | "seafood" | "dairy" | "pantry" | "drinks" | "supplies" | "frozen" | "bakery" }] }
+    ],
+    "staples": [{ "item": "string", "amount": "string", "unit": "string", "category": "pantry" }],
+    "shoppingNote": "string",
+    "stores": [{ "name": "string", "type": "bulk" | "specialty" | "seafood" | "local-market" | "general", "note": "string" }]
+  },
+  "tips": {
+    "activities": [
+      { "name": "string", "description": "string", "duration": "string", "cost": "string", "bookingRequired": boolean, "kidFriendly": boolean, "tags": ["string"] }
+    ],
+    "practical": ["string"],
+    "dayTrips": [
+      { "destination": "string", "distanceMinutes": number, "description": "string", "highlights": ["string"] }
+    ]
+  },
+  "packingList": {
+    "clothingAdults": [{ "item": "string", "checked": false }],
+    "clothingKids": [{ "item": "string", "checked": false }],
+    "beachOutdoor": [{ "item": "string", "checked": false }],
+    "kitchen": [{ "item": "string", "checked": false }],
+    "toiletries": [{ "item": "string", "checked": false }],
+    "electronics": [{ "item": "string", "checked": false }],
+    "evening": [{ "item": "string", "checked": false }],
+    "groupLogistics": [{ "item": "string", "checked": false }],
+    "propertyProvides": [{ "item": "string", "checked": false, "propertyProvides": true }]
+  }
+}
 
 RECIPE RULES:
-- Each cook-in meal must reference a recipe by recipeId
-- All recipes live in the top-level "recipes" array
-- groceryList.byMeal entries must reference the same recipeId
-- Scale all ingredient amounts to exact group size
+- Each cook-in meal in itinerary must have a matching entry in "recipes" with the same "id"
+- "recipeId" values in itinerary and groceryList.byMeal must exactly match a recipe "id"
+- Scale all ingredient amounts to the exact total group size
 
 RESTAURANT RULES:
-- Only include real, currently operating restaurants verified via web search
-- Include in both eat-out meal assignments AND standalone restaurants section
+- Only include real, currently operating restaurants
+- Each restaurant must have a unique "id"
 
 PLANNING STYLE RULES:
 - structured: exact times in activity strings e.g. "9:00am — Kayak rental at X"

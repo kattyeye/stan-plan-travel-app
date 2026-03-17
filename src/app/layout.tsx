@@ -17,7 +17,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Stan Plan — Custom Travel Planning",
+  title: "Irie — Custom Travel Planning",
   description: "Personalized trip plans built for your group, your vibe, and your budget.",
 };
 

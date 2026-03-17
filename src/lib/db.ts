@@ -2,13 +2,12 @@ import { Redis } from "@upstash/redis";
 import { TripRecord, TripStatus, WizardData, GeneratedTrip } from "@/types/trip";
 
 function getRedis(): Redis {
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-    throw new Error("UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set");
+  const url = process.env.PLAN_UPSTASH_KV_REST_API_URL;
+  const token = process.env.PLAN_UPSTASH_KV_REST_API_TOKEN;
+  if (!url || !token) {
+    throw new Error("PLAN_UPSTASH_KV_REST_API_URL and PLAN_UPSTASH_KV_REST_API_TOKEN must be set");
   }
-  return new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN,
-  });
+  return new Redis({ url, token });
 }
 
 function tripKey(slug: string) {
@@ -95,6 +94,16 @@ export async function saveTripData(
     status: "ready" as TripStatus,
     updatedAt: new Date().toISOString(),
   });
+}
+
+export async function listAllTrips(): Promise<TripRecord[]> {
+  const redis = getRedis();
+  const keys = await redis.keys("trip:*");
+  if (keys.length === 0) return [];
+  const records = await Promise.all(keys.map((k) => redis.get<TripRecord>(k)));
+  return (records.filter(Boolean) as TripRecord[]).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
 }
 
 export async function getTripHtml(slug: string): Promise<string | null> {

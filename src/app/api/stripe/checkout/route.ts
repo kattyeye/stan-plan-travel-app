@@ -12,7 +12,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Create the trip record first so we have a slug for the Stripe success URL
     const slug = generateSlug();
     await createTrip({
       slug,
@@ -20,6 +19,12 @@ export async function POST(req: NextRequest) {
       tripNickname: wizardData.tripNickname || wizardData.destination,
       wizardData,
     });
+
+    // Skip Stripe if no key is configured — go straight to generation
+    if (!process.env.STRIPE_SECRET_KEY) {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+      return NextResponse.json({ url: `${appUrl}/trip/${slug}/generating`, slug });
+    }
 
     const checkoutUrl = await createCheckoutSession({
       slug,

@@ -27,7 +27,7 @@ export async function createCheckoutSession(data: {
           currency: "usd",
           unit_amount: PRICE_CENTS,
           product_data: {
-            name: `Stan Plan — ${data.tripNickname || "Your Trip"}`,
+            name: `Irie — ${data.tripNickname || "Your Trip"}`,
             description: "AI-generated personalized travel plan with itinerary, meals, grocery list, and more.",
           },
         },

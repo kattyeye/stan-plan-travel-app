@@ -11,7 +11,7 @@ const STYLE_BADGE: Record<string, string> = {
 
 export default function TripHeader({ trip }: Props) {
   const { meta, preferences } = trip;
-  const badge = STYLE_BADGE[preferences.planningStyle] ?? preferences.planningStyle;
+  const badge = preferences ? (STYLE_BADGE[preferences.planningStyle] ?? preferences.planningStyle) : null;
 
   return (
     <header style={{
@@ -23,7 +23,7 @@ export default function TripHeader({ trip }: Props) {
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
           <div>
             <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-tea-green-400)", marginBottom: "0.5rem" }}>
-              Stan Plan
+              Irie
             </p>
             <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.75rem, 5vw, 2.75rem)", lineHeight: 1.1, marginBottom: "0.5rem" }}>
               {meta.title}
@@ -41,11 +41,11 @@ export default function TripHeader({ trip }: Props) {
           <MetaPill emoji="👥" label={`${meta.group.totalPeople} people`} />
           {meta.group.kids > 0 && <MetaPill emoji="👶" label={`${meta.group.kids} kids`} />}
           {meta.property && <MetaPill emoji="🏠" label={meta.property} />}
-          <MetaPill
+          {badge && <MetaPill
             emoji="✦"
             label={badge}
             style={{ background: "var(--color-tea-green-700)", border: "1px solid var(--color-tea-green-600)" }}
-          />
+          />}
         </div>
       </div>
     </header>

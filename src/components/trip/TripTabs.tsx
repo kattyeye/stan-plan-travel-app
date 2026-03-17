@@ -15,7 +15,7 @@ const TABS = [
   { id: "meals", label: "Meals", emoji: "🍴" },
   { id: "grocery", label: "Grocery", emoji: "🛒" },
   { id: "restaurants", label: "Restaurants", emoji: "🍜" },
-  { id: "tips", label: "Tips", emoji: "🎯" },
+  { id: "tips", label: "Activities", emoji: "🎯" },
   { id: "packing", label: "Packing", emoji: "🧳" },
 ] as const;
 
@@ -34,7 +34,7 @@ export default function TripTabs({ trip }: Props) {
         background: "var(--color-cornsilk-50)",
         borderBottom: "1px solid var(--color-tea-green-200)",
         overflowX: "auto",
-      }}>
+      }} className="trip-tab-bar">
         <div style={{ display: "flex", maxWidth: "800px", margin: "0 auto", padding: "0 1rem" }}>
           {TABS.map((tab) => (
             <button
@@ -63,14 +63,22 @@ export default function TripTabs({ trip }: Props) {
         </div>
       </div>
 
-      {/* Tab content */}
+      {/* Tab content — all sections rendered, inactive ones hidden via CSS so print gets everything */}
       <div style={{ maxWidth: "800px", margin: "0 auto", padding: "2rem 1rem" }}>
-        {active === "itinerary" && <ItinerarySection trip={trip} />}
-        {active === "meals" && <MealPlanSection trip={trip} />}
-        {active === "grocery" && <GrocerySection trip={trip} />}
-        {active === "restaurants" && <RestaurantSection trip={trip} />}
-        {active === "tips" && <TipsSection trip={trip} />}
-        {active === "packing" && <PackingSection trip={trip} />}
+        <style>{`
+          .trip-section { display: none; }
+          .trip-section.active { display: block; }
+          @media print {
+            .trip-section { display: block !important; }
+            .trip-tab-bar { display: none !important; }
+          }
+        `}</style>
+        <div className={`trip-section${active === "itinerary" ? " active" : ""}`}><ItinerarySection trip={trip} /></div>
+        <div className={`trip-section${active === "meals" ? " active" : ""}`}><MealPlanSection trip={trip} /></div>
+        <div className={`trip-section${active === "grocery" ? " active" : ""}`}><GrocerySection trip={trip} /></div>
+        <div className={`trip-section${active === "restaurants" ? " active" : ""}`}><RestaurantSection trip={trip} /></div>
+        <div className={`trip-section${active === "tips" ? " active" : ""}`}><TipsSection trip={trip} /></div>
+        <div className={`trip-section${active === "packing" ? " active" : ""}`}><PackingSection trip={trip} /></div>
       </div>
     </div>
   );

@@ -14,6 +14,8 @@ export async function GET(req: NextRequest) {
     status: trip.status,
     tripNickname: trip.tripNickname,
     destination: trip.wizardData.destination,
+    // Expose wizardData when pending or error (generating page + admin regenerate need it)
+    wizardData: (trip.status === "pending" || trip.status === "error") ? trip.wizardData : undefined,
     generatedData: trip.status === "ready" ? trip.generatedData : undefined,
   });
 }

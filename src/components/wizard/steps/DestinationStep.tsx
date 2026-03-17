@@ -4,6 +4,8 @@ import StepCard from "../ui/StepCard";
 import StepNav from "../ui/StepNav";
 import FieldLabel from "../ui/FieldLabel";
 import TextInput from "../ui/TextInput";
+import PlacesAutocomplete from "../ui/PlacesAutocomplete";
+import DateRangePicker from "../ui/DateRangePicker";
 
 interface Props {
   data: Partial<WizardData>;
@@ -39,41 +41,26 @@ export default function DestinationStep({ data, onUpdate, onNext }: Props) {
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
         <div>
-          <FieldLabel htmlFor="destination">Destination</FieldLabel>
-          <TextInput
-            id="destination"
-            placeholder="e.g. Outer Banks, NC"
+          <FieldLabel>Destination</FieldLabel>
+          <PlacesAutocomplete
             value={data.destination ?? ""}
-            onChange={(e) => onUpdate({ destination: e.target.value })}
+            onChange={(val) => onUpdate({ destination: val })}
           />
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-          <div>
-            <FieldLabel htmlFor="startDate">Arrival date</FieldLabel>
-            <TextInput
-              id="startDate"
-              type="date"
-              value={data.startDate ?? ""}
-              onChange={(e) => handleDates(e.target.value, data.endDate ?? "")}
-            />
-          </div>
-          <div>
-            <FieldLabel htmlFor="endDate">Departure date</FieldLabel>
-            <TextInput
-              id="endDate"
-              type="date"
-              value={data.endDate ?? ""}
-              onChange={(e) => handleDates(data.startDate ?? "", e.target.value)}
-            />
-          </div>
+        <div>
+          <FieldLabel>Travel dates</FieldLabel>
+          <DateRangePicker
+            startDate={data.startDate ?? ""}
+            endDate={data.endDate ?? ""}
+            onChange={handleDates}
+          />
+          {data.nights !== undefined && data.nights > 0 && (
+            <p style={{ color: "var(--color-tea-green-600)", fontSize: "0.875rem", fontWeight: 500, marginTop: "0.5rem" }}>
+              🌙 {data.nights} night{data.nights !== 1 ? "s" : ""}
+            </p>
+          )}
         </div>
-
-        {data.nights !== undefined && data.nights > 0 && (
-          <p style={{ color: "var(--color-tea-green-600)", fontSize: "0.875rem", fontWeight: 500 }}>
-            🌙 {data.nights} night{data.nights !== 1 ? "s" : ""}
-          </p>
-        )}
 
         <div>
           <FieldLabel htmlFor="tripType">Trip type</FieldLabel>

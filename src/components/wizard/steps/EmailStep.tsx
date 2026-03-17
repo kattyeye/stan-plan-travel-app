@@ -2,8 +2,8 @@
 import { useState } from "react";
 import { WizardData } from "@/types/trip";
 import StepCard from "../ui/StepCard";
-import StepNav from "../ui/StepNav";
 import FieldLabel from "../ui/FieldLabel";
+// StepNav not used here — custom submit button handles both back and submit
 import TextInput from "../ui/TextInput";
 
 interface Props {
@@ -18,14 +18,30 @@ function isValidEmail(s: string) {
 }
 
 export default function EmailStep({ data, onUpdate, onBack }: Props) {
-  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const emailValid = isValidEmail(data.email ?? "");
   const canSubmit = emailValid && !!(data.tripNickname ?? "").trim();
 
-  function handleSubmit() {
-    setSubmitted(true);
-    // Submission handled by parent / API route
+  async function handleSubmit() {
+    if (!canSubmit || loading) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wizardData: data }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Something went wrong");
+      // Redirect to Stripe Checkout
+      window.location.href = json.url;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      setLoading(false);
+    }
   }
 
   return (
@@ -89,28 +105,33 @@ export default function EmailStep({ data, onUpdate, onBack }: Props) {
       </div>
 
       <div style={{ marginTop: "2rem" }}>
+        {error && (
+          <p style={{ color: "#b91c1c", fontSize: "0.875rem", marginBottom: "0.75rem", padding: "0.625rem 0.875rem", background: "#fef2f2", borderRadius: "8px", border: "1px solid #fecaca" }}>
+            {error}
+          </p>
+        )}
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={!canSubmit || submitted}
+          disabled={!canSubmit || loading}
           style={{
             width: "100%",
             padding: "0.875rem",
             borderRadius: "10px",
             border: "none",
-            background: canSubmit && !submitted ? "var(--color-tea-green-600)" : "var(--color-tea-green-300)",
+            background: canSubmit && !loading ? "var(--color-tea-green-600)" : "var(--color-tea-green-300)",
             color: "var(--color-tea-green-50)",
             fontSize: "1rem",
             fontWeight: 700,
-            cursor: canSubmit && !submitted ? "pointer" : "not-allowed",
+            cursor: canSubmit && !loading ? "pointer" : "not-allowed",
             letterSpacing: "0.01em",
             transition: "background 0.15s",
           }}
         >
-          {submitted ? "✓ Plan submitted!" : "Build my trip plan →"}
+          {loading ? "Redirecting to checkout…" : "Build my trip plan →"}
         </button>
         <p style={{ textAlign: "center", color: "var(--color-tea-green-600)", fontSize: "0.8125rem", marginTop: "0.75rem" }}>
-          Your plan will be ready in a few minutes.
+          $19 · Your plan will be ready in a few minutes.
         </p>
       </div>
 

@@ -4,14 +4,15 @@ import TripHeader from "@/components/trip/TripHeader";
 import TripTabs from "@/components/trip/TripTabs";
 
 interface Props {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export default async function TripPage({ params }: Props) {
-  const trip = await getTripBySlug(params.slug);
+  const { slug } = await params;
+  const trip = await getTripBySlug(slug);
   if (!trip || trip.status !== "ready" || !trip.generatedData) notFound();
   return (
-    <div className="min-h-screen">
+    <div style={{ minHeight: "100vh", background: "var(--color-tea-green-50)" }}>
       <TripHeader trip={trip.generatedData} />
       <TripTabs trip={trip.generatedData} />
     </div>

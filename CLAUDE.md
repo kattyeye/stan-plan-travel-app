@@ -30,9 +30,10 @@ The key differentiator is the **planning style axis** — a "structured" family 
 ```
 ANTHROPIC_API_KEY
 NEXT_PUBLIC_APP_URL
-STRIPE_SECRET_KEY          (not yet added)
-STRIPE_WEBHOOK_SECRET      (not yet added)
-DATABASE_URL               (not yet added)
+STRIPE_SECRET_KEY                (not yet added)
+STRIPE_WEBHOOK_SECRET            (not yet added)
+UPSTASH_REDIS_REST_URL           (from Upstash Redis integration in Vercel)
+UPSTASH_REDIS_REST_TOKEN         (from Upstash Redis integration in Vercel)
 ```
 
 ---

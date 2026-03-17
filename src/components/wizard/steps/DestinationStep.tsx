@@ -3,9 +3,22 @@ import { WizardData } from "@/types/trip";
 import StepCard from "../ui/StepCard";
 import StepNav from "../ui/StepNav";
 import FieldLabel from "../ui/FieldLabel";
-import TextInput from "../ui/TextInput";
+import Chip from "../ui/Chip";
 import PlacesAutocomplete from "../ui/PlacesAutocomplete";
 import DateRangePicker from "../ui/DateRangePicker";
+
+const TRIP_TYPES = [
+  { value: "beach house", label: "Beach house", emoji: "🏖️" },
+  { value: "ski cabin", label: "Ski cabin", emoji: "⛷️" },
+  { value: "city trip", label: "City trip", emoji: "🏙️" },
+  { value: "national park", label: "National park", emoji: "🏔️" },
+  { value: "cruise", label: "Cruise", emoji: "🚢" },
+  { value: "road trip", label: "Road trip", emoji: "🚗" },
+  { value: "honeymoon", label: "Honeymoon", emoji: "💍" },
+  { value: "camping", label: "Camping", emoji: "⛺" },
+  { value: "villa", label: "Villa / resort", emoji: "🏡" },
+  { value: "other", label: "Other", emoji: "✈️" },
+];
 
 interface Props {
   data: Partial<WizardData>;
@@ -63,13 +76,18 @@ export default function DestinationStep({ data, onUpdate, onNext }: Props) {
         </div>
 
         <div>
-          <FieldLabel htmlFor="tripType">Trip type</FieldLabel>
-          <TextInput
-            id="tripType"
-            placeholder="e.g. beach house, ski cabin, city trip…"
-            value={data.tripType ?? ""}
-            onChange={(e) => onUpdate({ tripType: e.target.value })}
-          />
+          <FieldLabel>Trip type</FieldLabel>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+            {TRIP_TYPES.map((t) => (
+              <Chip
+                key={t.value}
+                label={t.label}
+                emoji={t.emoji}
+                selected={data.tripType === t.value}
+                onClick={() => onUpdate({ tripType: t.value })}
+              />
+            ))}
+          </div>
         </div>
       </div>
 

@@ -74,13 +74,24 @@ export default function ExtrasStep({ data, onUpdate, onNext, onBack }: Props) {
                     border: selected ? "2px solid var(--color-brand)" : "1.5px solid var(--color-border)",
                     background: selected ? "var(--color-bg-selected)" : "transparent",
                     cursor: "pointer", textAlign: "left", transition: "all 0.12s",
+                    position: "relative",
                   }}
                 >
                   <span style={{ fontSize: "1.25rem", lineHeight: 1.2 }}>{s.emoji}</span>
-                  <div>
+                  <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.875rem" }}>{s.label}</div>
                     <div style={{ color: "var(--color-text-muted)", fontSize: "0.78125rem", marginTop: "0.125rem" }}>{s.desc}</div>
                   </div>
+                  <span style={{
+                    width: "1.125rem", height: "1.125rem", borderRadius: "50%", flexShrink: 0, marginTop: "0.125rem",
+                    border: selected ? "none" : "1.5px solid var(--color-border)",
+                    background: selected ? "var(--color-brand)" : "transparent",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: "var(--color-text-inverse)", fontSize: "0.6rem", fontWeight: 700,
+                    transition: "all 0.12s",
+                  }}>
+                    {selected ? "✓" : ""}
+                  </span>
                 </button>
               );
             })}

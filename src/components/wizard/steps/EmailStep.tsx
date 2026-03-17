@@ -4,6 +4,7 @@ import { WizardData } from "@/types/trip";
 import StepCard from "../ui/StepCard";
 import FieldLabel from "../ui/FieldLabel";
 import TextInput from "../ui/TextInput";
+import { clearWizardDraft } from "../WizardShell";
 
 interface Props {
   data: Partial<WizardData>;
@@ -35,6 +36,7 @@ export default function EmailStep({ data, onUpdate, onBack }: Props) {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Something went wrong");
+      clearWizardDraft();
       window.location.href = json.url;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");

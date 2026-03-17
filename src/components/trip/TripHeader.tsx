@@ -15,20 +15,20 @@ export default function TripHeader({ trip }: Props) {
 
   return (
     <header style={{
-      background: "var(--color-tea-green-900)",
-      color: "var(--color-text-inverse)",
+      background: "var(--color-header-bg)",
+      color: "var(--color-header-text)",
       padding: "3rem 1.5rem 2.5rem",
     }}>
       <div style={{ maxWidth: "800px", margin: "0 auto" }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
           <div>
-            <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-tea-green-400)", marginBottom: "0.5rem" }}>
+            <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-header-label)", marginBottom: "0.5rem" }}>
               Irie
             </p>
-            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.75rem, 5vw, 2.75rem)", lineHeight: 1.1, marginBottom: "0.5rem" }}>
+            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.75rem, 5vw, 2.75rem)", lineHeight: 1.1, marginBottom: "0.5rem", color: "var(--color-header-text)" }}>
               {meta.title}
             </h1>
-            <p style={{ color: "var(--color-tea-green-300)", fontSize: "1.0625rem" }}>
+            <p style={{ color: "var(--color-header-muted)", fontSize: "1.0625rem" }}>
               {meta.destination}
             </p>
           </div>
@@ -56,10 +56,10 @@ function MetaPill({ emoji, label, highlight }: { emoji: string; label: string; h
       gap: "0.375rem",
       padding: "0.3125rem 0.75rem",
       borderRadius: "999px",
-      background: highlight ? "var(--color-tea-green-700)" : "var(--color-bg-overlay)",
-      border: highlight ? "1px solid var(--color-tea-green-600)" : "1px solid rgba(255,255,255,0.12)",
+      background: highlight ? "rgba(255,255,255,0.15)" : "var(--color-bg-overlay)",
+      border: highlight ? "1px solid var(--color-header-label)" : "1px solid rgba(255,255,255,0.12)",
       fontSize: "0.875rem",
-      color: "var(--color-tea-green-100)",
+      color: "var(--color-header-text)",
     }}>
       <span>{emoji}</span>
       <span>{label}</span>

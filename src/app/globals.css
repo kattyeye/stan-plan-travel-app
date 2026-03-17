@@ -105,6 +105,15 @@
   --color-accent-warm: #32210f;         /* light-bronze-900 — deep warm brown for h2s */
   --color-highlight: var(--color-cornsilk-300);
 
+  /* Heading color — bronze warm in light, soft gold in dark */
+  --color-heading: #32210f;
+
+  /* Trip header hero */
+  --color-header-bg: var(--color-tea-green-900);
+  --color-header-text: var(--color-tea-green-50);
+  --color-header-muted: var(--color-tea-green-300);
+  --color-header-label: var(--color-tea-green-400);
+
   /* Error */
   --color-error-text: #b91c1c;
   --color-error-bg: #fef2f2;
@@ -149,6 +158,13 @@
   --color-accent-warm: var(--color-light-bronze-200);
   --color-highlight: var(--color-cornsilk-800);
 
+  --color-heading: var(--color-light-bronze-200);
+
+  --color-header-bg: var(--color-tea-green-950);
+  --color-header-text: var(--color-tea-green-100);
+  --color-header-muted: var(--color-tea-green-400);
+  --color-header-label: var(--color-tea-green-500);
+
   --color-error-text: #fca5a5;
   --color-error-bg: #450a0a;
   --color-error-border: #7f1d1d;
@@ -166,8 +182,5 @@ body {
 
 h1, h2, h3, h4 {
   font-family: var(--font-display);
-}
-
-h2 {
-  color: var(--color-accent-warm);
+  color: var(--color-heading);
 }

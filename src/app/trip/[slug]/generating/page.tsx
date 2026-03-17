@@ -96,15 +96,15 @@ export default function GeneratingPage() {
     return (
       <div style={centerStyle}>
         <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>⚠️</div>
-        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", color: "var(--color-tea-green-950)", marginBottom: "0.75rem" }}>
+        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", color: "var(--color-heading)", marginBottom: "0.75rem" }}>
           Something went wrong
         </h2>
-        <p style={{ color: "var(--color-tea-green-700)", maxWidth: "400px", lineHeight: 1.6, marginBottom: "1rem" }}>
+        <p style={{ color: "var(--color-text-muted)", maxWidth: "400px", lineHeight: 1.6, marginBottom: "1rem" }}>
           {error}
         </p>
         <button
           onClick={() => router.push("/wizard")}
-          style={{ padding: "0.625rem 1.5rem", borderRadius: "10px", border: "none", background: "var(--color-tea-green-600)", color: "#fff", fontSize: "0.9375rem", fontWeight: 600, cursor: "pointer" }}
+          style={{ padding: "0.625rem 1.5rem", borderRadius: "10px", border: "none", background: "var(--color-brand)", color: "var(--color-text-inverse)", fontSize: "0.9375rem", fontWeight: 600, cursor: "pointer" }}
         >
           ← Back to wizard
         </button>
@@ -121,21 +121,21 @@ export default function GeneratingPage() {
     <div style={centerStyle}>
       <div style={{
         width: "56px", height: "56px", borderRadius: "50%",
-        border: "3px solid var(--color-tea-green-200)",
-        borderTopColor: "var(--color-tea-green-600)",
+        border: "3px solid var(--color-border)",
+        borderTopColor: "var(--color-brand)",
         animation: "spin 0.9s linear infinite",
         marginBottom: "2rem",
       }} />
 
-      <h1 style={{ fontFamily: "var(--font-display)", fontSize: "2rem", color: "var(--color-tea-green-950)", marginBottom: "0.75rem", lineHeight: 1.2 }}>
+      <h1 style={{ fontFamily: "var(--font-display)", fontSize: "2rem", color: "var(--color-heading)", marginBottom: "0.75rem", lineHeight: 1.2 }}>
         Irie is working on it
       </h1>
 
-      <p style={{ color: "var(--color-tea-green-700)", fontSize: "1.0625rem", minHeight: "1.5em", marginBottom: "3rem" }}>
+      <p style={{ color: "var(--color-text-muted)", fontSize: "1.0625rem", minHeight: "1.5em", marginBottom: "3rem" }}>
         {MESSAGES[messageIndex]}
       </p>
 
-      <p style={{ color: "var(--color-tea-green-500)", fontSize: "0.875rem", maxWidth: "340px", lineHeight: 1.6 }}>
+      <p style={{ color: "var(--color-text-faint)", fontSize: "0.875rem", maxWidth: "340px", lineHeight: 1.6 }}>
         This usually takes 1–2 minutes.
       </p>
 
@@ -150,7 +150,7 @@ const centerStyle: React.CSSProperties = {
   flexDirection: "column",
   alignItems: "center",
   justifyContent: "center",
-  background: "var(--color-tea-green-50)",
+  background: "var(--color-bg)",
   padding: "2rem",
   textAlign: "center",
 };

@@ -28,7 +28,7 @@ export default function Navbar() {
       justifyContent: "space-between",
       backdropFilter: "blur(8px)",
     }}>
-      <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center" }}>
+      <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "0.75rem" }}>
         <Image src="/irie-logo.png" alt="Irie" height={30} width={110} style={{ objectFit: "contain" }} priority />
       </Link>
 
@@ -48,7 +48,6 @@ export default function Navbar() {
       )}
 
       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-        <ThemeToggle />
         <Link href="/wizard" style={{
           display: "inline-flex",
           alignItems: "center",
@@ -63,6 +62,7 @@ export default function Navbar() {
         }}>
           Start Planning
         </Link>
+        <ThemeToggle />
       </div>
     </nav>
   );

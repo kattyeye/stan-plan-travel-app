@@ -141,14 +141,41 @@ export default function PaywallGate({ destination }: Props) {
           </Link>
         </div>
 
-        {/* Social proof */}
-        <p style={{
-          fontSize: "0.8125rem",
-          color: "var(--color-text-faint)",
-          marginTop: "1.25rem",
+        {/* Social proof strip */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "0.625rem",
+          marginTop: "1.5rem",
+          paddingTop: "1.25rem",
+          borderTop: "1px solid var(--color-border)",
         }}>
-          No account needed · Plans ready in under 2 minutes
-        </p>
+          <div style={{ display: "flex" }}>
+            {[
+              "https://i.pravatar.cc/48?img=47",
+              "https://i.pravatar.cc/48?img=12",
+              "https://i.pravatar.cc/48?img=5",
+            ].map((src, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={i} src={src} alt="" style={{
+                width: 24, height: 24,
+                borderRadius: "50%",
+                border: "2px solid var(--color-bg-card)",
+                marginLeft: i === 0 ? 0 : -7,
+                objectFit: "cover",
+              }} />
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: "0.1rem" }}>
+            {[1,2,3,4,5].map((s) => (
+              <span key={s} style={{ color: "var(--color-accent)", fontSize: "0.6875rem" }}>★</span>
+            ))}
+          </div>
+          <p style={{ fontSize: "0.8125rem", color: "var(--color-text-muted)", margin: 0 }}>
+            10,000+ trips planned · No account needed
+          </p>
+        </div>
       </div>
     </div>
   );

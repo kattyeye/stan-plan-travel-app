@@ -164,66 +164,70 @@ The brand feel is **warm, grounded, and confident** — not techy or sterile. Us
 - Testimonial sections use warm-toned cards with star ratings in `--color-primary`.
 
 ---
-
-## 6. Landing Page Structure
-
+6. Landing Page Structure
 Build a new marketing landing page with these sections in order:
+6a. Hero
 
-### 6a. Hero
+Large serif heading: "You've got the tickets. We've got the plan." (emphasize "plan" with italic/lighter weight)
+Subheading: "Irie builds personalized day-by-day itineraries — real restaurants, verified hours, group-matched activities — so you can stop researching and start exploring."
+Small muted pill/tag line near the subheading: "Not flights. Not hotels. Just everything after you land." — this is critical for positioning clarity
+Trip Wizard mini-form or search bar with: Destination input, Group Size selector, primary CTA "Build My Itinerary →"
+Optional: dark card overlay showing a "Trip Wizard" preview (group type selector, dietary needs, vibe selector) as seen in Design 2
+Social proof line below: avatars + "Joined by 10,000+ smart travelers"
 
-- Large serif heading: "Travel plans that actually **make** sense" (emphasize "make" with italic/lighter weight)
-- Subheading: value prop about real restaurants, verified hours, group-matched itineraries
-- **Trip Wizard mini-form** or search bar with: Destination input, Group Size selector, primary CTA "Plan Trip →"
-- Optional: dark card overlay showing a "Trip Wizard" preview (group type selector, dietary needs, vibe selector) as seen in Design 2
-- Social proof line below: avatars + "Joined by 10,000+ smart travelers"
+6b. Popular Destinations
 
-### 6b. Popular Destinations
+Section heading: "Popular destinations"
+Subtitle: "See what Irie itineraries look like in cities travelers love"
+3-column grid of destination image cards (Santorini, Tokyo, Austin — or your actual destinations)
+Each card: full-bleed photo, location name overlay, short description below (e.g. "3-day itinerary · food, culture, nightlife")
 
-- Section heading: "Popular destinations"
-- Subtitle: "Curated experiences for every type of traveler"
-- 3-column grid of destination image cards (Santorini, Tokyo, Austin — or your actual destinations)
-- Each card: full-bleed photo, location name overlay, short description below
+6c. How It Works
 
-### 6c. How It Works
+Section heading: "How it works"
+Subtitle: "Three simple steps to your perfect on-the-ground itinerary"
+3-step layout with large decorative step numbers (01, 02, 03)
+Each step: number, heading, description paragraph, and a small illustrative UI mockup or icon graphic to the side
 
-- Section heading: "How it works"
-- Subtitle: "Three simple steps to a perfectly personalized itinerary"
-- 3-step layout with large decorative step numbers (01, 02, 03)
-- Each step: number, heading, description paragraph, and a small illustrative UI mockup or icon graphic to the side
-  - Step 1: "Tell us about your group" — group size, dietary needs, budget, vibe
-  - Step 2: "AI builds your plan" — cross-referencing millions of data points
-  - Step 3: "Get your perfect itinerary" — downloadable PDF, restaurant reservations, directions
+Step 1: "Tell us about your trip" — where you're going, group size, dietary needs, budget, vibe
+Step 2: "AI builds your itinerary" — cross-referencing millions of data points to find real places that are actually open and match your group
+Step 3: "Get your day-by-day plan" — downloadable PDF with restaurants, activities, directions, and time-of-day recommendations
 
-### 6d. The Anti-Generic Guarantee (Trust/Features)
 
-- Section heading: "Real recommendations for real people."
-- Subtitle about cross-referencing data for flawlessly executable itineraries
-- 3-column feature grid:
-  - **Verified Operating Status** — real-time hours verification
-  - **Group-Dynamic Matching** — accommodates your specific group makeup
-  - **Hyper-Specific Dietary** — dietary restrictions celebrated, not just accommodated
-- Each with an icon, title, and short description
 
-### 6e. Testimonials
+6d. The Anti-Generic Guarantee (Trust/Features)
 
-- Section heading: "Trips that actually happened exactly as planned."
-- Carousel or 2-column grid of testimonial cards
-- Each card: 5-star rating, quote text, author name, trip type (e.g. "Solo Trip to Austin")
-- Author avatar beside name
+Section heading: "Real recommendations for real people."
+Subtitle: "We cross-reference millions of data points to ensure your itinerary isn't just inspiring, but flawlessly executable — every restaurant open, every activity vetted, every day planned around your group."
+3-column feature grid:
 
-### 6f. Final CTA Banner
+Verified Operating Status — no more arriving at a "must-visit" spot only to find it permanently closed. We verify real-time hours for every suggestion.
+Group-Dynamic Matching — a bachelorette party of 8 needs different dinner spots than a family of 4. We filter by what accommodates your specific group.
+Hyper-Specific Dietary — "vegan options available" isn't good enough. We find places where dietary restrictions are celebrated, not just accommodated.
 
-- Bold background block (use `--color-secondary` or a warm gradient)
-- Heading: "Stop researching. Start packing."
-- Subtitle: "Your next perfectly planned vacation is just a few questions away."
-- CTA button: "Try the wizard for free" in primary style
 
-### 6g. Footer
+Each with an icon, title, and short description
 
-- Irie logo (flower emblem + wordmark) + tagline
-- Column links: Product, Resources, Legal
-- Social icons
-- Copyright line
+6e. Testimonials
+
+Section heading: "Trips that actually happened exactly as planned."
+Carousel or 2-column grid of testimonial cards
+Each card: 5-star rating, quote text, author name, trip type (e.g. "Solo Trip to Austin")
+Author avatar beside name
+
+6f. Final CTA Banner
+
+Bold background block (use --color-secondary or a warm gradient)
+Heading: "Stop researching. Start exploring."
+Subtitle: "You already booked the trip. Let us handle what happens when you get there."
+CTA button: "Build my itinerary — free" in primary style
+
+6g. Footer
+
+Irie logo (flower emblem + wordmark) + tagline: "Travel made irie."
+Column links: Product, Resources, Legal
+Social icons
+Copyright line
 
 ---
 

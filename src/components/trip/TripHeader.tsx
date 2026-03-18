@@ -9,8 +9,8 @@ interface Props {
 }
 
 const STYLE_BADGE: Record<string, string> = {
-  structured: "Fully planned",
-  balanced: "Balanced",
+  structured: "Minute-by-minute plan",
+  balanced: "Balanced itinerary",
   flexible: "Go with the flow",
 };
 

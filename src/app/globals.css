@@ -194,6 +194,11 @@ h1, h2, h3, h4 {
   border-radius: 4px;
 }
 
+/* Hide navbar tagline on small screens */
+@media (max-width: 640px) {
+  :root { --tagline-display: none; }
+}
+
 /* Reduce motion for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

@@ -19,8 +19,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Irie — Personalized Trip Planning",
-  description: "Personalized trip plans built for your group, your vibe, and your budget.",
+  title: "Irie — Travel Made Irie",
+  description: "Every trip should feel irie. Personalized itineraries built for your group, your vibe, and your budget.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

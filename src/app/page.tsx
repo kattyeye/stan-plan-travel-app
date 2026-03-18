@@ -47,34 +47,46 @@ const TESTIMONIALS = [
   {
     quote: "It asked me if my group was 'early risers' or 'sleep in' types, and customized the morning activities accordingly. It even found a gluten-free bakery open at 7 AM near our Airbnb. Unbelievable.",
     author: "Sarah Jenkins",
-    trip: "Solo Trip to Austin, TX",
-    initials: "SJ",
+    trip: "Girls trip to Austin, TX",
+    avatar: "https://i.pravatar.cc/72?img=47",
   },
   {
     quote: "I usually spend 20 hours planning a trip. Irie gave me a perfectly paced 5-day Tokyo itinerary in 3 minutes. Every train transfer instruction was spot on.",
     author: "David Chen",
-    trip: "Solo Trip to Japan",
-    initials: "DC",
+    trip: "Family trip to Japan",
+    avatar: "https://i.pravatar.cc/72?img=12",
+  },
+  {
+    quote: "We're a group of 6 with two vegans and one nut allergy. It handled all of that without us having to triple-check everything ourselves. I was skeptical but it genuinely worked.",
+    author: "Maya Torres",
+    trip: "Friends trip to Santorini",
+    avatar: "https://i.pravatar.cc/72?img=5",
+  },
+  {
+    quote: "The 'structured' planning style gave us a real minute-by-minute schedule. My husband and I are type A planners and this was everything we didn't know we needed.",
+    author: "Rachel Kim",
+    trip: "Couples trip to Barcelona",
+    avatar: "https://i.pravatar.cc/72?img=9",
   },
 ];
 
 const STEPS = [
   {
     num: "01",
-    title: "Tell us about your group",
-    desc: "Group size, dietary needs, budget preferences, and the vibe you're going for. The more specific, the better.",
+    title: "Tell us about your trip",
+    desc: "Where you're going, group size, dietary needs, budget, and vibe. The more specific, the better.",
     detail: "Select group type · Set dietary needs · Choose your vibe",
   },
   {
     num: "02",
-    title: "AI builds your plan",
-    desc: "We cross-reference millions of data points to verify every restaurant is open, every activity fits your group, and every recommendation is genuinely useful.",
+    title: "AI builds your itinerary",
+    desc: "We cross-reference millions of data points to find real places that are actually open and match your group — no generic lists.",
     detail: "No generic lists · Verified hours · Group-matched results",
   },
   {
     num: "03",
-    title: "Get your perfect itinerary",
-    desc: "Download your complete, printable plan with all restaurant reservations, transit directions, and activity details.",
+    title: "Get your day-by-day plan",
+    desc: "A downloadable plan with restaurants, activities, directions, and time-of-day recommendations. Ready in under 2 minutes.",
     detail: "Printable PDF · Group collaboration · Direct Maps links",
   },
 ];
@@ -109,7 +121,7 @@ export default function Home() {
             borderRadius: "999px",
             marginBottom: "1.75rem",
           }}>
-            AI-Powered Travel Intelligence
+            Every trip should feel irie
           </div>
           <h1 style={{
             fontFamily: "var(--font-display)",
@@ -119,18 +131,26 @@ export default function Home() {
             color: "var(--color-heading)",
             marginBottom: "1.25rem",
           }}>
-            Travel plans that actually{" "}
-            <em style={{ fontStyle: "italic", color: "var(--color-accent)" }}>make</em>
-            {" "}sense.
+            You&apos;ve got the tickets.<br />We&apos;ve got the{" "}
+            <em style={{ fontStyle: "italic", color: "var(--color-accent)" }}>plan.</em>
           </h1>
           <p style={{
             fontSize: "1.125rem",
             color: "var(--color-text-muted)",
             lineHeight: 1.7,
-            marginBottom: "2.5rem",
+            marginBottom: "1rem",
             maxWidth: "440px",
           }}>
-            No generic lists. Real restaurants, verified hours, perfectly matched to your group&apos;s exact needs and vibe. We build hyper-personalized itineraries where every recommendation is genuinely executable.
+            Irie builds personalized day-by-day itineraries — real restaurants, verified hours, group-matched activities — so you can stop researching and start exploring.
+          </p>
+          <p style={{
+            display: "inline-block",
+            fontSize: "0.875rem",
+            color: "var(--color-text-faint)",
+            fontStyle: "italic",
+            marginBottom: "2rem",
+          }}>
+            Not flights. Not hotels. Just everything after you land.
           </p>
 
           {/* Mini form */}
@@ -187,29 +207,38 @@ export default function Home() {
               textDecoration: "none",
               whiteSpace: "nowrap",
             }}>
-              Plan trip →
+              Build My Itinerary →
             </Link>
           </div>
 
           {/* Social proof */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <div style={{ display: "flex" }}>
-              {["A","B","C"].map((l, i) => (
-                <div key={l} style={{
+              {[
+                "https://i.pravatar.cc/56?img=47",
+                "https://i.pravatar.cc/56?img=12",
+                "https://i.pravatar.cc/56?img=5",
+              ].map((src, i) => (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img key={i} src={src} alt="" style={{
                   width: 28, height: 28,
                   borderRadius: "50%",
-                  background: "var(--color-brand-light)",
                   border: "2px solid var(--color-bg)",
                   marginLeft: i === 0 ? 0 : -8,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "0.625rem", fontWeight: 700,
-                  color: "var(--color-brand)",
-                }}>{l}</div>
+                  objectFit: "cover",
+                }} />
               ))}
             </div>
-            <span style={{ fontSize: "0.875rem", color: "var(--color-text-muted)" }}>
-              Joined by <strong style={{ color: "var(--color-text)" }}>10,000+</strong> smart travelers
-            </span>
+            <div>
+              <div style={{ display: "flex", gap: "0.125rem", marginBottom: "0.15rem" }}>
+                {[1,2,3,4,5].map((s) => (
+                  <span key={s} style={{ color: "var(--color-accent)", fontSize: "0.75rem" }}>★</span>
+                ))}
+              </div>
+              <span style={{ fontSize: "0.8125rem", color: "var(--color-text-muted)" }}>
+                <strong style={{ color: "var(--color-text)" }}>10,000+</strong> trips planned
+              </span>
+            </div>
           </div>
         </div>
 
@@ -279,7 +308,7 @@ export default function Home() {
         <div style={{ maxWidth: "1240px", margin: "0 auto" }}>
           <p style={{ fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-muted)", marginBottom: "0.5rem" }}>Explore</p>
           <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.75rem, 3vw, 2.5rem)", color: "var(--color-heading)", marginBottom: "0.5rem" }}>Popular destinations</h2>
-          <p style={{ color: "var(--color-text-muted)", marginBottom: "2.5rem", fontSize: "1rem" }}>Curated experiences for every type of traveler</p>
+          <p style={{ color: "var(--color-text-muted)", marginBottom: "2.5rem", fontSize: "1rem" }}>See what Irie itineraries look like in cities travelers love</p>
 
           <div style={{
             display: "grid",
@@ -335,7 +364,7 @@ export default function Home() {
           <div style={{ textAlign: "center", marginBottom: "4rem" }}>
             <p style={{ fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-muted)", marginBottom: "0.5rem" }}>Simple process</p>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.75rem, 3vw, 2.5rem)", color: "var(--color-heading)", marginBottom: "0.75rem" }}>How it works</h2>
-            <p style={{ color: "var(--color-text-muted)", fontSize: "1rem", maxWidth: "480px", margin: "0 auto" }}>Three simple steps to a perfectly personalized itinerary</p>
+            <p style={{ color: "var(--color-text-muted)", fontSize: "1rem", maxWidth: "480px", margin: "0 auto" }}>Three simple steps to your perfect on-the-ground itinerary</p>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "4rem" }}>
@@ -353,9 +382,10 @@ export default function Home() {
                     fontFamily: "var(--font-display)",
                     fontSize: "4rem",
                     fontWeight: 400,
-                    color: "var(--color-border)",
+                    color: "var(--color-accent)",
                     lineHeight: 1,
                     marginBottom: "0.75rem",
+                    opacity: 0.6,
                   }}>{step.num}</span>
                   <h3 style={{
                     fontFamily: "var(--font-display)",
@@ -402,11 +432,43 @@ export default function Home() {
       {/* ── ANTI-GENERIC GUARANTEE ── */}
       <section style={{ background: "var(--color-bg-subtle)", padding: "100px 2rem" }}>
         <div style={{ maxWidth: "1240px", margin: "0 auto" }}>
+
+          {/* Stats strip — social validation through numbers */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: "1rem",
+            marginBottom: "5rem",
+            padding: "2rem",
+            background: "var(--color-bg-card)",
+            border: "1px solid var(--color-border)",
+            borderRadius: "16px",
+            boxShadow: "var(--shadow-card)",
+          }} className="stats-grid">
+            {[
+              { stat: "10,000+", label: "trips planned" },
+              { stat: "4.9★", label: "average rating" },
+              { stat: "2 min", label: "average build time" },
+            ].map(({ stat, label }) => (
+              <div key={label} style={{ textAlign: "center" }}>
+                <p style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "clamp(1.75rem, 3vw, 2.25rem)",
+                  color: "var(--color-heading)",
+                  margin: 0,
+                  lineHeight: 1,
+                  marginBottom: "0.375rem",
+                }}>{stat}</p>
+                <p style={{ fontSize: "0.875rem", color: "var(--color-text-muted)", margin: 0 }}>{label}</p>
+              </div>
+            ))}
+          </div>
+
           <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
             <p style={{ fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-muted)", marginBottom: "0.5rem" }}>The Anti-Generic Guarantee</p>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.75rem, 3vw, 2.5rem)", color: "var(--color-heading)", marginBottom: "0.75rem", maxWidth: "560px", margin: "0 auto 0.75rem" }}>Real recommendations for real people.</h2>
-            <p style={{ color: "var(--color-text-muted)", fontSize: "1rem", maxWidth: "520px", margin: "0 auto" }}>
-              We cross-reference millions of data points to ensure your itinerary is not just inspiring, but flawlessly executable.
+            <p style={{ color: "var(--color-text-muted)", fontSize: "1rem", maxWidth: "580px", margin: "0 auto" }}>
+              We cross-reference millions of data points to ensure your itinerary isn&apos;t just inspiring, but flawlessly executable — every restaurant open, every activity vetted, every day planned around your group.
             </p>
           </div>
           <div style={{
@@ -446,9 +508,15 @@ export default function Home() {
       {/* ── TESTIMONIALS ── */}
       <section style={{ padding: "100px 2rem" }}>
         <div style={{ maxWidth: "1240px", margin: "0 auto" }}>
-          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.75rem, 3vw, 2.5rem)", color: "var(--color-heading)", marginBottom: "2.5rem" }}>
-            Trips that actually happened exactly as planned.
-          </h2>
+          <div style={{ marginBottom: "2.5rem" }}>
+            <p style={{ fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-muted)", marginBottom: "0.5rem" }}>Real travelers. Real trips.</p>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.75rem, 3vw, 2.5rem)", color: "var(--color-heading)", marginBottom: "0.5rem" }}>
+              People just like you.
+            </h2>
+            <p style={{ color: "var(--color-text-muted)", fontSize: "1rem", maxWidth: "480px" }}>
+              Families, couples, solo travelers, and friend groups — all with different diets, budgets, and vibes.
+            </p>
+          </div>
           <div style={{
             display: "grid",
             gridTemplateColumns: "repeat(2, 1fr)",
@@ -477,12 +545,12 @@ export default function Home() {
                   &ldquo;{t.quote}&rdquo;
                 </p>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                  <div style={{
-                    width: 36, height: 36, borderRadius: "50%",
-                    background: "var(--color-brand-light)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontWeight: 700, fontSize: "0.75rem", color: "var(--color-brand)",
-                  }}>{t.initials}</div>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={t.avatar} alt={t.author} style={{
+                    width: 40, height: 40, borderRadius: "50%",
+                    objectFit: "cover",
+                    border: "2px solid var(--color-border)",
+                  }} />
                   <div>
                     <p style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--color-text)", margin: 0 }}>{t.author}</p>
                     <p style={{ fontSize: "0.8125rem", color: "var(--color-text-muted)", margin: 0 }}>{t.trip}</p>
@@ -515,7 +583,7 @@ export default function Home() {
             marginBottom: "2rem",
             lineHeight: 1.65,
           }}>
-            Your next perfectly planned vacation is just a few questions away.
+            Answer a few questions. Get a complete, personalized trip plan — itinerary, meals, restaurants, and packing list — in under 2 minutes.
           </p>
           <Link href="/wizard" style={{
             display: "inline-flex",
@@ -529,8 +597,11 @@ export default function Home() {
             fontSize: "1rem",
             textDecoration: "none",
           }}>
-            Try the wizard for free →
+            Build my trip plan →
           </Link>
+          <p style={{ color: "rgba(254, 250, 224, 0.55)", fontSize: "0.8125rem", marginTop: "1rem" }}>
+            No account needed. Takes under 2 minutes.
+          </p>
         </div>
       </section>
 
@@ -550,8 +621,8 @@ export default function Home() {
           }} className="footer-grid">
             <div>
               <Image src="/irie-logo.png" alt="Irie" height={28} width={96} style={{ objectFit: "contain", filter: "brightness(0) invert(1)", marginBottom: "0.875rem" }} />
-              <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.875rem", lineHeight: 1.65, maxWidth: "240px" }}>
-                Personalized trip plans built for your group, your vibe, and your budget.
+              <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.875rem", lineHeight: 1.65, maxWidth: "240px", fontStyle: "italic" }}>
+                Travel made irie.
               </p>
             </div>
             {[
@@ -582,6 +653,7 @@ export default function Home() {
           .dest-grid { grid-template-columns: 1fr !important; }
           .features-grid { grid-template-columns: 1fr !important; }
           .testimonials-grid { grid-template-columns: 1fr !important; }
+          .stats-grid { grid-template-columns: 1fr !important; }
           .footer-grid { grid-template-columns: 1fr 1fr !important; }
           .step-grid { grid-template-columns: 1fr !important; direction: ltr !important; }
         }

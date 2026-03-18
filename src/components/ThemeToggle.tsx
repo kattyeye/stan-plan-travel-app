@@ -17,7 +17,7 @@ export function ThemeToggle() {
     <button
       onClick={() => setTheme(isDark ? "light" : "dark")}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors"
+      className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
       style={{
         backgroundColor: "var(--color-bg-subtle)",
         border: "1px solid var(--color-border)",

@@ -1,5 +1,6 @@
 import { GeneratedTrip } from "@/types/trip";
 import PrintButton from "./PrintButton";
+import { CalendarDays, Moon, Users, Baby, Home, Sparkles } from "lucide-react";
 
 interface Props { trip: GeneratedTrip }
 
@@ -36,19 +37,19 @@ export default function TripHeader({ trip }: Props) {
         </div>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginTop: "1.75rem" }}>
-          <MetaPill emoji="📅" label={`${meta.dates.start} – ${meta.dates.end}`} />
-          <MetaPill emoji="🌙" label={`${meta.dates.nights} nights`} />
-          <MetaPill emoji="👥" label={`${meta.group.totalPeople} people`} />
-          {meta.group.kids > 0 && <MetaPill emoji="👶" label={`${meta.group.kids} kids`} />}
-          {meta.property && <MetaPill emoji="🏠" label={meta.property} />}
-          {badge && <MetaPill emoji="✦" label={badge} highlight />}
+          <MetaPill icon={<CalendarDays size={13} aria-hidden="true" />} label={`${meta.dates.start} – ${meta.dates.end}`} />
+          <MetaPill icon={<Moon size={13} aria-hidden="true" />} label={`${meta.dates.nights} nights`} />
+          <MetaPill icon={<Users size={13} aria-hidden="true" />} label={`${meta.group.totalPeople} ${meta.group.totalPeople === 1 ? "person" : "people"}`} />
+          {meta.group.kids > 0 && <MetaPill icon={<Baby size={13} aria-hidden="true" />} label={`${meta.group.kids} ${meta.group.kids === 1 ? "kid" : "kids"}`} />}
+          {meta.property && <MetaPill icon={<Home size={13} aria-hidden="true" />} label={meta.property} />}
+          {badge && <MetaPill icon={<Sparkles size={13} aria-hidden="true" />} label={badge} highlight />}
         </div>
       </div>
     </header>
   );
 }
 
-function MetaPill({ emoji, label, highlight }: { emoji: string; label: string; highlight?: boolean }) {
+function MetaPill({ icon, label, highlight }: { icon: React.ReactNode; label: string; highlight?: boolean }) {
   return (
     <span style={{
       display: "inline-flex",
@@ -61,7 +62,7 @@ function MetaPill({ emoji, label, highlight }: { emoji: string; label: string; h
       fontSize: "0.875rem",
       color: "var(--color-header-text)",
     }}>
-      <span>{emoji}</span>
+      {icon}
       <span>{label}</span>
     </span>
   );

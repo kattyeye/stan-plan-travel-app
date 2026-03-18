@@ -25,10 +25,13 @@ interface Props {
   onUpdate: (data: Partial<WizardData>) => void;
   onNext?: () => void;
   onBack?: () => void;
+  onDestinationSelected?: (destination: string) => void;
+  suggestedTripTypes?: string[];
+  suggestionsLoading?: boolean;
 }
 
-export default function DestinationStep({ data, onUpdate, onNext }: Props) {
-  const canContinue = !!(data.destination && data.startDate && data.endDate);
+export default function DestinationStep({ data, onUpdate, onNext, onDestinationSelected, suggestedTripTypes, suggestionsLoading }: Props) {
+  const canContinue = !!(data.destination && data.startDate && data.endDate && data.tripType);
 
   function handleDates(start: string, end: string) {
     if (start && end) {
@@ -58,6 +61,7 @@ export default function DestinationStep({ data, onUpdate, onNext }: Props) {
           <PlacesAutocomplete
             value={data.destination ?? ""}
             onChange={(val) => onUpdate({ destination: val })}
+            onSelect={(val) => onDestinationSelected?.(val)}
           />
         </div>
 
@@ -77,17 +81,27 @@ export default function DestinationStep({ data, onUpdate, onNext }: Props) {
 
         <div>
           <FieldLabel>Trip type</FieldLabel>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-            {TRIP_TYPES.map((t) => (
-              <Chip
-                key={t.value}
-                label={t.label}
-                emoji={t.emoji}
-                selected={data.tripType === t.value}
-                onClick={() => onUpdate({ tripType: t.value })}
-              />
-            ))}
-          </div>
+          {suggestionsLoading && !suggestedTripTypes ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-text-faint)", fontSize: "0.875rem", padding: "0.375rem 0" }}>
+              <span style={{ display: "inline-block", width: "14px", height: "14px", border: "2px solid var(--color-border)", borderTopColor: "var(--color-brand)", borderRadius: "50%", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />
+              Finding trip types for {data.destination}...
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+              {(suggestedTripTypes
+                ? TRIP_TYPES.filter((t) => suggestedTripTypes.includes(t.value) || data.tripType === t.value)
+                : TRIP_TYPES
+              ).map((t) => (
+                <Chip
+                  key={t.value}
+                  label={t.label}
+                  emoji={t.emoji}
+                  selected={data.tripType === t.value}
+                  onClick={() => onUpdate({ tripType: t.value })}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

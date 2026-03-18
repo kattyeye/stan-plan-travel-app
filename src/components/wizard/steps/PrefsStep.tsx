@@ -9,6 +9,8 @@ interface Props {
   onUpdate: (data: Partial<WizardData>) => void;
   onNext?: () => void;
   onBack?: () => void;
+  suggestedVibes?: string[];
+  suggestionsLoading?: boolean;
 }
 
 const VIBES: { value: TripVibe; label: string; emoji: string }[] = [
@@ -73,13 +75,28 @@ function RadioCard({ selected, onClick, label, children }: { selected: boolean; 
   );
 }
 
-export default function PrefsStep({ data, onUpdate, onNext, onBack }: Props) {
+const SPINNER = (
+  <span style={{
+    display: "inline-block", width: "14px", height: "14px",
+    border: "2px solid var(--color-border)",
+    borderTopColor: "var(--color-brand)",
+    borderRadius: "50%",
+    animation: "spin 0.7s linear infinite",
+    flexShrink: 0,
+  }} />
+);
+
+export default function PrefsStep({ data, onUpdate, onNext, onBack, suggestedVibes, suggestionsLoading }: Props) {
   const vibes = data.vibes ?? [];
 
   function toggleVibe(v: TripVibe) {
     const next = vibes.includes(v) ? vibes.filter((x) => x !== v) : [...vibes, v];
     onUpdate({ vibes: next });
   }
+
+  const vibeOptions = suggestedVibes
+    ? VIBES.filter((v) => suggestedVibes.includes(v.value) || vibes.includes(v.value))
+    : VIBES;
 
   const canContinue = !!(data.planningStyle && data.budget && data.travelMethod && vibes.length > 0);
 
@@ -98,11 +115,18 @@ export default function PrefsStep({ data, onUpdate, onNext, onBack }: Props) {
       <div style={{ display: "flex", flexDirection: "column", gap: "1.75rem" }}>
         <div>
           <SectionTitle>Trip vibe (pick all that apply)</SectionTitle>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-            {VIBES.map((v) => (
-              <Chip key={v.value} label={v.label} emoji={v.emoji} selected={vibes.includes(v.value)} onClick={() => toggleVibe(v.value)} />
-            ))}
-          </div>
+          {suggestionsLoading && !suggestedVibes ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-text-faint)", fontSize: "0.875rem", padding: "0.375rem 0" }}>
+              {SPINNER}
+              Finding vibes for {data.destination}...
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+              {vibeOptions.map((v) => (
+                <Chip key={v.value} label={v.label} emoji={v.emoji} selected={vibes.includes(v.value)} onClick={() => toggleVibe(v.value)} />
+              ))}
+            </div>
+          )}
         </div>
 
         <div>

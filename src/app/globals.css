@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "../styles/print.css";
 
+@keyframes spin { to { transform: rotate(360deg); } }
+
 :root {
   /* Tea Green */
   --color-tea-green-50: #f4f6ee;

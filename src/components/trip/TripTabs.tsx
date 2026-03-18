@@ -7,16 +7,17 @@ import GrocerySection from "./GrocerySection";
 import RestaurantSection from "./RestaurantSection";
 import TipsSection from "./TipsSection";
 import PackingSection from "./PackingSection";
+import { CalendarDays, Utensils, ShoppingCart, MapPin, Compass, Luggage } from "lucide-react";
 
 interface Props { trip: GeneratedTrip }
 
 const TABS = [
-  { id: "itinerary", label: "Itinerary", emoji: "📅" },
-  { id: "meals", label: "Meals", emoji: "🍴" },
-  { id: "grocery", label: "Grocery", emoji: "🛒" },
-  { id: "restaurants", label: "Restaurants", emoji: "🍜" },
-  { id: "tips", label: "Activities", emoji: "🎯" },
-  { id: "packing", label: "Packing", emoji: "🧳" },
+  { id: "itinerary", label: "Itinerary", Icon: CalendarDays },
+  { id: "meals", label: "Meals", Icon: Utensils },
+  { id: "grocery", label: "Grocery", Icon: ShoppingCart },
+  { id: "restaurants", label: "Restaurants", Icon: MapPin },
+  { id: "tips", label: "Activities", Icon: Compass },
+  { id: "packing", label: "Packing", Icon: Luggage },
 ] as const;
 
 type TabId = typeof TABS[number]["id"];
@@ -47,7 +48,6 @@ export default function TripTabs({ trip }: Props) {
       <style>{`
         .trip-tab-bar::-webkit-scrollbar { display: none; }
         .tab-label { display: inline; }
-        @media (max-width: 480px) { .tab-label { display: none; } }
         @media print {
           .trip-tab-bar { display: none !important; }
           [role="tabpanel"] { display: block !important; }
@@ -85,8 +85,8 @@ export default function TripTabs({ trip }: Props) {
               style={{
                 flex: 1,
                 display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                gap: "0.2rem",
-                padding: "0.75rem 0.25rem",
+                gap: "0.25rem",
+                padding: "0.75rem 0.875rem",
                 border: "none",
                 borderBottom: active === tab.id ? "2px solid var(--color-brand)" : "2px solid transparent",
                 background: "transparent",
@@ -94,14 +94,11 @@ export default function TripTabs({ trip }: Props) {
                 fontSize: "0.75rem",
                 fontWeight: active === tab.id ? 600 : 400,
                 cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.12s",
-                minWidth: 0,
+                minWidth: "4.5rem",
               }}
             >
-              <span aria-hidden="true" style={{ fontSize: "1.25rem", lineHeight: 1 }}>{tab.emoji}</span>
+              <tab.Icon size={18} aria-hidden="true" />
               <span className="tab-label">{tab.label}</span>
-              <span className="sr-only" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap" }}>
-                {/* visible on mobile where .tab-label is hidden */}
-              </span>
             </button>
           ))}
         </div>

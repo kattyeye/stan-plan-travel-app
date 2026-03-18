@@ -27,13 +27,13 @@ export default function MealPlanSection({ trip }: Props) {
             const recipe = meal.recipeId ? cookInRecipes.find((r) => r.id === meal.recipeId) : null;
             return (
               <div key={mealType} style={{ marginBottom: "0.75rem" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.375rem" }}>
-                  <span style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--color-text-faint)", minWidth: "5rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.375rem", flexWrap: "nowrap", minWidth: 0 }}>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--color-text-faint)", minWidth: "5rem", flexShrink: 0 }}>
                     {mealType}
                   </span>
-                  <span style={{ color: "var(--color-text)", fontWeight: 500 }}>{meal.name}</span>
+                  <span style={{ color: "var(--color-text)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{meal.name}</span>
                   {meal.type === "eat-out" && (
-                    <span style={{ fontSize: "0.75rem", padding: "0.125rem 0.5rem", borderRadius: "999px", background: "var(--color-light-bronze-100)", color: "var(--color-light-bronze-700)", fontWeight: 600 }}>
+                    <span style={{ fontSize: "0.75rem", padding: "0.125rem 0.5rem", borderRadius: "999px", background: "var(--color-light-bronze-100)", color: "var(--color-light-bronze-700)", fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>
                       eat out
                     </span>
                   )}

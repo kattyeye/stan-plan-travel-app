@@ -11,6 +11,7 @@ interface Suggestion {
 interface Props {
   value: string;
   onChange: (value: string) => void;
+  onSelect?: (value: string) => void;
   placeholder?: string;
 }
 
@@ -42,7 +43,7 @@ function loadGoogleMaps(apiKey: string): Promise<void> {
   });
 }
 
-export default function PlacesAutocomplete({ value, onChange, placeholder = "e.g. Outer Banks, NC" }: Props) {
+export default function PlacesAutocomplete({ value, onChange, onSelect, placeholder = "e.g. Outer Banks, NC" }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
   const serviceRef = useRef<google.maps.places.AutocompleteService | null>(null);
@@ -107,6 +108,7 @@ export default function PlacesAutocomplete({ value, onChange, placeholder = "e.g
 
   function handleSelect(suggestion: Suggestion) {
     onChange(suggestion.description);
+    onSelect?.(suggestion.description);
     setSuggestions([]);
     setOpen(false);
     // Refresh session token after a selection

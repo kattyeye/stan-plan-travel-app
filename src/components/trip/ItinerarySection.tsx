@@ -7,11 +7,11 @@ function MealRow({ meal, label, recipes }: { meal: Meal; label: string; recipes:
   const recipe = meal.recipeId ? recipes.find((r) => r.id === meal.recipeId) : null;
   return (
     <div style={{ marginBottom: "0.875rem" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.375rem" }}>
-        <span style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--color-text-faint)" }}>{label}</span>
-        <span style={{ color: "var(--color-text)", fontSize: "0.9375rem", fontWeight: 500 }}>{meal.name}</span>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.375rem", flexWrap: "nowrap", minWidth: 0 }}>
+        <span style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--color-text-faint)", flexShrink: 0 }}>{label}</span>
+        <span style={{ color: "var(--color-text)", fontSize: "0.9375rem", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{meal.name}</span>
         {meal.type === "eat-out" && (
-          <span style={{ fontSize: "0.75rem", padding: "0.125rem 0.5rem", borderRadius: "999px", background: "var(--color-light-bronze-100)", color: "var(--color-light-bronze-700)", fontWeight: 600 }}>eat out</span>
+          <span style={{ fontSize: "0.75rem", padding: "0.125rem 0.5rem", borderRadius: "999px", background: "var(--color-light-bronze-100)", color: "var(--color-light-bronze-700)", fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>eat out</span>
         )}
       </div>
       {recipe && <RecipeCard recipe={recipe} />}

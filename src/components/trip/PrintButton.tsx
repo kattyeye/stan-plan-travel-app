@@ -1,4 +1,5 @@
 "use client";
+import { Printer } from "lucide-react";
 
 export default function PrintButton() {
   return (
@@ -18,7 +19,8 @@ export default function PrintButton() {
         whiteSpace: "nowrap",
       }}
     >
-      🖨️ Print / Save PDF
+      <Printer size={15} aria-hidden="true" />
+      Print / Save PDF
     </button>
   );
 }

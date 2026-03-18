@@ -9,6 +9,8 @@ interface Props {
   onUpdate: (data: Partial<WizardData>) => void;
   onNext?: () => void;
   onBack?: () => void;
+  suggestedCuisines?: string[];
+  suggestionsLoading?: boolean;
 }
 
 const COOK_RATIO: { value: CookInRatio; label: string; desc: string; emoji: string }[] = [
@@ -28,9 +30,21 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function MealStep({ data, onUpdate, onNext, onBack }: Props) {
+const SPINNER = (
+  <span style={{
+    display: "inline-block", width: "14px", height: "14px",
+    border: "2px solid var(--color-border)",
+    borderTopColor: "var(--color-brand)",
+    borderRadius: "50%",
+    animation: "spin 0.7s linear infinite",
+    flexShrink: 0,
+  }} />
+);
+
+export default function MealStep({ data, onUpdate, onNext, onBack, suggestedCuisines, suggestionsLoading }: Props) {
   const dietary = data.dietaryRestrictions ?? [];
   const cuisines = data.cuisinePreferences ?? [];
+  const cuisineOptions = suggestedCuisines ?? CUISINES;
 
   function toggleDietary(item: string) {
     const next = dietary.includes(item) ? dietary.filter((x) => x !== item) : [...dietary, item];
@@ -93,11 +107,18 @@ export default function MealStep({ data, onUpdate, onNext, onBack }: Props) {
 
         <div>
           <SectionTitle>Cuisine preferences <span style={{ fontWeight: 400, color: "var(--color-text-faint)" }}>(optional)</span></SectionTitle>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-            {CUISINES.map((c) => (
-              <Chip key={c} label={c} selected={cuisines.includes(c)} onClick={() => toggleCuisine(c)} />
-            ))}
-          </div>
+          {suggestionsLoading && !suggestedCuisines ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-text-faint)", fontSize: "0.875rem", padding: "0.375rem 0" }}>
+              {SPINNER}
+              Finding local cuisine for {data.destination}...
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+              {cuisineOptions.map((c) => (
+                <Chip key={c} label={c} selected={cuisines.includes(c)} onClick={() => toggleCuisine(c)} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

@@ -9,6 +9,8 @@ interface Props {
   onUpdate: (data: Partial<WizardData>) => void;
   onNext?: () => void;
   onBack?: () => void;
+  suggestedAmenities?: string[];
+  suggestionsLoading?: boolean;
 }
 
 const SECTIONS: { value: TripSection; label: string; desc: string; emoji: string }[] = [
@@ -30,9 +32,21 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function ExtrasStep({ data, onUpdate, onNext, onBack }: Props) {
+const SPINNER = (
+  <span style={{
+    display: "inline-block", width: "14px", height: "14px",
+    border: "2px solid var(--color-border)",
+    borderTopColor: "var(--color-brand)",
+    borderRadius: "50%",
+    animation: "spin 0.7s linear infinite",
+    flexShrink: 0,
+  }} />
+);
+
+export default function ExtrasStep({ data, onUpdate, onNext, onBack, suggestedAmenities, suggestionsLoading }: Props) {
   const sections = data.sections ?? (["itinerary", "meals", "grocery", "restaurants", "activities", "packing"] as TripSection[]);
   const amenities = data.propertyAmenities ?? [];
+  const amenityOptions = suggestedAmenities ?? AMENITIES;
 
   function toggleSection(s: TripSection) {
     const next = sections.includes(s) ? sections.filter((x) => x !== s) : [...sections, s];
@@ -122,29 +136,36 @@ export default function ExtrasStep({ data, onUpdate, onNext, onBack }: Props) {
 
         <div>
           <SectionTitle>Property amenities <span style={{ fontWeight: 400, color: "var(--color-text-faint)" }}>(optional)</span></SectionTitle>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-            {AMENITIES.map((a) => {
-              const selected = amenities.includes(a);
-              return (
-                <button
-                  key={a}
-                  type="button"
-                  onClick={() => toggleAmenity(a)}
-                  style={{
-                    padding: "0.375rem 0.875rem",
-                    borderRadius: "var(--radius-chip)",
-                    border: selected ? "1.5px solid var(--color-brand)" : "1.5px solid var(--color-border)",
-                    background: selected ? "var(--color-bg-selected)" : "transparent",
-                    color: selected ? "var(--color-text)" : "var(--color-text-muted)",
-                    fontSize: "0.875rem", fontWeight: selected ? 600 : 400,
-                    cursor: "pointer", transition: "all 0.12s",
-                  }}
-                >
-                  {a}
-                </button>
-              );
-            })}
-          </div>
+          {suggestionsLoading && !suggestedAmenities ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-text-faint)", fontSize: "0.875rem", padding: "0.375rem 0" }}>
+              {SPINNER}
+              Checking amenities for {data.destination}...
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+              {amenityOptions.map((a) => {
+                const selected = amenities.includes(a);
+                return (
+                  <button
+                    key={a}
+                    type="button"
+                    onClick={() => toggleAmenity(a)}
+                    style={{
+                      padding: "0.375rem 0.875rem",
+                      borderRadius: "var(--radius-chip)",
+                      border: selected ? "1.5px solid var(--color-brand)" : "1.5px solid var(--color-border)",
+                      background: selected ? "var(--color-bg-selected)" : "transparent",
+                      color: selected ? "var(--color-text)" : "var(--color-text-muted)",
+                      fontSize: "0.875rem", fontWeight: selected ? 600 : 400,
+                      cursor: "pointer", transition: "all 0.12s",
+                    }}
+                  >
+                    {a}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 

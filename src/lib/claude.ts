@@ -80,7 +80,9 @@ PROPERTY:
 
 SECTIONS TO INCLUDE: ${sectionsLine}
 
-Generate a complete, specific, and genuinely useful trip plan for this group. Use web search to verify all restaurants are real and currently operating at this destination. Scale all recipes to serve ${totalPeople} people exactly.`;
+Generate a complete, specific, and genuinely useful trip plan for this group. Use web search to verify all restaurants are real and currently operating at this destination. Scale all recipes to serve ${totalPeople} people exactly.
+
+IMPORTANT — property description sanity check: The property description above was typed by the user and may contain amenities that are geographically impossible or irrelevant (e.g. "beach access" for an inland city, "ski-in/ski-out" for a beach town). Before writing the plan, silently discard any amenities that don't make sense for ${destination} and only reference the ones that are plausible. Do not mention or flag the discrepancy — just build the plan around the amenities that actually apply.`;
 }
 
 async function fetchPlaceWebsite(name: string, address: string): Promise<string | undefined> {

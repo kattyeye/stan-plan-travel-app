@@ -68,10 +68,11 @@ export default function TripTabs({ trip }: Props) {
           borderBottom: "1px solid var(--color-border)",
           overflowX: "auto",
           scrollbarWidth: "none",
+          boxShadow: "0 1px 4px rgba(21,24,12,0.06)",
         }}
         className="trip-tab-bar"
       >
-        <div style={{ display: "flex", maxWidth: "800px", margin: "0 auto", padding: "0 0.25rem" }}>
+        <div style={{ display: "flex", maxWidth: "800px", margin: "0 auto", padding: "0 0.5rem" }}>
           {TABS.map((tab, index) => (
             <button
               key={tab.id}
@@ -86,25 +87,26 @@ export default function TripTabs({ trip }: Props) {
                 flex: 1,
                 display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
                 gap: "0.25rem",
-                padding: "0.75rem 0.875rem",
+                padding: "0.875rem 0.75rem 0.75rem",
                 border: "none",
-                borderBottom: active === tab.id ? "2px solid var(--color-brand)" : "2px solid transparent",
+                borderBottom: active === tab.id ? "2.5px solid var(--color-brand)" : "2.5px solid transparent",
                 background: "transparent",
-                color: active === tab.id ? "var(--color-text)" : "var(--color-text-muted)",
-                fontSize: "0.75rem",
-                fontWeight: active === tab.id ? 600 : 400,
-                cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.12s",
+                color: active === tab.id ? "var(--color-heading)" : "var(--color-text-muted)",
+                fontSize: "0.6875rem",
+                fontWeight: active === tab.id ? 700 : 400,
+                cursor: "pointer", whiteSpace: "nowrap", transition: "color 0.12s, border-color 0.12s",
                 minWidth: "4.5rem",
+                letterSpacing: active === tab.id ? "0.02em" : 0,
               }}
             >
-              <tab.Icon size={18} aria-hidden="true" />
-              <span className="tab-label">{tab.label}</span>
+              <tab.Icon size={17} aria-hidden="true" />
+              <span className="tab-label" style={{ textTransform: "uppercase", letterSpacing: "0.07em", fontSize: "0.6rem", marginTop: "0.2rem" }}>{tab.label}</span>
             </button>
           ))}
         </div>
       </div>
 
-      <div style={{ maxWidth: "800px", margin: "0 auto", padding: "1.5rem 1rem" }}>
+      <div style={{ maxWidth: "800px", margin: "0 auto", padding: "2rem 1.25rem" }}>
         {TABS.map((tab) => (
           <div
             key={tab.id}

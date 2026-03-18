@@ -5,19 +5,22 @@ const DESTINATIONS = [
   {
     name: "Santorini",
     region: "Greece",
-    image: "https://images.unsplash.com/photo-1507501336603-6260faf6a579?w=600&q=80",
+    slug: "santorini",
+    image: "/santorini.jpg",
     description: "Perfect for couples and small groups seeking stunning sunsets and authentic Mediterranean cuisine.",
   },
   {
     name: "Tokyo",
     region: "Japan",
-    image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600&q=80",
+    slug: "tokyo",
+    image: "/tokyo.jpg",
     description: "Immersive cultural experiences with verified restaurant reservations and transit directions.",
   },
   {
     name: "Austin",
     region: "Texas, USA",
-    image: "https://images.unsplash.com/photo-1531218150217-54595bc2b934?w=600&q=80",
+    slug: "austin",
+    image: "/austin.jpg",
     description: "Live music, food trucks, and outdoor adventures tailored to your group's energy level.",
   },
 ];
@@ -284,12 +287,15 @@ export default function Home() {
             gap: "1.5rem",
           }} className="dest-grid">
             {DESTINATIONS.map((d) => (
-              <div key={d.name} style={{
+              <Link key={d.name} href={`/preview/${d.slug}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", display: "block" }}>
+              <div style={{
                 background: "var(--color-surface)",
                 borderRadius: "16px",
                 overflow: "hidden",
                 border: "1px solid var(--color-border)",
                 boxShadow: "var(--shadow-card)",
+                transition: "box-shadow 0.2s ease, transform 0.15s ease",
+                cursor: "pointer",
               }}>
                 <div style={{ position: "relative", height: "200px", overflow: "hidden" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -307,10 +313,17 @@ export default function Home() {
                     <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.8125rem", margin: 0 }}>{d.region}</p>
                   </div>
                 </div>
-                <div style={{ padding: "1rem 1.25rem 1.25rem" }}>
+                <div style={{ padding: "1rem 1.25rem 1.25rem", display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: "0.5rem" }}>
                   <p style={{ color: "var(--color-text-muted)", fontSize: "0.875rem", lineHeight: 1.6, margin: 0 }}>{d.description}</p>
+                  <span style={{
+                    flexShrink: 0,
+                    fontSize: "0.75rem", fontWeight: 600,
+                    color: "var(--color-brand)",
+                    whiteSpace: "nowrap",
+                  }}>See plan →</span>
                 </div>
               </div>
+              </Link>
             ))}
           </div>
         </div>

@@ -28,10 +28,10 @@ function DayCard({ day, recipes }: { day: ItineraryDay; recipes: GeneratedTrip["
       padding: "1.5rem",
       marginBottom: "1.25rem",
     }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: "0.75rem", marginBottom: "1.25rem" }}>
-        <span style={{ fontFamily: "var(--font-display)", fontSize: "1.25rem", color: "var(--color-text)" }}>Day {day.day}</span>
-        <span style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>{day.date}</span>
-        {day.theme && <span style={{ color: "var(--color-text-faint)", fontSize: "0.875rem", fontStyle: "italic" }}>— {day.theme}</span>}
+      <div style={{ display: "flex", alignItems: "baseline", gap: "0.75rem", marginBottom: "1.25rem", flexWrap: "wrap" }}>
+        <span style={{ fontFamily: "var(--font-display)", fontSize: "1.375rem", color: "var(--color-heading)", fontWeight: 400 }}>Day {day.day}</span>
+        <span style={{ color: "var(--color-text-muted)", fontSize: "0.875rem", fontWeight: 500 }}>{day.date}</span>
+        {day.theme && <span style={{ color: "var(--color-accent)", fontSize: "0.875rem", fontStyle: "italic" }}>— {day.theme}</span>}
       </div>
 
       {/* Activities */}
@@ -63,7 +63,7 @@ function DayCard({ day, recipes }: { day: ItineraryDay; recipes: GeneratedTrip["
 export default function ItinerarySection({ trip }: Props) {
   return (
     <div>
-      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", color: "var(--color-text)", marginBottom: "1.5rem" }}>
+      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", color: "var(--color-heading)", marginBottom: "1.5rem" }}>
         Daily Itinerary
       </h2>
       {trip.itinerary.map((day) => (

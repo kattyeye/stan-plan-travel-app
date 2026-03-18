@@ -8,7 +8,7 @@ export default function MealPlanSection({ trip }: Props) {
 
   return (
     <div>
-      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", color: "var(--color-text)", marginBottom: "0.5rem" }}>
+      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", color: "var(--color-heading)", marginBottom: "0.5rem" }}>
         Meal Plan
       </h2>
       <p style={{ color: "var(--color-text-muted)", fontSize: "0.9375rem", marginBottom: "1.5rem" }}>
@@ -18,7 +18,7 @@ export default function MealPlanSection({ trip }: Props) {
       {/* Overview by day */}
       {trip.itinerary.map((day) => (
         <div key={day.day} style={{ marginBottom: "1.75rem" }}>
-          <h3 style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "1rem", marginBottom: "0.75rem" }}>
+          <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 400, color: "var(--color-heading)", fontSize: "1.125rem", marginBottom: "0.75rem" }}>
             Day {day.day} — {day.date}
           </h3>
           {(["breakfast", "lunch", "dinner"] as const).map((mealType) => {

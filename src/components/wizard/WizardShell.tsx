@@ -105,7 +105,7 @@ export default function WizardShell() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--color-bg)" }}>
       <WizardProgress currentStep={currentStep} totalSteps={TOTAL_STEPS} />
-      <main style={{ maxWidth: "640px", margin: "0 auto", padding: "3rem 1rem" }}>
+      <main style={{ maxWidth: "640px", margin: "0 auto", padding: "2.5rem 1.25rem 4rem" }}>
         {steps[currentStep]}
       </main>
     </div>

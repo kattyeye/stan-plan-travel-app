@@ -28,13 +28,20 @@ export async function startTrip(
   const wizardData = applyDefaults(input);
   const slug = generateSlug();
 
-  await createTrip({
-    slug,
-    email: wizardData.email,
-    tripNickname: wizardData.tripNickname,
-    wizardData,
-    referralCode: options.referralCode,
-  });
+  try {
+    await createTrip({
+      slug,
+      email: wizardData.email,
+      tripNickname: wizardData.tripNickname,
+      wizardData,
+      referralCode: options.referralCode,
+    });
+  } catch (error) {
+    // Almost always missing PLAN_UPSTASH_KV_REST_API_* in the environment.
+    // Distinguish it from a payment failure so the cause is obvious.
+    console.error("startTrip: could not write the trip record:", error);
+    throw new TripDependencyError("storage", error);
+  }
 
   // No Stripe key configured (local dev) — skip payment and go straight to
   // generation rather than failing.
@@ -43,14 +50,37 @@ export async function startTrip(
     return { slug, url: `${appUrl}/trip/${slug}/generating` };
   }
 
-  const url = await createCheckoutSession({
-    slug,
-    email: wizardData.email,
-    tripNickname: wizardData.tripNickname,
-    referralCode: options.referralCode,
-  });
+  let url: string;
+  try {
+    url = await createCheckoutSession({
+      slug,
+      email: wizardData.email,
+      tripNickname: wizardData.tripNickname,
+      referralCode: options.referralCode,
+    });
+  } catch (error) {
+    console.error("startTrip: Stripe checkout session failed:", error);
+    throw new TripDependencyError("payment", error);
+  }
 
   return { slug, url };
+}
+
+/**
+ * A dependency (Redis or Stripe) failed.
+ *
+ * Kept distinct from TripValidationError so the route can say which one broke
+ * instead of collapsing everything into "Checkout failed", which told nobody
+ * anything.
+ */
+export class TripDependencyError extends Error {
+  constructor(
+    public readonly dependency: "storage" | "payment",
+    public readonly cause: unknown,
+  ) {
+    super(`Trip creation failed at the ${dependency} step`);
+    this.name = "TripDependencyError";
+  }
 }
 
 export class TripValidationError extends Error {

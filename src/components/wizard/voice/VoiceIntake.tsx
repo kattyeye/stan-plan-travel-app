@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Mic, Square, Sparkles, ArrowRight, Pencil } from "lucide-react";
 import { useSpeechInput } from "@/hooks/useSpeechInput";
 import { MAX_INTENT_TEXT, type ParseIntentResult } from "@/core/intent";
-import { FIELD_LABELS, applyDefaults, calcNights, missingRequiredFields, type RequiredField } from "@/core/wizard-machine";
+import { FIELD_LABELS, REQUIRED_FIELDS, applyDefaults, calcNights, missingRequiredFields, type RequiredField } from "@/core/wizard-machine";
 import type { WizardData } from "@/types/trip";
 import StepCard from "../ui/StepCard";
 import FieldLabel from "../ui/FieldLabel";
@@ -22,6 +22,15 @@ export default function VoiceIntake() {
   const [result, setResult] = useState<ParseIntentResult | null>(null);
   const [data, setData] = useState<Partial<WizardData>>({});
   const [submitting, setSubmitting] = useState(false);
+  /**
+   * Which fields to ask for, captured once when the confirm stage opens.
+   *
+   * This must NOT be recomputed as the user types. Rendering the live
+   * "missing" list unmounts each input the instant its value becomes valid —
+   * the email box disappeared at "kat@gmail.c", and adults could never reach
+   * two digits because "1" is already valid.
+   */
+  const [askFields, setAskFields] = useState<RequiredField[]>([]);
 
   const text = speech.transcript;
   const missing = missingRequiredFields(data);
@@ -41,8 +50,10 @@ export default function VoiceIntake() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Could not understand that.");
+      const parsed = withDerivedDates((json as ParseIntentResult).data);
       setResult(json as ParseIntentResult);
-      setData(withDerivedDates((json as ParseIntentResult).data));
+      setData(parsed);
+      setAskFields(missingRequiredFields(parsed));
       setStage("confirm");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -75,6 +86,7 @@ export default function VoiceIntake() {
       <ConfirmStage
         result={result}
         data={data}
+        askFields={askFields}
         missing={missing}
         error={error}
         submitting={submitting}
@@ -177,10 +189,13 @@ export default function VoiceIntake() {
 }
 
 function ConfirmStage({
-  result, data, missing, error, submitting, onChange, onBack, onSubmit,
+  result, data, askFields, missing, error, submitting, onChange, onBack, onSubmit,
 }: {
   result: ParseIntentResult;
   data: Partial<WizardData>;
+  /** Fixed for the life of the stage — see the note on `askFields` above. */
+  askFields: RequiredField[];
+  /** Live; used only to enable the submit button. */
   missing: RequiredField[];
   error: string | null;
   submitting: boolean;
@@ -189,6 +204,12 @@ function ConfirmStage({
   onSubmit: () => void;
 }) {
   const understood = summarize(data);
+
+  // Render the frozen ask-list, plus any field that has since become invalid
+  // (e.g. the user cleared one). Order stays stable so nothing jumps around.
+  const fieldsToShow = REQUIRED_FIELDS.filter(
+    (field) => askFields.includes(field) || missing.includes(field),
+  );
 
   return (
     <StepCard>
@@ -227,14 +248,20 @@ function ConfirmStage({
         </p>
       )}
 
-      {missing.length > 0 && (
+      {fieldsToShow.length > 0 && (
         <>
           <p style={{ fontWeight: 600, fontSize: "0.9375rem", color: "var(--color-text)", marginBottom: "0.875rem" }}>
-            Just {missing.length} more thing{missing.length === 1 ? "" : "s"}:
+            Just {fieldsToShow.length} more thing{fieldsToShow.length === 1 ? "" : "s"}:
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.5rem" }}>
-            {missing.map((field) => (
-              <GapField key={field} field={field} data={data} onChange={onChange} />
+            {fieldsToShow.map((field) => (
+              <GapField
+                key={field}
+                field={field}
+                data={data}
+                onChange={onChange}
+                done={!missing.includes(field)}
+              />
             ))}
           </div>
         </>
@@ -260,13 +287,22 @@ function ConfirmStage({
 }
 
 function GapField({
-  field, data, onChange,
+  field, data, onChange, done,
 }: {
   field: RequiredField;
   data: Partial<WizardData>;
   onChange: (patch: Partial<WizardData>) => void;
+  /** Filled and valid. The field stays put — it just stops looking outstanding. */
+  done?: boolean;
 }) {
-  const label = FIELD_LABELS[field];
+  const label = (
+    <>
+      {FIELD_LABELS[field]}
+      {done && (
+        <span aria-hidden="true" style={{ color: "var(--color-brand)", marginLeft: "0.4rem" }}>✓</span>
+      )}
+    </>
+  );
 
   if (field === "numAdults") {
     return (
@@ -284,18 +320,21 @@ function GapField({
   }
 
   if (field === "startDate" || field === "endDate") {
+    const today = new Date().toISOString().slice(0, 10);
     return (
       <div>
         <FieldLabel htmlFor={field}>{label}</FieldLabel>
         <TextInput
           id={field}
           type="date"
+          // A trip can't start in the past, and can't end before it starts.
+          min={field === "startDate" ? today : data.startDate || today}
           value={data[field] ?? ""}
           onChange={(e) => onChange({ [field]: e.target.value } as Partial<WizardData>)}
         />
-        {field === "startDate" && data.nights ? (
+        {field === "endDate" && data.endDate && data.nights ? (
           <p style={{ fontSize: "0.8125rem", color: "var(--color-text-faint)", marginTop: "0.375rem" }}>
-            You said {data.nights} night{data.nights === 1 ? "" : "s"} — we&apos;ll work out the end date if you leave it.
+            Filled in from the {data.nights} night{data.nights === 1 ? "" : "s"} you mentioned — change it if that&apos;s not right.
           </p>
         ) : null}
       </div>

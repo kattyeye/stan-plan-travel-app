@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { REFERRAL_COOKIE, normalizeReferralCode } from "@/core/referral";
-import { TripValidationError, startTrip } from "@/lib/trips";
+import { TripDependencyError, TripValidationError, startTrip } from "@/lib/trips";
 import { WizardData } from "@/types/trip";
 
 /**
@@ -17,6 +17,18 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     if (error instanceof TripValidationError) {
       return NextResponse.json({ error: "Missing required fields", missing: error.missing }, { status: 400 });
+    }
+    if (error instanceof TripDependencyError) {
+      return NextResponse.json(
+        {
+          error:
+            error.dependency === "storage"
+              ? "Storage unavailable — check PLAN_UPSTASH_KV_REST_API_URL and _TOKEN."
+              : "Payment provider error — check STRIPE_SECRET_KEY.",
+          dependency: error.dependency,
+        },
+        { status: 503 },
+      );
     }
     console.error("Checkout error:", error);
     return NextResponse.json({ error: "Checkout failed" }, { status: 500 });

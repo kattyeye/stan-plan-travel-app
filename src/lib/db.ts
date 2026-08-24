@@ -72,6 +72,7 @@ export async function createTrip(data: {
   tripNickname: string;
   wizardData: WizardData;
   stripeSessionId?: string;
+  referralCode?: string;
 }): Promise<TripRecord> {
   const redis = getRedis();
   const now = new Date().toISOString();
@@ -84,6 +85,7 @@ export async function createTrip(data: {
     status: "pending",
     wizardData: data.wizardData,
     stripeSessionId: data.stripeSessionId,
+    referralCode: data.referralCode,
     createdAt: now,
     updatedAt: now,
   };

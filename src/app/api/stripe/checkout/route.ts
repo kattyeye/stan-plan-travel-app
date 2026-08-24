@@ -3,6 +3,7 @@ import { createCheckoutSession } from "@/lib/stripe";
 import { createTrip } from "@/lib/db";
 import { generateSlug } from "@/lib/slug";
 import { WizardData } from "@/types/trip";
+import { REFERRAL_COOKIE, normalizeReferralCode } from "@/core/referral";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,12 +13,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    // Attribute the sale to whichever creator sent this visitor, if any.
+    const referralCode = normalizeReferralCode(req.cookies.get(REFERRAL_COOKIE)?.value);
+
     const slug = generateSlug();
     await createTrip({
       slug,
       email: wizardData.email,
       tripNickname: wizardData.tripNickname || wizardData.destination,
       wizardData,
+      referralCode: referralCode ?? undefined,
     });
 
     // Skip Stripe if no key is configured — go straight to generation
@@ -30,6 +35,7 @@ export async function POST(req: NextRequest) {
       slug,
       email: wizardData.email,
       tripNickname: wizardData.tripNickname || wizardData.destination,
+      referralCode: referralCode ?? undefined,
     });
 
     return NextResponse.json({ url: checkoutUrl, slug });

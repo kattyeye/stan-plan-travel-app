@@ -13,6 +13,7 @@ export async function createCheckoutSession(data: {
   slug: string;
   email: string;
   tripNickname: string;
+  referralCode?: string;
 }): Promise<string> {
   const stripe = getStripe();
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -36,6 +37,8 @@ export async function createCheckoutSession(data: {
     metadata: {
       slug: data.slug,
       email: data.email,
+      // Reconcile creator payouts against actual payments, not trip records.
+      ...(data.referralCode ? { referralCode: data.referralCode } : {}),
     },
     success_url: `${appUrl}/trip/${data.slug}/generating?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appUrl}/wizard?cancelled=true`,

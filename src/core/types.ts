@@ -43,6 +43,8 @@ export interface WizardData {
   cuisinePreferences: string[];
   propertyDescription: string;
   propertyAmenities: string[];
+  /** Minimum bedrooms, used to prefill lodging searches. */
+  bedrooms?: number;
   sections: TripSection[];
   email: string;
   tripNickname: string;

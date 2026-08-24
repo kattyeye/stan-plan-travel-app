@@ -1,15 +1,20 @@
 "use client";
 import { useState } from "react";
-import { GeneratedTrip } from "@/types/trip";
+import { NormalizedTrip } from "@/types/trip";
 import ItinerarySection from "./ItinerarySection";
 import MealPlanSection from "./MealPlanSection";
 import GrocerySection from "./GrocerySection";
 import RestaurantSection from "./RestaurantSection";
 import TipsSection from "./TipsSection";
 import PackingSection from "./PackingSection";
+import TripActions from "./TripActions";
 import { CalendarDays, Utensils, ShoppingCart, MapPin, Compass, Luggage } from "lucide-react";
 
-interface Props { trip: GeneratedTrip }
+interface Props {
+  trip: NormalizedTrip;
+  /** Present for a real trip; omitted in the sample preview. */
+  slug?: string;
+}
 
 const TABS = [
   { id: "itinerary", label: "Itinerary", Icon: CalendarDays },
@@ -22,7 +27,7 @@ const TABS = [
 
 type TabId = typeof TABS[number]["id"];
 
-export default function TripTabs({ trip }: Props) {
+export default function TripTabs({ trip, slug }: Props) {
   const [active, setActive] = useState<TabId>("itinerary");
 
   function handleKeyDown(e: React.KeyboardEvent, index: number) {
@@ -47,6 +52,20 @@ export default function TripTabs({ trip }: Props) {
     <div style={{ background: "var(--color-bg)", minHeight: "60vh" }}>
       <style>{`
         .trip-tab-bar::-webkit-scrollbar { display: none; }
+        .trip-tab-bar { scroll-snap-type: x proximity; }
+        .trip-tab-bar [role="tab"] { scroll-snap-align: center; }
+        /* Fade the trailing edge so it reads as scrollable on narrow screens. */
+        .trip-tab-scroll::after {
+          content: "";
+          position: absolute;
+          top: 0; right: 0; bottom: 0;
+          width: 2rem;
+          pointer-events: none;
+          background: linear-gradient(to right, transparent, var(--color-bg-card));
+        }
+        @media (min-width: 640px) {
+          .trip-tab-scroll::after { display: none; }
+        }
         .tab-label { display: inline; }
         @media print {
           .trip-tab-bar { display: none !important; }
@@ -59,11 +78,11 @@ export default function TripTabs({ trip }: Props) {
         }
       `}</style>
 
+      <div className="trip-tab-scroll" style={{ position: "sticky", top: 0, zIndex: 10 }}>
       <div
         role="tablist"
         aria-label="Trip sections"
         style={{
-          position: "sticky", top: 0, zIndex: 10,
           background: "var(--color-bg-card)",
           borderBottom: "1px solid var(--color-border)",
           overflowX: "auto",
@@ -105,8 +124,10 @@ export default function TripTabs({ trip }: Props) {
           ))}
         </div>
       </div>
+      </div>
 
       <div style={{ maxWidth: "800px", margin: "0 auto", padding: "2rem 1.25rem" }}>
+        {slug && <TripActions trip={trip} slug={slug} />}
         {TABS.map((tab) => (
           <div
             key={tab.id}
@@ -120,7 +141,7 @@ export default function TripTabs({ trip }: Props) {
             {tab.id === "grocery" && <GrocerySection trip={trip} />}
             {tab.id === "restaurants" && <RestaurantSection trip={trip} />}
             {tab.id === "tips" && <TipsSection trip={trip} />}
-            {tab.id === "packing" && <PackingSection trip={trip} />}
+            {tab.id === "packing" && <PackingSection trip={trip} slug={slug} />}
           </div>
         ))}
       </div>

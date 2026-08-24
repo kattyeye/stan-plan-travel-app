@@ -9,7 +9,8 @@
     "lint": "eslint",
     "tokens": "tsx scripts/generate-tokens-css.ts",
     "predev": "npm run tokens",
-    "prebuild": "npm run tokens"
+    "prebuild": "npm run tokens",
+    "test": "tsx --test src/core/__tests__/*.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.79.0",

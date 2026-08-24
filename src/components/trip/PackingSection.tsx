@@ -1,12 +1,16 @@
 "use client";
-import { useState } from "react";
-import { GeneratedTrip, PackingItem } from "@/types/trip";
+import { useEffect, useRef, useState } from "react";
+import { NormalizedTrip, PackingItem } from "@/types/trip";
 
-interface Props { trip: GeneratedTrip }
+interface Props {
+  trip: NormalizedTrip;
+  /** Scopes saved progress to this trip. Omitted in the sample preview. */
+  slug?: string;
+}
 
 type CheckedState = Record<string, boolean>;
 
-const SECTION_LABELS: Record<keyof GeneratedTrip["packingList"], string> = {
+const SECTION_LABELS: Record<keyof NormalizedTrip["packingList"], string> = {
   clothingAdults: "👕 Clothing — Adults",
   clothingKids: "👗 Clothing — Kids",
   beachOutdoor: "🏖️ Beach & Outdoor",
@@ -18,7 +22,7 @@ const SECTION_LABELS: Record<keyof GeneratedTrip["packingList"], string> = {
   propertyProvides: "🏠 Property Provides",
 };
 
-function buildInitialState(packing: GeneratedTrip["packingList"]): CheckedState {
+function buildInitialState(packing: NormalizedTrip["packingList"]): CheckedState {
   const state: CheckedState = {};
   for (const [section, items] of Object.entries(packing) as [keyof typeof packing, PackingItem[]][]) {
     for (const item of items) {
@@ -29,9 +33,64 @@ function buildInitialState(packing: GeneratedTrip["packingList"]): CheckedState 
   return state;
 }
 
-export default function PackingSection({ trip }: Props) {
+/**
+ * Packing progress is per-device on purpose: a trip link is shared with the
+ * whole group, and one person ticking "sunscreen" should not clear it for
+ * everyone else.
+ */
+function storageKey(slug: string) {
+  return `irie_packing_${slug}`;
+}
+
+export default function PackingSection({ trip, slug }: Props) {
   const { packingList } = trip;
   const [checked, setChecked] = useState<CheckedState>(() => buildInitialState(packingList));
+
+  // Tracks whether the restore pass has run. A ref rather than state: flipping
+  // it must not trigger a render, and effects run in declaration order so the
+  // save effect below always sees the settled value.
+  const restored = useRef(false);
+
+  // Restore saved progress after mount. Reading storage during render would
+  // desync the server and client HTML.
+  useEffect(() => {
+    if (restored.current || !slug) {
+      restored.current = true;
+      return;
+    }
+    restored.current = true;
+    let saved: CheckedState | null = null;
+    try {
+      const raw = localStorage.getItem(storageKey(slug));
+      saved = raw ? (JSON.parse(raw) as CheckedState) : null;
+    } catch {
+      // Private mode or disabled storage — fall back to in-memory only.
+    }
+    if (!saved) return;
+    // Merge onto a fresh baseline so a regenerated list picks up new items
+    // instead of resurrecting ones that no longer exist.
+    //
+    // The storage read must happen after mount: doing it during render would
+    // make the client HTML disagree with the server's and break hydration.
+    // This runs once per trip, so the extra render is not a cascade.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setChecked((base) => {
+      const merged = { ...base };
+      for (const key of Object.keys(merged)) {
+        if (typeof saved![key] === "boolean") merged[key] = saved![key];
+      }
+      return merged;
+    });
+  }, [slug]);
+
+  useEffect(() => {
+    if (!slug || !restored.current) return;
+    try {
+      localStorage.setItem(storageKey(slug), JSON.stringify(checked));
+    } catch {
+      // Ignore quota/permission failures; the list still works this session.
+    }
+  }, [checked, slug]);
 
   function toggle(key: string) {
     setChecked((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -39,6 +98,13 @@ export default function PackingSection({ trip }: Props) {
 
   function reset() {
     setChecked(buildInitialState(packingList));
+    if (slug) {
+      try {
+        localStorage.removeItem(storageKey(slug));
+      } catch {
+        // Nothing to clean up if storage is unavailable.
+      }
+    }
   }
 
   const total = Object.keys(checked).length;

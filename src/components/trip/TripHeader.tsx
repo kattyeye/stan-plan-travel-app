@@ -1,9 +1,9 @@
-import { GeneratedTrip } from "@/types/trip";
+import { NormalizedTrip } from "@/types/trip";
 import PrintButton from "./PrintButton";
 import { CalendarDays, Moon, Users, Baby, Home, Sparkles } from "lucide-react";
 
 interface Props {
-  trip: GeneratedTrip;
+  trip: NormalizedTrip;
   cityPhoto?: string | null;
   preview?: boolean;
 }

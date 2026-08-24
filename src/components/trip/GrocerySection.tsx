@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
-import { GeneratedTrip, RecipeIngredient } from "@/types/trip";
+import { NormalizedTrip, RecipeIngredient } from "@/types/trip";
 
-interface Props { trip: GeneratedTrip }
+interface Props { trip: NormalizedTrip }
 
 const CATEGORY_EMOJI: Record<string, string> = {
   produce: "🥦", meat: "🥩", seafood: "🐟", dairy: "🧀",

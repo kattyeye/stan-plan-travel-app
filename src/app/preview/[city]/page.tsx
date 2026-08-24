@@ -4,6 +4,7 @@ import TripHeader from "@/components/trip/TripHeader";
 import ItinerarySection from "@/components/trip/ItinerarySection";
 import PaywallGate from "@/components/trip/PaywallGate";
 import { getCityPhoto } from "@/lib/unsplash";
+import { normalizeTrip } from "@/core/normalize";
 import { CalendarDays, Utensils, ShoppingCart, MapPin, Compass, Luggage } from "lucide-react";
 
 interface Props {
@@ -37,15 +38,17 @@ export default async function PreviewPage({ params }: Props) {
   const cityLabel = CITY_LABELS[city] ?? city;
   const cityPhoto = await getCityPhoto(trip.meta.destination);
 
+  const normalized = normalizeTrip(trip);
+
   // Only show Day 1 — the rest is behind the paywall
   const previewTrip = {
-    ...trip,
-    itinerary: trip.itinerary.slice(0, 1),
+    ...normalized,
+    itinerary: normalized.itinerary.slice(0, 1),
   };
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--color-bg)" }}>
-      <TripHeader trip={trip} cityPhoto={cityPhoto} preview />
+      <TripHeader trip={normalized} cityPhoto={cityPhoto} preview />
 
       {/* Tab bar — all locked except Itinerary */}
       <div style={{

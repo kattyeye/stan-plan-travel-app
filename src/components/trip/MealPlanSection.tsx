@@ -1,7 +1,7 @@
-import { GeneratedTrip } from "@/types/trip";
+import { NormalizedTrip } from "@/types/trip";
 import RecipeCard from "./RecipeCard";
 
-interface Props { trip: GeneratedTrip }
+interface Props { trip: NormalizedTrip }
 
 export default function MealPlanSection({ trip }: Props) {
   const cookInRecipes = trip.recipes;

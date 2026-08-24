@@ -1,15 +1,16 @@
-import { GeneratedTrip, ItineraryDay, Meal } from "@/types/trip";
+import { NormalizedTrip, NormalizedItineraryDay, NormalizedMeal } from "@/types/trip";
+import { formatClock } from "@/core/normalize";
 import RecipeCard from "./RecipeCard";
 
-interface Props { trip: GeneratedTrip }
+interface Props { trip: NormalizedTrip }
 
-function MealRow({ meal, label, recipes }: { meal: Meal; label: string; recipes: GeneratedTrip["recipes"] }) {
+function MealRow({ meal, label, recipes }: { meal: NormalizedMeal; label: string; recipes: NormalizedTrip["recipes"] }) {
   const recipe = meal.recipeId ? recipes.find((r) => r.id === meal.recipeId) : null;
   return (
     <div style={{ marginBottom: "0.875rem" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.375rem", flexWrap: "nowrap", minWidth: 0 }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: "0.5rem", marginBottom: "0.375rem", flexWrap: "wrap", minWidth: 0 }}>
         <span style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--color-text-faint)", flexShrink: 0 }}>{label}</span>
-        <span style={{ color: "var(--color-text)", fontSize: "0.9375rem", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{meal.name}</span>
+        <span style={{ color: "var(--color-text)", fontSize: "0.9375rem", fontWeight: 500, minWidth: 0 }}>{meal.name}</span>
         {meal.type === "eat-out" && (
           <span style={{ fontSize: "0.75rem", padding: "0.125rem 0.5rem", borderRadius: "999px", background: "var(--color-light-bronze-100)", color: "var(--color-light-bronze-700)", fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>eat out</span>
         )}
@@ -19,7 +20,7 @@ function MealRow({ meal, label, recipes }: { meal: Meal; label: string; recipes:
   );
 }
 
-function DayCard({ day, recipes }: { day: ItineraryDay; recipes: GeneratedTrip["recipes"] }) {
+function DayCard({ day, recipes }: { day: NormalizedItineraryDay; recipes: NormalizedTrip["recipes"] }) {
   return (
     <div style={{
       background: "var(--color-bg-card)",
@@ -40,9 +41,44 @@ function DayCard({ day, recipes }: { day: ItineraryDay; recipes: GeneratedTrip["
           <p style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--color-text-faint)", marginBottom: "0.5rem" }}>Activities</p>
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.375rem" }}>
             {day.activities.map((a, i) => (
-              <li key={i} style={{ fontSize: "0.9375rem", color: "var(--color-text)", paddingLeft: "1rem", position: "relative" }}>
-                <span style={{ position: "absolute", left: 0, color: "var(--color-text-faint)" }}>·</span>
-                {a}
+              <li key={i} style={{ display: "flex", gap: "0.625rem", alignItems: "baseline", fontSize: "0.9375rem", color: "var(--color-text)" }}>
+                {a.startTime ? (
+                  <span style={{
+                    flexShrink: 0,
+                    minWidth: "4.5rem",
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    letterSpacing: "0.03em",
+                    color: "var(--color-accent)",
+                    fontVariantNumeric: "tabular-nums",
+                  }}>
+                    {formatClock(a.startTime)}
+                  </span>
+                ) : (
+                  <span aria-hidden="true" style={{ flexShrink: 0, minWidth: "4.5rem", color: "var(--color-text-faint)", fontSize: "0.75rem" }}>
+                    ·
+                  </span>
+                )}
+                <span style={{ minWidth: 0 }}>
+                  {a.title}
+                  {a.location && (
+                    <span style={{ color: "var(--color-text-muted)", fontSize: "0.8125rem" }}> · {a.location}</span>
+                  )}
+                  {a.bookingRequired && (
+                    <span style={{
+                      marginLeft: "0.5rem",
+                      fontSize: "0.6875rem",
+                      fontWeight: 600,
+                      padding: "0.05rem 0.4rem",
+                      borderRadius: "var(--radius-chip)",
+                      background: "var(--color-bg-selected)",
+                      color: "var(--color-text-muted)",
+                      whiteSpace: "nowrap",
+                    }}>
+                      booking needed
+                    </span>
+                  )}
+                </span>
               </li>
             ))}
           </ul>

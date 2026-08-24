@@ -1,6 +1,6 @@
-import { GeneratedTrip } from "@/types/trip";
+import { NormalizedTrip } from "@/types/trip";
 
-interface Props { trip: GeneratedTrip }
+interface Props { trip: NormalizedTrip }
 
 export default function TipsSection({ trip }: Props) {
   const { tips } = trip;

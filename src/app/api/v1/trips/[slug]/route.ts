@@ -13,7 +13,17 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
-  const trip = await getTripBySlug(slug);
+
+  let trip;
+  try {
+    trip = await getTripBySlug(slug);
+  } catch (error) {
+    // Almost always a missing/incorrect Redis configuration. Say so rather
+    // than returning a bare 500 to a client that can't debug it.
+    console.error("v1 get trip: storage unavailable:", error);
+    return NextResponse.json({ error: "Storage unavailable" }, { status: 503 });
+  }
+
   if (!trip) return NextResponse.json({ error: "Trip not found" }, { status: 404 });
 
   return NextResponse.json({

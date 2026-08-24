@@ -15,7 +15,14 @@ export async function POST(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
-  const outcome = await runGeneration(slug);
+
+  let outcome;
+  try {
+    outcome = await runGeneration(slug);
+  } catch (error) {
+    console.error("v1 generate: storage unavailable:", error);
+    return NextResponse.json({ error: "Storage unavailable" }, { status: 503 });
+  }
 
   switch (outcome.status) {
     case "done":

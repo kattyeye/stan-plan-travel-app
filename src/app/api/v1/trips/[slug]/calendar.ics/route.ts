@@ -18,7 +18,14 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
-  const trip = await getTripBySlug(slug);
+
+  let trip;
+  try {
+    trip = await getTripBySlug(slug);
+  } catch (error) {
+    console.error("calendar: storage unavailable:", error);
+    return NextResponse.json({ error: "Storage unavailable" }, { status: 503 });
+  }
 
   if (!trip || trip.status !== "ready" || !trip.generatedData) {
     return NextResponse.json({ error: "Trip not found or not ready" }, { status: 404 });

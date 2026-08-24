@@ -202,6 +202,7 @@ typed client exposes `.status` and `.body`.
 | `404` | Trip not found, or no file for it |
 | `422` | Trip has no schedulable dates (calendar only) |
 | `500` | Generation or upstream failure |
+| `503` | Storage (Redis) unavailable — check configuration |
 
 ---
 

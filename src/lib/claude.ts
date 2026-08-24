@@ -2,10 +2,10 @@ import Anthropic from "@anthropic-ai/sdk";
 import { readFile } from "fs/promises";
 import path from "path";
 import { WizardData, GeneratedTrip } from "@/types/trip";
+import { GENERATION_MODEL } from "@/lib/models";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const MODEL = "claude-haiku-4-5-20251001"; // dev: swap to claude-sonnet-4-20250514 for production
 
 async function loadPrompt(filename: string): Promise<string> {
   const filePath = path.join(process.cwd(), "src", "prompts", filename);
@@ -121,7 +121,7 @@ export async function generateTripJSON(wizardData: WizardData): Promise<Generate
   const userPrompt = buildUserPrompt(wizardData);
 
   const response = await client.messages.stream({
-    model: MODEL,
+    model: GENERATION_MODEL,
     max_tokens: 32000,
     system: `${systemPrompt}\n\n${schemaPrompt}`,
     messages: [{ role: "user", content: userPrompt }],
@@ -153,7 +153,7 @@ export async function generateTripHTML(trip: GeneratedTrip): Promise<string> {
   ]);
 
   const response = await client.messages.stream({
-    model: MODEL,
+    model: GENERATION_MODEL,
     max_tokens: 16000,
     system: `${systemPrompt}\n\n${htmlTemplate}\n\nReturn valid HTML only. No markdown, no preamble, no explanation. Start with <!DOCTYPE html>.`,
     messages: [

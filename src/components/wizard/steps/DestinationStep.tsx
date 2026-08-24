@@ -45,6 +45,28 @@ export default function DestinationStep({ data, onUpdate, onNext, onDestinationS
 
   return (
     <StepCard>
+      {/* Escape hatch to the fast path — most useful before any typing has
+          happened, so it only shows on an untouched step 1. */}
+      {!data.destination && (
+        <a
+          href="/wizard/voice"
+          style={{
+            display: "flex", alignItems: "center", gap: "0.6rem",
+            padding: "0.75rem 0.875rem", marginBottom: "1.5rem",
+            borderRadius: "var(--radius-input)",
+            border: "1px solid var(--color-border)",
+            background: "var(--color-bg-selected)",
+            textDecoration: "none", color: "var(--color-text)",
+          }}
+        >
+          <span aria-hidden="true" style={{ fontSize: "1.1rem" }}>🎙️</span>
+          <span style={{ fontSize: "0.875rem", lineHeight: 1.4 }}>
+            <strong>In a hurry?</strong> Say or type your whole trip in one go
+            and we&apos;ll fill this in.
+          </span>
+        </a>
+      )}
+
       <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.08em", color: "var(--color-text-faint)", textTransform: "uppercase", marginBottom: "0.5rem" }}>
         Step 1 of 6
       </p>

@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { Redis } from "@upstash/redis";
 import { NextResponse } from "next/server";
+import { FAST_MODEL } from "@/lib/models";
 
 export const runtime = "nodejs";
 
@@ -94,7 +95,7 @@ Rules:
 - Return valid JSON only. No explanation.`;
 
     const response = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
+      model: FAST_MODEL,
       max_tokens: 300,
       system: "You are a concise travel context engine. Return JSON only. No prose, no markdown fences.",
       messages: [{ role: "user", content: userPrompt }],

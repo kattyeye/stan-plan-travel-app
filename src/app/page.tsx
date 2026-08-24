@@ -211,6 +211,22 @@ export default function Home() {
             </Link>
           </div>
 
+          {/* Voice fast path — the differentiator, so it sits directly under
+              the primary CTA rather than buried in the wizard. */}
+          <Link href="/wizard/voice" style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            marginBottom: "1.5rem",
+            color: "var(--color-brand)",
+            fontWeight: 600,
+            fontSize: "0.9375rem",
+            textDecoration: "none",
+          }}>
+            <span aria-hidden="true">🎙️</span>
+            Or just tell us your trip in one sentence
+          </Link>
+
           {/* Social proof */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <div style={{ display: "flex" }}>

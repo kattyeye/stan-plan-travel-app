@@ -1,6 +1,7 @@
 "use client";
 import { WizardData } from "@/types/trip";
 import StepCard from "../ui/StepCard";
+import StepHeading from "../ui/StepHeading";
 import StepNav from "../ui/StepNav";
 import FieldLabel from "../ui/FieldLabel";
 import Chip from "../ui/Chip";
@@ -67,15 +68,12 @@ export default function DestinationStep({ data, onUpdate, onNext, onDestinationS
         </a>
       )}
 
-      <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.08em", color: "var(--color-text-faint)", textTransform: "uppercase", marginBottom: "0.5rem" }}>
-        Step 1 of 6
-      </p>
-      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", color: "var(--color-text)", marginBottom: "0.375rem", lineHeight: 1.2 }}>
-        Where are you headed?
-      </h2>
-      <p style={{ color: "var(--color-text-muted)", fontSize: "0.9375rem", marginBottom: "1.75rem" }}>
-        Tell us your destination and travel dates so we can plan around your trip.
-      </p>
+      <StepHeading
+        step={1}
+        totalSteps={6}
+        title="Where are you headed?"
+        description="Tell us your destination and travel dates so we can plan around your trip."
+      />
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
         <div>

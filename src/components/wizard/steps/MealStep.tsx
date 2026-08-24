@@ -1,6 +1,9 @@
 "use client";
 import { CookInRatio, WizardData } from "@/types/trip";
 import StepCard from "../ui/StepCard";
+import SectionLabel from "../ui/SectionLabel";
+import Spinner from "../ui/Spinner";
+import StepHeading from "../ui/StepHeading";
 import StepNav from "../ui/StepNav";
 import Chip from "../ui/Chip";
 
@@ -22,24 +25,7 @@ const COOK_RATIO: { value: CookInRatio; label: string; desc: string; emoji: stri
 const DIETARY = ["Vegetarian", "Vegan", "Gluten-free", "Dairy-free", "Nut allergy", "Halal", "Kosher", "Shellfish-free"];
 const CUISINES = ["American", "Italian", "Mexican", "Asian", "Mediterranean", "BBQ", "Seafood", "Farm-to-table", "Comfort food", "Brunch"];
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <p style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem", marginBottom: "0.625rem" }}>
-      {children}
-    </p>
-  );
-}
 
-const SPINNER = (
-  <span style={{
-    display: "inline-block", width: "14px", height: "14px",
-    border: "2px solid var(--color-border)",
-    borderTopColor: "var(--color-brand)",
-    borderRadius: "50%",
-    animation: "spin 0.7s linear infinite",
-    flexShrink: 0,
-  }} />
-);
 
 export default function MealStep({ data, onUpdate, onNext, onBack, suggestedCuisines, suggestionsLoading }: Props) {
   const dietary = data.dietaryRestrictions ?? [];
@@ -58,19 +44,16 @@ export default function MealStep({ data, onUpdate, onNext, onBack, suggestedCuis
 
   return (
     <StepCard>
-      <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.08em", color: "var(--color-text-faint)", textTransform: "uppercase", marginBottom: "0.5rem" }}>
-        Step 4 of 6
-      </p>
-      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", color: "var(--color-text)", marginBottom: "0.375rem", lineHeight: 1.2 }}>
-        Let's talk food
-      </h2>
-      <p style={{ color: "var(--color-text-muted)", fontSize: "0.9375rem", marginBottom: "1.75rem" }}>
-        We'll build a meal plan, grocery list, and restaurant picks around your preferences.
-      </p>
+      <StepHeading
+        step={4}
+        totalSteps={6}
+        title="Let's talk food"
+        description="We'll build a meal plan, grocery list, and restaurant picks around your preferences."
+      />
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1.75rem" }}>
         <div>
-          <SectionTitle>How will you eat?</SectionTitle>
+          <SectionLabel>How will you eat?</SectionLabel>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
             {COOK_RATIO.map((r) => (
               <button
@@ -97,7 +80,7 @@ export default function MealStep({ data, onUpdate, onNext, onBack, suggestedCuis
         </div>
 
         <div>
-          <SectionTitle>Dietary needs <span style={{ fontWeight: 400, color: "var(--color-text-faint)" }}>(optional)</span></SectionTitle>
+          <SectionLabel>Dietary needs <span style={{ fontWeight: 400, color: "var(--color-text-faint)" }}>(optional)</span></SectionLabel>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
             {DIETARY.map((d) => (
               <Chip key={d} label={d} selected={dietary.includes(d)} onClick={() => toggleDietary(d)} />
@@ -106,10 +89,10 @@ export default function MealStep({ data, onUpdate, onNext, onBack, suggestedCuis
         </div>
 
         <div>
-          <SectionTitle>Cuisine preferences <span style={{ fontWeight: 400, color: "var(--color-text-faint)" }}>(optional)</span></SectionTitle>
+          <SectionLabel>Cuisine preferences <span style={{ fontWeight: 400, color: "var(--color-text-faint)" }}>(optional)</span></SectionLabel>
           {suggestionsLoading && !suggestedCuisines ? (
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-text-faint)", fontSize: "0.875rem", padding: "0.375rem 0" }}>
-              {SPINNER}
+              <Spinner />
               Finding local cuisine for {data.destination}...
             </div>
           ) : (

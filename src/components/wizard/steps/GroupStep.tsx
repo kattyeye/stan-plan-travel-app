@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { WizardData } from "@/types/trip";
 import StepCard from "../ui/StepCard";
+import StepHeading from "../ui/StepHeading";
 import StepNav from "../ui/StepNav";
 import FieldLabel from "../ui/FieldLabel";
 import TextInput from "../ui/TextInput";
@@ -58,15 +59,12 @@ export default function GroupStep({ data, onUpdate, onNext, onBack }: Props) {
 
   return (
     <StepCard>
-      <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.08em", color: "var(--color-text-faint)", textTransform: "uppercase", marginBottom: "0.5rem" }}>
-        Step 2 of 6
-      </p>
-      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", color: "var(--color-text)", marginBottom: "0.375rem", lineHeight: 1.2 }}>
-        Who's coming?
-      </h2>
-      <p style={{ color: "var(--color-text-muted)", fontSize: "0.9375rem", marginBottom: "1.75rem" }}>
-        We'll tailor activities, meals, and packing lists for your exact group.
-      </p>
+      <StepHeading
+        step={2}
+        totalSteps={6}
+        title="Who's coming?"
+        description="We'll tailor activities, meals, and packing lists for your exact group."
+      />
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.25rem", borderRadius: "var(--radius-input)", border: "1px solid var(--color-border)", background: "var(--color-bg)" }}>

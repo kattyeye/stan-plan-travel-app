@@ -1,6 +1,9 @@
 "use client";
 import { PlanningStyle, BudgetTier, TripVibe, TravelMethod, WizardData } from "@/types/trip";
 import StepCard from "../ui/StepCard";
+import SectionLabel from "../ui/SectionLabel";
+import Spinner from "../ui/Spinner";
+import StepHeading from "../ui/StepHeading";
 import StepNav from "../ui/StepNav";
 import Chip from "../ui/Chip";
 
@@ -43,13 +46,6 @@ const TRAVEL: { value: TravelMethod; label: string; emoji: string }[] = [
   { value: "other", label: "Other", emoji: "🚌" },
 ];
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <p style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem", marginBottom: "0.625rem" }}>
-      {children}
-    </p>
-  );
-}
 
 function RadioCard({ selected, onClick, label, children }: { selected: boolean; onClick: () => void; label: string; children: React.ReactNode }) {
   return (
@@ -75,16 +71,6 @@ function RadioCard({ selected, onClick, label, children }: { selected: boolean; 
   );
 }
 
-const SPINNER = (
-  <span style={{
-    display: "inline-block", width: "14px", height: "14px",
-    border: "2px solid var(--color-border)",
-    borderTopColor: "var(--color-brand)",
-    borderRadius: "50%",
-    animation: "spin 0.7s linear infinite",
-    flexShrink: 0,
-  }} />
-);
 
 export default function PrefsStep({ data, onUpdate, onNext, onBack, suggestedVibes, suggestionsLoading }: Props) {
   const vibes = data.vibes ?? [];
@@ -102,22 +88,19 @@ export default function PrefsStep({ data, onUpdate, onNext, onBack, suggestedVib
 
   return (
     <StepCard>
-      <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.08em", color: "var(--color-text-faint)", textTransform: "uppercase", marginBottom: "0.5rem" }}>
-        Step 3 of 6
-      </p>
-      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", color: "var(--color-text)", marginBottom: "0.375rem", lineHeight: 1.2 }}>
-        What's your vibe?
-      </h2>
-      <p style={{ color: "var(--color-text-muted)", fontSize: "0.9375rem", marginBottom: "1.75rem" }}>
-        This shapes the whole feel of your plan.
-      </p>
+      <StepHeading
+        step={3}
+        totalSteps={6}
+        title="What's your vibe?"
+        description="This shapes the whole feel of your plan."
+      />
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1.75rem" }}>
         <div>
-          <SectionTitle>Trip vibe (pick all that apply)</SectionTitle>
+          <SectionLabel>Trip vibe (pick all that apply)</SectionLabel>
           {suggestionsLoading && !suggestedVibes ? (
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-text-faint)", fontSize: "0.875rem", padding: "0.375rem 0" }}>
-              {SPINNER}
+              <Spinner />
               Finding vibes for {data.destination}...
             </div>
           ) : (
@@ -130,7 +113,7 @@ export default function PrefsStep({ data, onUpdate, onNext, onBack, suggestedVib
         </div>
 
         <div>
-          <SectionTitle>Planning style</SectionTitle>
+          <SectionLabel>Planning style</SectionLabel>
           <div role="radiogroup" aria-label="Planning style" style={{ display: "flex", gap: "0.75rem" }}>
             {PLANNING.map((p) => (
               <RadioCard key={p.value} label={`${p.label} — ${p.desc}`} selected={data.planningStyle === p.value} onClick={() => onUpdate({ planningStyle: p.value })}>
@@ -142,7 +125,7 @@ export default function PrefsStep({ data, onUpdate, onNext, onBack, suggestedVib
         </div>
 
         <div>
-          <SectionTitle>Budget</SectionTitle>
+          <SectionLabel>Budget</SectionLabel>
           <div role="radiogroup" aria-label="Budget" style={{ display: "flex", gap: "0.75rem" }}>
             {BUDGET.map((b) => (
               <RadioCard key={b.value} label={`${b.label} — ${b.desc}`} selected={data.budget === b.value} onClick={() => onUpdate({ budget: b.value })}>
@@ -155,7 +138,7 @@ export default function PrefsStep({ data, onUpdate, onNext, onBack, suggestedVib
         </div>
 
         <div>
-          <SectionTitle>Getting there</SectionTitle>
+          <SectionLabel>Getting there</SectionLabel>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
             {TRAVEL.map((t) => (
               <Chip key={t.value} label={t.label} emoji={t.emoji} selected={data.travelMethod === t.value} onClick={() => onUpdate({ travelMethod: t.value })} />

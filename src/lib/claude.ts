@@ -138,7 +138,7 @@ export async function generateTripJSON(wizardData: WizardData): Promise<Generate
   let parsed: GeneratedTrip;
   try {
     parsed = JSON.parse(cleaned);
-  } catch (e) {
+  } catch {
     console.error("Claude returned invalid JSON:", cleaned.slice(0, 500));
     throw new Error("Claude returned malformed JSON");
   }

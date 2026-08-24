@@ -5,7 +5,7 @@ import ItinerarySection from "@/components/trip/ItinerarySection";
 import PaywallGate from "@/components/trip/PaywallGate";
 import { getCityPhoto } from "@/lib/unsplash";
 import { normalizeTrip } from "@/core/normalize";
-import { CalendarDays, Utensils, ShoppingCart, MapPin, Compass, Luggage } from "lucide-react";
+import { TABS } from "@/components/trip/tabs";
 
 interface Props {
   params: Promise<{ city: string }>;
@@ -17,14 +17,6 @@ const CITY_LABELS: Record<string, string> = {
   austin: "Austin",
 };
 
-const TABS = [
-  { id: "itinerary", label: "Itinerary", Icon: CalendarDays },
-  { id: "meals", label: "Meals", Icon: Utensils },
-  { id: "grocery", label: "Grocery", Icon: ShoppingCart },
-  { id: "restaurants", label: "Restaurants", Icon: MapPin },
-  { id: "tips", label: "Activities", Icon: Compass },
-  { id: "packing", label: "Packing", Icon: Luggage },
-];
 
 export async function generateStaticParams() {
   return Object.keys(SAMPLE_TRIPS).map((city) => ({ city }));

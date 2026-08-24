@@ -54,6 +54,8 @@ STRIPE_WEBHOOK_SECRET
 GOOGLE_MAPS_API_KEY                 # server-side, restaurant website lookup
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY     # client-side, destination autocomplete
 UNSPLASH_ACCESS_KEY                 # trip hero photos
+BOOKING_AID                         # Booking.com affiliate id (free programme)
+EXPEDIA_AFFILIATE_ID                # Vrbo/Expedia — requires approval
 ```
 
 Anything optional degrades gracefully rather than crashing — keep it that way.
@@ -68,6 +70,18 @@ page, which is how local dev runs without payment.
 scripts/
 └── generate-tokens-css.ts       ← compiles theme tokens → CSS (npm run tokens)
 src/
+├── core/                        ← PLATFORM-FREE. No React, no Next, no DOM.
+│   │                              A React Native app imports this wholesale.
+│   ├── types.ts                 ← all shared types (src/types/trip.ts re-exports)
+│   ├── normalize.ts             ← legacy→current trip shape
+│   ├── calendar.ts              ← trip → calendar events → .ics
+│   ├── partners.ts              ← lodging deep links
+│   ├── referral.ts              ← creator referral codes
+│   ├── ingredients.ts           ← grocery deduplication
+│   ├── wizard-machine.ts        ← required fields, defaults, night maths
+│   ├── intent.ts                ← voice/NL intake types
+│   ├── api-client.ts            ← typed client for the v1 API
+│   └── __tests__/               ← npm test (node:test via tsx)
 ├── theme/                       ← DESIGN TOKEN SOURCE OF TRUTH
 │   ├── palette.ts               ← raw color ramps (the only hex literals)
 │   └── tokens.ts                ← semantic light/dark themes, platform-free
@@ -77,36 +91,49 @@ src/
 │   ├── globals.css              ← imports tokens.generated.css + base styles
 │   ├── tokens.generated.css     ← AUTO-GENERATED, do not edit
 │   ├── wizard/page.tsx          ← renders WizardShell
+│   ├── wizard/voice/page.tsx    ← speak/type your whole trip at once
 │   ├── preview/[city]/page.tsx  ← sample trips behind a paywall gate
 │   ├── trip/[slug]/page.tsx     ← generated trip view
 │   ├── trip/[slug]/generating/  ← polling/loading screen
 │   ├── admin/trips/page.tsx     ← internal trip list + regenerate
 │   └── api/
-│       ├── generate/route.ts    ← wizard data → Claude → save → slug
-│       ├── trip/route.ts        ← GET trip status/data by slug
-│       ├── suggest/route.ts     ← destination-aware option suggestions
-│       ├── admin/trips/route.ts
+│       ├── v1/                  ← the versioned API — see API.md
+│       │   ├── trips/…          ← create, read, generate, calendar, download,
+│       │   │                      booking-links
+│       │   ├── parse-intent/    ← natural-language trip intake
+│       │   └── suggest/
+│       ├── generate|trip|suggest/route.ts   ← legacy, share the v1 handlers
+│       ├── admin/{trips,referrals}/route.ts
 │       └── stripe/{checkout,webhook}/route.ts
 ├── components/
 │   ├── wizard/
 │   │   ├── WizardShell.tsx      ← step state, draft persistence, suggestions
 │   │   ├── WizardProgress.tsx
 │   │   ├── ui/                  ← the hand-built wizard primitives
+│   │   ├── voice/VoiceIntake.tsx
 │   │   └── steps/               ← the 6 step components
 │   └── trip/                    ← trip view sections + PaywallGate
-├── lib/
+├── hooks/useSpeechInput.ts      ← Web Speech API behind a swappable interface
+├── lib/                         ← server/web-only. Imports core, never vice versa.
 │   ├── claude.ts                ← Claude wrapper + prompt builder
+│   ├── generate.ts              ← the ONLY way to run generation (Redis lock)
+│   ├── trips.ts                 ← create trip + checkout, shared by both APIs
+│   ├── intent.ts                ← natural-language parsing + sanitization
 │   ├── db.ts                    ← Redis CRUD
 │   ├── stripe.ts                ← checkout / verify / webhook helpers
+│   ├── models.ts                ← Claude model ids, one place
+│   ├── affiliates.ts            ← affiliate ids from env
 │   ├── unsplash.ts, slug.ts, utils.ts, sample-trips.ts
 ├── prompts/                     ← system.txt, json-schema.txt, html-template.txt
+├── middleware.ts                ← captures ?ref= creator referral codes
 ├── styles/print.css
-└── types/trip.ts                ← all shared types
+└── types/trip.ts                ← re-export shim for @/core/types
 ```
 
 ### Where the UI primitives actually live
-`src/components/wizard/ui/` — `StepCard`, `StepNav`, `FieldLabel`, `TextInput`,
-`Chip`, `PlacesAutocomplete`, `DateRangePicker`.
+`src/components/wizard/ui/` — `StepCard`, `StepHeading`, `StepNav`,
+`SectionLabel`, `Spinner`, `FieldLabel`, `TextInput`, `Chip`,
+`PlacesAutocomplete`, `DateRangePicker`.
 
 There is **no** `src/components/ui/`. It previously held an unused 27-file
 Tailwind Catalyst kit with zero imports; it was deleted. Do not reintroduce a
@@ -177,6 +204,16 @@ Generation runs **synchronously** inside the request (`maxDuration = 300`),
 because Vercel kills the process once a response returns — fire-and-forget does
 not work. The client polls rather than waiting on that request.
 
+**Always start generation via `runGeneration()` in `src/lib/generate.ts`.** It
+takes a Redis `SET NX` lock, which is what stops the webhook and the generating
+page from both firing a run for the same trip (that bug cost two Claude
+generations per purchase).
+
+**Stored trips are normalized on read.** `normalizeTrip()` upgrades older trips
+whose activities are prose strings ("9:00am — Kayak rental") into structured
+objects with real times. Call it at the read boundary; never render a raw
+`GeneratedTrip`.
+
 ### Redis keys
 | Key | Value |
 | --- | --- |
@@ -204,14 +241,26 @@ data.
    event handlers. Trip sections that are purely presentational stay server
    components deliberately — don't add the directive without needing it.
 3. **`recipes[]` is the source of truth** — reference by `recipeId`.
-4. **Run `npm run build` after every significant change.** There is no test
-   suite; the build is the only automated gate.
-5. **Planning style must affect output everywhere** — itinerary format, copy
+4. **Run `npm test` and `npm run build` after every significant change.**
+   `npm test` covers the pure logic in `src/core`; the build catches
+   everything else. Lint currently has zero errors — keep it that way.
+5. **Keep `src/core/` platform-free.** No React, no `next/*`, no DOM, no
+   `localStorage`, and no importing from `src/lib` or `src/components`. A test
+   enforces this, because a React Native app imports that directory wholesale.
+   Web- or server-specific code belongs in `src/lib`.
+6. **Planning style must affect output everywhere** — itinerary format, copy
    tone, restaurant assignment, activity suggestions.
-6. **Generation costs real money.** Each trip is two Claude calls. When testing,
+7. **Generation costs real money.** Each trip is two Claude calls. When testing,
    reuse existing slugs via `/admin/trips` regenerate rather than running the
    full wizard repeatedly.
-7. **Commit prefixes:** `feat:`, `fix:`, `style:`, `deps:`, `refactor:`, `docs:`
+8. **Commit prefixes:** `feat:`, `fix:`, `style:`, `deps:`, `refactor:`, `docs:`
+
+---
+
+## The API
+
+`API.md` documents the versioned JSON API under `/api/v1` — the contract a
+mobile client builds against. Update it in the same commit as any route change.
 
 ---
 

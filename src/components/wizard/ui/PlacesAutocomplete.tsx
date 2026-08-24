@@ -51,7 +51,6 @@ export default function PlacesAutocomplete({ value, onChange, onSelect, placehol
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
   const [focused, setFocused] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -72,7 +71,6 @@ export default function PlacesAutocomplete({ value, onChange, onSelect, placehol
       setOpen(false);
       return;
     }
-    setLoading(true);
     serviceRef.current.getPlacePredictions(
       {
         input,
@@ -80,7 +78,6 @@ export default function PlacesAutocomplete({ value, onChange, onSelect, placehol
         types: ["(regions)"],
       },
       (predictions, status) => {
-        setLoading(false);
         if (status !== window.google.maps.places.PlacesServiceStatus.OK || !predictions) {
           setSuggestions([]);
           setOpen(false);

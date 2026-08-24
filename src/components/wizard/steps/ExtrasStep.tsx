@@ -1,6 +1,9 @@
 "use client";
 import { TripSection, WizardData } from "@/types/trip";
 import StepCard from "../ui/StepCard";
+import SectionLabel from "../ui/SectionLabel";
+import Spinner from "../ui/Spinner";
+import StepHeading from "../ui/StepHeading";
 import StepNav from "../ui/StepNav";
 import FieldLabel from "../ui/FieldLabel";
 
@@ -24,24 +27,7 @@ const SECTIONS: { value: TripSection; label: string; desc: string; emoji: string
 
 const AMENITIES = ["Full kitchen", "Gas grill", "Pool", "Hot tub", "Beach access", "Washer/dryer", "Fire pit", "Game room", "Outdoor shower", "Kayaks/paddleboards"];
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <p style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem", marginBottom: "0.625rem" }}>
-      {children}
-    </p>
-  );
-}
 
-const SPINNER = (
-  <span style={{
-    display: "inline-block", width: "14px", height: "14px",
-    border: "2px solid var(--color-border)",
-    borderTopColor: "var(--color-brand)",
-    borderRadius: "50%",
-    animation: "spin 0.7s linear infinite",
-    flexShrink: 0,
-  }} />
-);
 
 export default function ExtrasStep({ data, onUpdate, onNext, onBack, suggestedAmenities, suggestionsLoading }: Props) {
   const sections = data.sections ?? (["itinerary", "meals", "grocery", "restaurants", "activities", "packing"] as TripSection[]);
@@ -60,19 +46,16 @@ export default function ExtrasStep({ data, onUpdate, onNext, onBack, suggestedAm
 
   return (
     <StepCard>
-      <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.08em", color: "var(--color-text-faint)", textTransform: "uppercase", marginBottom: "0.5rem" }}>
-        Step 5 of 6
-      </p>
-      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", color: "var(--color-text)", marginBottom: "0.375rem", lineHeight: 1.2 }}>
-        What do you want in your plan?
-      </h2>
-      <p style={{ color: "var(--color-text-muted)", fontSize: "0.9375rem", marginBottom: "1.75rem" }}>
-        Choose what to include and tell us about your property.
-      </p>
+      <StepHeading
+        step={5}
+        totalSteps={6}
+        title="What do you want in your plan?"
+        description="Choose what to include and tell us about your property."
+      />
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1.75rem" }}>
         <div>
-          <SectionTitle>Include in my plan</SectionTitle>
+          <SectionLabel>Include in my plan</SectionLabel>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.625rem" }}>
             {SECTIONS.map((s) => {
               const selected = sections.includes(s.value);
@@ -135,10 +118,10 @@ export default function ExtrasStep({ data, onUpdate, onNext, onBack, suggestedAm
         </div>
 
         <div>
-          <SectionTitle>Property amenities <span style={{ fontWeight: 400, color: "var(--color-text-faint)" }}>(optional)</span></SectionTitle>
+          <SectionLabel>Property amenities <span style={{ fontWeight: 400, color: "var(--color-text-faint)" }}>(optional)</span></SectionLabel>
           {suggestionsLoading && !suggestedAmenities ? (
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-text-faint)", fontSize: "0.875rem", padding: "0.375rem 0" }}>
-              {SPINNER}
+              <Spinner />
               Checking amenities for {data.destination}...
             </div>
           ) : (

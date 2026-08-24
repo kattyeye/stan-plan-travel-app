@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { WizardData } from "@/types/trip";
 import StepCard from "../ui/StepCard";
+import StepHeading from "../ui/StepHeading";
 import FieldLabel from "../ui/FieldLabel";
 import TextInput from "../ui/TextInput";
 import { clearWizardDraft } from "../WizardShell";
@@ -46,15 +47,12 @@ export default function EmailStep({ data, onUpdate, onBack }: Props) {
 
   return (
     <StepCard>
-      <p style={{ fontSize: "0.8125rem", fontWeight: 600, letterSpacing: "0.08em", color: "var(--color-text-faint)", textTransform: "uppercase", marginBottom: "0.5rem" }}>
-        Step 6 of 6
-      </p>
-      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", color: "var(--color-text)", marginBottom: "0.375rem", lineHeight: 1.2 }}>
-        Almost there!
-      </h2>
-      <p style={{ color: "var(--color-text-muted)", fontSize: "0.9375rem", marginBottom: "1.75rem" }}>
-        Give your trip a name and drop your email — we'll send your plan here when it's ready.
-      </p>
+      <StepHeading
+        step={6}
+        totalSteps={6}
+        title="Almost there!"
+        description="Give your trip a name and drop your email — we'll send your plan here when it's ready."
+      />
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
         <div>
@@ -77,7 +75,7 @@ export default function EmailStep({ data, onUpdate, onBack }: Props) {
             onChange={(e) => onUpdate({ email: e.target.value })}
           />
           <p style={{ color: "var(--color-text-faint)", fontSize: "0.8125rem", marginTop: "0.375rem" }}>
-            We'll send your trip plan here. No spam, ever.
+            We&apos;ll send your trip plan here. No spam, ever.
           </p>
         </div>
 

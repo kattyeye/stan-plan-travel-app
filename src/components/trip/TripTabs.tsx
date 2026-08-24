@@ -8,7 +8,7 @@ import RestaurantSection from "./RestaurantSection";
 import TipsSection from "./TipsSection";
 import PackingSection from "./PackingSection";
 import TripActions from "./TripActions";
-import { CalendarDays, Utensils, ShoppingCart, MapPin, Compass, Luggage } from "lucide-react";
+import { TABS, type TabId } from "./tabs";
 
 interface Props {
   trip: NormalizedTrip;
@@ -16,16 +16,6 @@ interface Props {
   slug?: string;
 }
 
-const TABS = [
-  { id: "itinerary", label: "Itinerary", Icon: CalendarDays },
-  { id: "meals", label: "Meals", Icon: Utensils },
-  { id: "grocery", label: "Grocery", Icon: ShoppingCart },
-  { id: "restaurants", label: "Restaurants", Icon: MapPin },
-  { id: "tips", label: "Activities", Icon: Compass },
-  { id: "packing", label: "Packing", Icon: Luggage },
-] as const;
-
-type TabId = typeof TABS[number]["id"];
 
 export default function TripTabs({ trip, slug }: Props) {
   const [active, setActive] = useState<TabId>("itinerary");

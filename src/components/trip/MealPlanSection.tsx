@@ -33,7 +33,7 @@ export default function MealPlanSection({ trip }: Props) {
                   </span>
                   <span style={{ color: "var(--color-text)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{meal.name}</span>
                   {meal.type === "eat-out" && (
-                    <span style={{ fontSize: "0.75rem", padding: "0.125rem 0.5rem", borderRadius: "999px", background: "var(--color-light-bronze-100)", color: "var(--color-light-bronze-700)", fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>
+                    <span style={{ fontSize: "0.75rem", padding: "0.125rem 0.5rem", borderRadius: "999px", background: "var(--color-badge-bg)", color: "var(--color-badge-text)", fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>
                       eat out
                     </span>
                   )}

@@ -130,9 +130,9 @@ export default function DateRangePicker({ startDate, endDate, onChange }: Props)
           width: "100%",
           padding: "0.625rem 0.875rem",
           borderRadius: "10px",
-          border: `1px solid ${open ? "var(--color-tea-green-600)" : "var(--color-tea-green-200)"}`,
-          background: "#ffffff",
-          color: startDate ? "var(--color-tea-green-950)" : "var(--color-tea-green-400)",
+          border: `1px solid ${open ? "var(--color-border-focus)" : "var(--color-border)"}`,
+          background: "var(--color-bg-input)",
+          color: startDate ? "var(--color-text)" : "var(--color-text-faint)",
           fontSize: "0.9375rem",
           textAlign: "left",
           cursor: "pointer",
@@ -153,8 +153,8 @@ export default function DateRangePicker({ startDate, endDate, onChange }: Props)
           top: "calc(100% + 6px)",
           left: 0,
           zIndex: 50,
-          background: "#ffffff",
-          border: "1px solid var(--color-tea-green-200)",
+          background: "var(--color-bg-input)",
+          border: "1px solid var(--color-border)",
           borderRadius: "14px",
           boxShadow: "0 8px 32px rgba(21,24,12,0.12)",
           padding: "1.25rem",
@@ -163,7 +163,7 @@ export default function DateRangePicker({ startDate, endDate, onChange }: Props)
           {/* Header */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
             <button type="button" aria-label="Previous month" onClick={prevMonth} style={navBtnStyle}><span aria-hidden="true">‹</span></button>
-            <span style={{ color: "var(--color-tea-green-800)", fontWeight: 600, fontSize: "0.9375rem" }}>
+            <span style={{ color: "var(--color-text)", fontWeight: 600, fontSize: "0.9375rem" }}>
               {MONTHS[months[0].month]} {months[0].year} – {MONTHS[months[1].month]} {months[1].year}
             </span>
             <button type="button" aria-label="Next month" onClick={nextMonth} style={navBtnStyle}><span aria-hidden="true">›</span></button>
@@ -185,7 +185,7 @@ export default function DateRangePicker({ startDate, endDate, onChange }: Props)
           </div>
 
           {/* Footer hint */}
-          <p aria-live="polite" aria-atomic="true" style={{ marginTop: "0.875rem", color: "var(--color-tea-green-500)", fontSize: "0.8125rem", textAlign: "center" }}>
+          <p aria-live="polite" aria-atomic="true" style={{ marginTop: "0.875rem", color: "var(--color-text-faint)", fontSize: "0.8125rem", textAlign: "center" }}>
             {!startDate ? "Click your arrival date" : !endDate ? "Now click your departure date" : `${endDate ? `${Math.round((parseYMD(endDate)!.getTime() - parseYMD(startDate)!.getTime()) / 86400000)} nights selected` : ""}`}
           </p>
         </div>
@@ -197,9 +197,9 @@ export default function DateRangePicker({ startDate, endDate, onChange }: Props)
 const navBtnStyle: React.CSSProperties = {
   width: "2rem", height: "2rem",
   borderRadius: "50%",
-  border: "1px solid var(--color-tea-green-200)",
+  border: "1px solid var(--color-border)",
   background: "transparent",
-  color: "var(--color-tea-green-700)",
+  color: "var(--color-text-muted)",
   fontSize: "1.125rem",
   cursor: "pointer",
   display: "flex", alignItems: "center", justifyContent: "center",
@@ -232,13 +232,13 @@ function MonthGrid({ year, month, today, getDayState, onDayClick, onDayHover }: 
 
   return (
     <div>
-      <p style={{ fontWeight: 600, color: "var(--color-tea-green-700)", fontSize: "0.875rem", marginBottom: "0.625rem" }}>
+      <p style={{ fontWeight: 600, color: "var(--color-text-muted)", fontSize: "0.875rem", marginBottom: "0.625rem" }}>
         {MONTHS[month]} {year}
       </p>
       {/* Day headers */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px", marginBottom: "4px" }}>
         {DAYS.map(d => (
-          <div key={d} style={{ textAlign: "center", fontSize: "0.6875rem", fontWeight: 600, color: "var(--color-tea-green-400)", padding: "0.25rem 0" }}>{d}</div>
+          <div key={d} style={{ textAlign: "center", fontSize: "0.6875rem", fontWeight: 600, color: "var(--color-text-faint)", padding: "0.25rem 0" }}>{d}</div>
         ))}
       </div>
       {/* Day cells */}
@@ -249,17 +249,17 @@ function MonthGrid({ year, month, today, getDayState, onDayClick, onDayHover }: 
           const isToday = isSameDay(parseYMD(ymd)!, today);
 
           let bg = "transparent";
-          let color = isPast ? "var(--color-tea-green-300)" : "var(--color-tea-green-900)";
+          let color = isPast ? "var(--color-brand-disabled)" : "var(--color-text)";
           let borderRadius = "7px";
           let fontWeight: React.CSSProperties["fontWeight"] = 400;
 
           if (isStart || isEnd) {
-            bg = "var(--color-tea-green-600)";
-            color = "#fff";
+            bg = "var(--color-brand)";
+            color = "var(--color-text-inverse)";
             fontWeight = 700;
           } else if (inRange) {
-            bg = "var(--color-tea-green-100)";
-            color = "var(--color-tea-green-800)";
+            bg = "var(--color-bg-selected)";
+            color = "var(--color-text)";
             borderRadius = "0";
           }
 
@@ -286,7 +286,7 @@ function MonthGrid({ year, month, today, getDayState, onDayClick, onDayHover }: 
                 padding: "0.375rem 0",
                 background: bg,
                 color,
-                border: isToday && !isStart && !isEnd ? "1px solid var(--color-tea-green-400)" : "1px solid transparent",
+                border: isToday && !isStart && !isEnd ? "1px solid var(--color-text-faint)" : "1px solid transparent",
                 borderRadius,
                 fontSize: "0.8125rem",
                 fontWeight,

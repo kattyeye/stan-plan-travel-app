@@ -49,6 +49,10 @@ export interface Theme {
     highlight: string;
     heading: string;
 
+    /* Small chips/badges — "eat out", tags, price ranges */
+    badgeBg: string;
+    badgeText: string;
+
     /* Trip hero */
     headerBg: string;
     headerText: string;
@@ -102,6 +106,9 @@ export const lightTheme: Theme = {
     highlight: p.cornsilk[300],
     heading: "#32210f",
 
+    badgeBg: p.lightBronze[100],
+    badgeText: p.lightBronze[700],
+
     headerBg: p.teaGreen[900],
     headerText: p.teaGreen[50],
     headerMuted: p.teaGreen[300],
@@ -149,6 +156,9 @@ export const darkTheme: Theme = {
     accentWarm: p.lightBronze[200],
     highlight: p.cornsilk[800],
     heading: p.lightBronze[200],
+
+    badgeBg: p.lightBronze[900],
+    badgeText: p.lightBronze[200],
 
     headerBg: p.teaGreen[950],
     headerText: p.teaGreen[100],

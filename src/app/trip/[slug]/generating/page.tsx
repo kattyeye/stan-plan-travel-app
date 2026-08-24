@@ -15,6 +15,13 @@ const MESSAGES = [
 
 const POLL_INTERVAL_MS = 5000;
 
+/**
+ * Give up after this long. Generation is two Claude calls behind a 300s
+ * function limit, so anything past ~5 minutes means the run died without
+ * writing an "error" status — previously the screen just span forever.
+ */
+const TIMEOUT_MS = 5 * 60 * 1000;
+
 export default function GeneratingPage() {
   const params = useParams();
   const router = useRouter();
@@ -22,14 +29,23 @@ export default function GeneratingPage() {
 
   const [messageIndex, setMessageIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [timedOut, setTimedOut] = useState(false);
   const [devError, setDevError] = useState<string | null>(null); // raw error for debugging
   const generateFiredRef = useRef(false);
 
   // Rotate messages
   useEffect(() => {
+    if (error || timedOut) return;
     const id = setInterval(() => setMessageIndex((i) => (i + 1) % MESSAGES.length), 4000);
     return () => clearInterval(id);
-  }, []);
+  }, [error, timedOut]);
+
+  // Stop waiting eventually rather than spinning forever.
+  useEffect(() => {
+    if (error || timedOut) return;
+    const id = setTimeout(() => setTimedOut(true), TIMEOUT_MS);
+    return () => clearTimeout(id);
+  }, [error, timedOut]);
 
   // On mount: check status — if pending, fire generation
   useEffect(() => {
@@ -88,9 +104,39 @@ export default function GeneratingPage() {
       }
     }
 
+    if (timedOut) return;
     const id = setInterval(checkStatus, POLL_INTERVAL_MS);
     return () => clearInterval(id);
-  }, [slug, router]);
+  }, [slug, router, timedOut]);
+
+  if (timedOut && !error) {
+    return (
+      <div style={centerStyle}>
+        <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>⏳</div>
+        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", color: "var(--color-heading)", marginBottom: "0.75rem" }}>
+          This is taking longer than usual
+        </h2>
+        <p style={{ color: "var(--color-text-muted)", maxWidth: "420px", lineHeight: 1.6, marginBottom: "1.5rem" }}>
+          Your plan is still being built — you don&apos;t need to keep this page open.
+          We&apos;ll email you the link as soon as it&apos;s ready.
+        </p>
+        <div style={{ display: "flex", gap: "0.625rem", flexWrap: "wrap", justifyContent: "center" }}>
+          <button
+            onClick={() => { setTimedOut(false); }}
+            style={{ padding: "0.625rem 1.5rem", borderRadius: "10px", border: "none", background: "var(--color-brand)", color: "var(--color-text-inverse)", fontSize: "0.9375rem", fontWeight: 600, cursor: "pointer" }}
+          >
+            Keep waiting
+          </button>
+          <a
+            href={`/trip/${slug}`}
+            style={{ padding: "0.625rem 1.5rem", borderRadius: "10px", border: "1px solid var(--color-border)", background: "var(--color-bg-card)", color: "var(--color-text)", fontSize: "0.9375rem", fontWeight: 600, textDecoration: "none" }}
+          >
+            Try opening it now
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (

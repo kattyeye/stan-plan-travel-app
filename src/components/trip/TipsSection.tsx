@@ -22,7 +22,7 @@ export default function TipsSection({ trip }: Props) {
                   <span style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem" }}>{a.name}</span>
                   <div style={{ display: "flex", gap: "0.375rem", flexShrink: 0 }}>
                     {a.kidFriendly && <span style={{ fontSize: "0.75rem", padding: "0.125rem 0.5rem", borderRadius: "999px", background: "var(--color-border)", color: "var(--color-text-muted)", fontWeight: 600 }}>Kid-friendly</span>}
-                    {a.bookingRequired && <span style={{ fontSize: "0.75rem", padding: "0.125rem 0.5rem", borderRadius: "999px", background: "var(--color-light-bronze-100)", color: "var(--color-light-bronze-700)", fontWeight: 600 }}>Book ahead</span>}
+                    {a.bookingRequired && <span style={{ fontSize: "0.75rem", padding: "0.125rem 0.5rem", borderRadius: "999px", background: "var(--color-badge-bg)", color: "var(--color-badge-text)", fontWeight: 600 }}>Book ahead</span>}
                   </div>
                 </div>
                 <p style={{ color: "var(--color-text-muted)", fontSize: "0.875rem", lineHeight: 1.5, marginBottom: "0.5rem" }}>{a.description}</p>

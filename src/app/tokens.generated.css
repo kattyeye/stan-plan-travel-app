@@ -94,6 +94,8 @@
   --color-accent-warm: #32210f;
   --color-highlight: #fae76b;
   --color-heading: #32210f;
+  --color-badge-bg: #f3e6d8;
+  --color-badge-text: #754d24;
   --color-header-bg: #1e2211;
   --color-header-text: #f4f6ee;
   --color-header-muted: #c0cb9a;
@@ -139,6 +141,8 @@
   --color-accent-warm: #e7ccb1;
   --color-highlight: #635603;
   --color-heading: #e7ccb1;
+  --color-badge-bg: #271a0c;
+  --color-badge-text: #e7ccb1;
   --color-header-bg: #15180c;
   --color-header-text: #eaeedd;
   --color-header-muted: #aaba78;

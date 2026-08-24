@@ -42,11 +42,20 @@ The JSON must exactly match this structure — all field names must be identical
       "date": "YYYY-MM-DD",
       "theme": "string",
       "meals": {
-        "breakfast": { "type": "cook-in" | "eat-out", "name": "string", "recipeId": "string if cook-in, omit if eat-out" },
-        "lunch": { "type": "cook-in" | "eat-out", "name": "string", "recipeId": "string if cook-in, omit if eat-out" },
-        "dinner": { "type": "cook-in" | "eat-out", "name": "string", "recipeId": "string if cook-in, omit if eat-out" }
+        "breakfast": { "type": "cook-in" | "eat-out", "name": "string", "recipeId": "string if cook-in, omit if eat-out", "time": "HH:MM 24-hour, omit for flexible style" },
+        "lunch": { "type": "cook-in" | "eat-out", "name": "string", "recipeId": "string if cook-in, omit if eat-out", "time": "HH:MM 24-hour, omit for flexible style" },
+        "dinner": { "type": "cook-in" | "eat-out", "name": "string", "recipeId": "string if cook-in, omit if eat-out", "time": "HH:MM 24-hour, omit for flexible style" }
       },
-      "activities": ["string"],
+      "activities": [
+        {
+          "title": "string — the activity itself, with NO time inside the text",
+          "startTime": "HH:MM 24-hour — omit entirely for flexible style",
+          "endTime": "HH:MM 24-hour — omit unless the duration is genuinely known",
+          "location": "string — venue or address, omit if not applicable",
+          "notes": "string — alternatives or context, omit if none",
+          "bookingRequired": boolean
+        }
+      ],
       "vibe": ["string"]
     }
   ],
@@ -100,7 +109,20 @@ RESTAURANT RULES:
 - Only include real, currently operating restaurants
 - Each restaurant must have a unique "id"
 
+ACTIVITY TIME RULES:
+- "title" must never contain a time. Write "Kayak rental at Kitty Hawk", not
+  "9:00am — Kayak rental at Kitty Hawk". Times belong in startTime/endTime so
+  the plan can be exported to a calendar.
+- Times are 24-hour "HH:MM" (e.g. "09:00", "18:30"), local to the destination.
+- Activities within a day must be ordered chronologically.
+- Do not overlap timed activities on the same day.
+
 PLANNING STYLE RULES:
-- structured: exact times in activity strings e.g. "9:00am — Kayak rental at X"
-- balanced: time buckets e.g. "Morning — head to the kayak rental"
-- flexible: suggestion language e.g. "Kayaking is great here if you feel like it"
+- structured: every activity has startTime (endTime where the duration is
+  known); every meal has a time. Language is direct and specific.
+- balanced: most activities have a startTime reflecting the part of day
+  (morning ~09:00, afternoon ~13:00, evening ~18:00); meals have times. Offer a
+  primary plan plus one alternative in "notes".
+- flexible: omit startTime, endTime and meal "time" entirely. Use suggestion
+  language, e.g. title "Kayaking — great here if you feel like it". Untimed
+  entries are intentional and export as all-day calendar items.

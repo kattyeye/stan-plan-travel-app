@@ -18,6 +18,40 @@ function sessionKey(sessionId: string) {
   return `session:${sessionId}`;
 }
 
+function generationLockKey(slug: string) {
+  return `lock:generate:${slug}`;
+}
+
+// ─── Generation lock ─────────────────────────────────────────────────────────
+
+/**
+ * Claim the exclusive right to generate this trip.
+ *
+ * Two independent paths can start generation for the same slug: the Stripe
+ * webhook on `checkout.session.completed`, and the generating page when it
+ * sees a trip still marked "pending". If the page loads before the webhook
+ * lands, both fire — two full Claude generations for one purchase, with the
+ * slower one overwriting the faster.
+ *
+ * SET NX is atomic in Redis, so exactly one caller wins. The TTL is a little
+ * longer than the 300s function limit so a crashed run cannot wedge the slug
+ * forever.
+ */
+export async function acquireGenerationLock(slug: string, ttlSeconds = 360): Promise<boolean> {
+  const redis = getRedis();
+  const result = await redis.set(generationLockKey(slug), new Date().toISOString(), {
+    nx: true,
+    ex: ttlSeconds,
+  });
+  return result === "OK";
+}
+
+/** Release the lock so a failed run can be retried without waiting for the TTL. */
+export async function releaseGenerationLock(slug: string): Promise<void> {
+  const redis = getRedis();
+  await redis.del(generationLockKey(slug));
+}
+
 // ─── Queries ─────────────────────────────────────────────────────────────────
 
 export async function getTripBySlug(slug: string): Promise<TripRecord | null> {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateTripJSON, generateTripHTML } from "@/lib/claude";
-import { createTrip, updateTripStatus, saveTripData } from "@/lib/db";
+import { createTrip, getTripBySlug } from "@/lib/db";
+import { runGeneration } from "@/lib/generate";
 import { generateSlug } from "@/lib/slug";
 import { verifyStripeSession } from "@/lib/stripe";
 import { WizardData } from "@/types/trip";
@@ -13,26 +13,31 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { wizardData, stripeSessionId, slug: existingSlug } = body as {
-      wizardData: WizardData;
+      wizardData?: WizardData;
       stripeSessionId?: string;
       slug?: string;
     };
 
-    if (!wizardData?.destination || !wizardData?.email) {
-      return NextResponse.json({ error: "Missing required wizard data" }, { status: 400 });
-    }
-
-    // Verify Stripe payment if a session ID was provided
-    if (stripeSessionId) {
-      const paid = await verifyStripeSession(stripeSessionId);
-      if (!paid) {
-        return NextResponse.json({ error: "Payment not confirmed" }, { status: 402 });
-      }
-    }
-
     if (existingSlug) {
       slug = existingSlug;
+      const existing = await getTripBySlug(slug);
+      if (!existing) {
+        return NextResponse.json({ error: "Trip not found" }, { status: 404 });
+      }
     } else {
+      if (!wizardData?.destination || !wizardData?.email) {
+        return NextResponse.json({ error: "Missing required wizard data" }, { status: 400 });
+      }
+
+      // Only verify payment when creating a new trip. An existing slug was
+      // already created (and paid for) through the checkout flow.
+      if (stripeSessionId) {
+        const paid = await verifyStripeSession(stripeSessionId);
+        if (!paid) {
+          return NextResponse.json({ error: "Payment not confirmed" }, { status: 402 });
+        }
+      }
+
       slug = generateSlug();
       await createTrip({
         slug,
@@ -43,25 +48,25 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    await updateTripStatus(slug, "generating");
+    // Runs synchronously — Next.js serverless kills the process once the
+    // response returns, so fire-and-forget is unreliable. The client polls
+    // /api/trip; this request simply stays open until generation settles.
+    const outcome = await runGeneration(slug);
 
-    // Run generation synchronously — Next.js serverless kills the process
-    // once the response returns, so fire-and-forget doesn't work reliably.
-    // The client polls for status; this request stays open until done.
-    try {
-      const generatedData = await generateTripJSON(wizardData);
-      const htmlBlob = await generateTripHTML(generatedData);
-      await saveTripData(slug, generatedData, htmlBlob);
-    } catch (genErr) {
-      console.error(`Generation failed for slug ${slug}:`, genErr);
-      await updateTripStatus(slug, "error");
-      return NextResponse.json({ error: "Generation failed", slug }, { status: 500 });
+    switch (outcome.status) {
+      case "done":
+        return NextResponse.json({ slug });
+      case "already-running":
+        // Another path (usually the Stripe webhook) got there first. Not an
+        // error — the client's polling will pick up the result.
+        return NextResponse.json({ slug, alreadyGenerating: true });
+      case "not-found":
+        return NextResponse.json({ error: "Trip not found", slug }, { status: 404 });
+      case "failed":
+        return NextResponse.json({ error: "Generation failed", slug }, { status: 500 });
     }
-
-    return NextResponse.json({ slug });
   } catch (error) {
     console.error("Generate route error:", error);
-    if (slug) await updateTripStatus(slug, "error").catch(() => {});
-    return NextResponse.json({ error: "Generation failed" }, { status: 500 });
+    return NextResponse.json({ error: "Generation failed", slug }, { status: 500 });
   }
 }

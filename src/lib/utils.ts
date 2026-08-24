@@ -1,9 +1,5 @@
-import { RecipeIngredient } from "@/types/trip";
-
-export function deduplicateIngredients(ingredients: RecipeIngredient[]): RecipeIngredient[] {
-  // TODO: group by item+unit, sum quantities, sort by category
-  return ingredients;
-}
+// Implementation lives in src/core so React Native can reuse it.
+export { deduplicateIngredients, parseAmount, formatAmount } from "@/core/ingredients";
 
 export function formatDate(dateStr: string): string {
   const [y, m, d] = dateStr.split("-");

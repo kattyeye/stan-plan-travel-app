@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { constructWebhookEvent } from "@/lib/stripe";
-import { getTripByStripeSession, updateTripStatus, updateTripStripeSession } from "@/lib/db";
-import { generateTripJSON, generateTripHTML } from "@/lib/claude";
-import { saveTripData } from "@/lib/db";
+import { updateTripStatus, updateTripStripeSession } from "@/lib/db";
+import { runGeneration } from "@/lib/generate";
 
 export async function POST(req: NextRequest) {
   const signature = req.headers.get("stripe-signature");
@@ -33,10 +32,11 @@ export async function POST(req: NextRequest) {
       await updateTripStripeSession(slug, session.id);
       await updateTripStatus(slug, "paid");
 
-      // Fire off generation — webhook must return quickly so we don't await
-      triggerGeneration(slug).catch((err) => {
+      // Fire off generation — the webhook must return quickly, so we don't
+      // await. runGeneration takes a Redis lock, so if the generating page
+      // also tries to start this trip only one of them calls Claude.
+      runGeneration(slug).catch((err) => {
         console.error(`Generation failed for ${slug}:`, err);
-        updateTripStatus(slug, "error").catch(() => {});
       });
     } catch (err) {
       console.error(`Webhook processing failed for slug ${slug}:`, err);
@@ -44,15 +44,4 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ received: true });
-}
-
-async function triggerGeneration(slug: string) {
-  const { getTripBySlug } = await import("@/lib/db");
-  const trip = await getTripBySlug(slug);
-  if (!trip) throw new Error(`Trip not found: ${slug}`);
-
-  await updateTripStatus(slug, "generating");
-  const generatedData = await generateTripJSON(trip.wizardData);
-  const htmlBlob = await generateTripHTML(generatedData);
-  await saveTripData(slug, generatedData, htmlBlob);
 }

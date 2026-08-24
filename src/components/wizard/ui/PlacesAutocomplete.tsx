@@ -135,9 +135,9 @@ export default function PlacesAutocomplete({ value, onChange, onSelect, placehol
           width: "100%",
           padding: "0.625rem 0.875rem",
           borderRadius: "10px",
-          border: `1px solid ${focused ? "var(--color-tea-green-600)" : "var(--color-tea-green-200)"}`,
-          background: "#ffffff",
-          color: "var(--color-tea-green-950)",
+          border: `1px solid ${focused ? "var(--color-border-focus)" : "var(--color-border)"}`,
+          background: "var(--color-bg-input)",
+          color: "var(--color-text)",
           fontSize: "0.9375rem",
           outline: "none",
           boxSizing: "border-box",
@@ -168,9 +168,9 @@ export default function PlacesAutocomplete({ value, onChange, onSelect, placehol
             width: "100%",
             padding: "0.625rem 2.5rem 0.625rem 0.875rem",
             borderRadius: "10px",
-            border: `1px solid ${focused ? "var(--color-tea-green-600)" : "var(--color-tea-green-200)"}`,
-            background: "#ffffff",
-            color: "var(--color-tea-green-950)",
+            border: `1px solid ${focused ? "var(--color-border-focus)" : "var(--color-border)"}`,
+            background: "var(--color-bg-input)",
+            color: "var(--color-text)",
             fontSize: "0.9375rem",
             outline: "none",
             boxSizing: "border-box",
@@ -196,8 +196,8 @@ export default function PlacesAutocomplete({ value, onChange, onSelect, placehol
           top: "calc(100% + 4px)",
           left: 0,
           right: 0,
-          background: "#ffffff",
-          border: "1px solid var(--color-tea-green-200)",
+          background: "var(--color-bg-input)",
+          border: "1px solid var(--color-border)",
           borderRadius: "10px",
           boxShadow: "0 8px 24px rgba(21,24,12,0.12)",
           listStyle: "none",
@@ -219,14 +219,14 @@ export default function PlacesAutocomplete({ value, onChange, onSelect, placehol
                 cursor: "pointer",
                 transition: "background 0.1s",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-tea-green-50)")}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-bg-selected)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
-              <span style={{ fontWeight: 600, color: "var(--color-tea-green-950)", fontSize: "0.9375rem" }}>
+              <span style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem" }}>
                 {s.mainText}
               </span>
               {s.secondaryText && (
-                <span style={{ color: "var(--color-tea-green-600)", fontSize: "0.8125rem", marginTop: "0.125rem" }}>
+                <span style={{ color: "var(--color-border-focus)", fontSize: "0.8125rem", marginTop: "0.125rem" }}>
                   {s.secondaryText}
                 </span>
               )}

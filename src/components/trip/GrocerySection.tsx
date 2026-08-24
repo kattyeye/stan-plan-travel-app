@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { NormalizedTrip, RecipeIngredient } from "@/types/trip";
+import { deduplicateIngredients } from "@/core/ingredients";
 
 interface Props { trip: NormalizedTrip }
 
@@ -23,11 +24,13 @@ export default function GrocerySection({ trip }: Props) {
   const [view, setView] = useState<"by-meal" | "master">("by-meal");
   const { groceryList } = trip;
 
-  // Build master list grouped by category
-  const allIngredients: RecipeIngredient[] = [
+  // Master list: merge the same item across every meal, then group by aisle.
+  // Without the dedupe pass an ingredient used in five recipes showed up five
+  // separate times.
+  const allIngredients: RecipeIngredient[] = deduplicateIngredients([
     ...groceryList.byMeal.flatMap((m) => m.ingredients),
     ...groceryList.staples,
-  ];
+  ]);
   const byCategory = allIngredients.reduce<Record<string, RecipeIngredient[]>>((acc, ing) => {
     const key = ing.category ?? "pantry";
     if (!acc[key]) acc[key] = [];
@@ -52,7 +55,7 @@ export default function GrocerySection({ trip }: Props) {
                 borderRadius: "6px",
                 border: "none",
                 background: view === v ? "var(--color-bg-card)" : "transparent",
-                color: view === v ? "var(--color-tea-green-900)" : "var(--color-text-muted)",
+                color: view === v ? "var(--color-text)" : "var(--color-text-muted)",
                 fontSize: "0.875rem",
                 fontWeight: view === v ? 600 : 400,
                 cursor: "pointer",
@@ -66,7 +69,7 @@ export default function GrocerySection({ trip }: Props) {
       </div>
 
       {groceryList.shoppingNote && (
-        <p style={{ padding: "0.75rem 1rem", background: "var(--color-bg-card)", border: "1px solid var(--color-cornsilk-200)", borderRadius: "8px", color: "var(--color-text-muted)", fontSize: "0.875rem", marginBottom: "1.25rem" }}>
+        <p style={{ padding: "0.75rem 1rem", background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "8px", color: "var(--color-text-muted)", fontSize: "0.875rem", marginBottom: "1.25rem" }}>
           💡 {groceryList.shoppingNote}
         </p>
       )}

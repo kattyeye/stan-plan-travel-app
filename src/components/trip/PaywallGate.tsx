@@ -38,7 +38,7 @@ export default function PaywallGate({ destination }: Props) {
         <div style={{
           width: 52, height: 52,
           borderRadius: "50%",
-          background: "var(--color-primary-light, #e8e0d5)",
+          background: "var(--color-brand-light)",
           display: "flex", alignItems: "center", justifyContent: "center",
           margin: "0 auto 1.25rem",
         }}>

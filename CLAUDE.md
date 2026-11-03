@@ -91,6 +91,7 @@ src/
 │       ├── suggest                      wizard chip suggestions (Haiku, cached, rate-limited)
 │       ├── drafts/[id]                  partner prefill drafts
 │       ├── admin/trips[/slug[/regenerate]] · admin/partners
+│       ├── v1/client/*                  public API for mobile apps & extensions — docs/CLIENT_API.md
 │       └── v1/trips[/id] · v1/openapi.json   partner API — see docs/PARTNER_API.md
 ├── components/
 │   ├── ui/          Tailwind UI kit — DO NOT modify
@@ -107,10 +108,15 @@ src/
 │   ├── validation.ts    zod input validation (wizard + partner)
 │   ├── security.ts      admin/internal auth, rate limiting, origins
 │   ├── stripe.ts · notify.ts · export-html.ts · utils.ts (quantities, grocery aggregation)
+│   ├── trips/           startTrip (pricing + validation) and resumeTrip — shared by web + client API
+│   ├── options.ts       every wizard option list (web wizard and /api/v1/client/config)
+│   ├── suggest.ts · geocode.ts   destination suggestions and autocomplete
+│   ├── api/client.ts    client-API response envelope + CORS
 │   ├── partners/        API keys + signed webhooks, listing adapters (Airbnb/VRBO), drafts
 │   └── __tests__/       vitest suites
 ├── styles/print.css
 └── types/trip.ts        ALL shared types
+src/sdk/irie-client.ts       typed client for apps/extensions (wraps /api/v1/client)
 scripts/mock-anthropic.mjs   local mock of the Messages API for credit-free development
 docs/PARTNER_API.md          partner integration guide
 ```
@@ -143,10 +149,11 @@ docs/PARTNER_API.md          partner integration guide
 3. **Add `"use client"`** to components using state, effects, or event handlers.
 4. **`recipes[]` is the source of truth** — itinerary and grocery reference by `recipeId`; restaurants are referenced by `restaurantId`. Never duplicate.
 5. **Never trust model output for facts code can compute**: dates, weekdays, quantities, servings, ids, opening hours. Validate with zod and normalize in `normalize.ts`.
-6. **Never start generation for an unpaid trip** and never accept wizard data from the client at generation time — the pipeline reads the stored trip.
-7. **The planning style must change the output everywhere** — itinerary phrasing, meal options, UI badges.
-8. Run `npm run typecheck`, `npm test` and `npm run build` before pushing.
-9. **Commit messages:** `feat:`, `fix:`, `style:`, `deps:`, `refactor:`, `test:`, `docs:` prefixes.
+6. **Website and client API share one implementation** (`lib/trips`, `lib/options`, `lib/suggest`, `lib/geocode`) — never fork logic into a route.
+7. **Never start generation for an unpaid trip** and never accept wizard data from the client at generation time — the pipeline reads the stored trip.
+8. **The planning style must change the output everywhere** — itinerary phrasing, meal options, UI badges.
+9. Run `npm run typecheck`, `npm test` and `npm run build` before pushing.
+10. **Commit messages:** `feat:`, `fix:`, `style:`, `deps:`, `refactor:`, `test:`, `docs:` prefixes.
 
 ---
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appOrigin } from "@/lib/security";
 
-/** OpenAPI 3.1 description of the partner API. */
+/** OpenAPI 3.1 description of the client and partner APIs. */
 export function GET(req: NextRequest) {
   const origin = appOrigin(req);
   const tripInput = {
@@ -67,10 +67,10 @@ export function GET(req: NextRequest) {
   return NextResponse.json({
     openapi: "3.1.0",
     info: {
-      title: "Irie Partner API",
+      title: "Irie API",
       version: "1.0.0",
       description:
-        "Create personalised, verified trip plans for guests of a booked stay. Authenticate with `Authorization: Bearer irie_live_…`. Webhooks are signed: `Irie-Signature: t=<unix>,v1=<hex HMAC-SHA256(secret, \"<t>.<body>\")>`.",
+        "Two surfaces. **Client API** (`/api/v1/client/*`, tag `client`): public, no key, CORS-enabled — for Irie's own mobile apps and browser extensions; a trip's unguessable id is its access capability. **Partner API** (`/api/v1/trips*`, tag `partner`): for booking platforms, authenticated with `Authorization: Bearer irie_live_…`; webhooks are signed `Irie-Signature: t=<unix>,v1=<hex HMAC-SHA256(secret, \"<t>.<body>\")>`. Errors use `{ error: { type, message } }`.",
     },
     servers: [{ url: origin }],
     components: {
@@ -78,9 +78,97 @@ export function GET(req: NextRequest) {
       schemas: { TripInput: tripInput, Property: property, Trip: trip, Error: error },
     },
     security: [{ bearer: [] }],
+    tags: [
+      { name: "client", description: "Public API for Irie's mobile apps and browser extensions (docs/CLIENT_API.md)" },
+      { name: "partner", description: "Authenticated API for booking platforms (docs/PARTNER_API.md)" },
+    ],
     paths: {
+      "/api/v1/client/config": {
+        get: { tags: ["client"], security: [], summary: "Wizard options, limits and pricing", responses: { "200": { description: "Config" } } },
+      },
+      "/api/v1/client/places": {
+        get: {
+          tags: ["client"],
+          security: [],
+          summary: "Destination autocomplete",
+          parameters: [
+            { name: "q", in: "query", required: true, schema: { type: "string", minLength: 2 } },
+            { name: "session", in: "query", schema: { type: "string" }, description: "One id per search session (improves billing on Google)" },
+          ],
+          responses: { "200": { description: "{ suggestions: [{ id, label, mainText, secondaryText }] }" }, "429": { description: "Rate limited" } },
+        },
+      },
+      "/api/v1/client/suggestions": {
+        get: {
+          tags: ["client"],
+          security: [],
+          summary: "Options that suit a destination",
+          parameters: [
+            { name: "destination", in: "query", required: true, schema: { type: "string" } },
+            { name: "kids", in: "query", schema: { type: "integer", default: 0 } },
+          ],
+          responses: { "200": { description: "{ tripTypes, vibes, cuisines, amenities }" } },
+        },
+      },
+      "/api/v1/client/trips": {
+        post: {
+          tags: ["client"],
+          security: [],
+          summary: "Create a trip (first plan per email is free; otherwise returns a Stripe checkoutUrl)",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["trip"],
+                  properties: { trip: { allOf: [{ $ref: "#/components/schemas/TripInput" }], required: ["destination", "startDate", "endDate", "email"] }, draftId: { type: "string" } },
+                },
+              },
+            },
+          },
+          responses: {
+            "201": { description: "{ id, payment: free|checkout, checkoutUrl, urls: { web, api, download } }" },
+            "400": { description: "invalid_request (with fields)" },
+            "402": { description: "payment_required — free plan used and payments not enabled" },
+            "429": { description: "rate_limited" },
+            "503": { description: "storage_unavailable" },
+          },
+        },
+      },
+      "/api/v1/client/trips/{id}": {
+        get: {
+          tags: ["client"],
+          security: [],
+          summary: "Status, progress, and the full plan once ready",
+          parameters: [
+            { name: "id", in: "path", required: true, schema: { type: "string" } },
+            { name: "plan", in: "query", schema: { type: "boolean", default: true } },
+          ],
+          responses: { "200": { description: "{ trip: { id, status, progress, … }, plan: GeneratedTrip | null }" }, "404": { description: "not_found" } },
+        },
+      },
+      "/api/v1/client/trips/{id}/resume": {
+        post: {
+          tags: ["client"],
+          security: [],
+          summary: "Restart a stalled build, or retry after an error ({ retry: true })",
+          parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+          responses: { "200": { description: "{ status, progress, started }" } },
+        },
+      },
+      "/api/v1/client/trips/{id}/download": {
+        get: {
+          tags: ["client"],
+          security: [],
+          summary: "Offline HTML copy of the plan",
+          parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+          responses: { "200": { description: "text/html attachment" }, "404": { description: "Not found or not ready" } },
+        },
+      },
       "/api/v1/trips": {
         post: {
+          tags: ["partner"],
           summary: "Create a trip (generate now) or a prefilled wizard link for the guest",
           requestBody: {
             required: true,
@@ -111,6 +199,7 @@ export function GET(req: NextRequest) {
           },
         },
         get: {
+          tags: ["partner"],
           summary: "List your recent trips",
           parameters: [{ name: "limit", in: "query", schema: { type: "integer", maximum: 100, default: 25 } }],
           responses: { "200": { description: "List of trips (without full plans)" } },
@@ -118,6 +207,7 @@ export function GET(req: NextRequest) {
       },
       "/api/v1/trips/{id}": {
         get: {
+          tags: ["partner"],
           summary: "Get a trip's status, and its full plan once ready",
           parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
           responses: {

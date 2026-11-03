@@ -1,8 +1,9 @@
 "use client";
-import { PlanningStyle, BudgetTier, TripVibe, TravelMethod, WizardData } from "@/types/trip";
+import { TripVibe, WizardData } from "@/types/trip";
 import StepCard from "../ui/StepCard";
 import StepNav from "../ui/StepNav";
 import Chip from "../ui/Chip";
+import { VIBES, PLANNING, BUDGET, TRAVEL } from "@/lib/options";
 
 interface Props {
   data: Partial<WizardData>;
@@ -13,35 +14,9 @@ interface Props {
   suggestionsLoading?: boolean;
 }
 
-const VIBES: { value: TripVibe; label: string; emoji: string }[] = [
-  { value: "laid-back", label: "Laid-back", emoji: "🛋️" },
-  { value: "adventurous", label: "Adventurous", emoji: "🧗" },
-  { value: "foodie", label: "Foodie", emoji: "🍽️" },
-  { value: "nature", label: "Nature", emoji: "🌿" },
-  { value: "cultural", label: "Cultural", emoji: "🏛️" },
-  { value: "family-fun", label: "Family fun", emoji: "🎡" },
-  { value: "nightlife", label: "Nightlife", emoji: "🍸" },
-  { value: "live-music", label: "Live music", emoji: "🎶" },
-];
 
-const PLANNING: { value: PlanningStyle; label: string; desc: string }[] = [
-  { value: "structured", label: "Structured", desc: "Every hour planned" },
-  { value: "balanced", label: "Balanced", desc: "Some plans, some flow" },
-  { value: "flexible", label: "Flexible", desc: "Go with the vibe" },
-];
 
-const BUDGET: { value: BudgetTier; label: string; desc: string; emoji: string }[] = [
-  { value: "budget", label: "Budget", desc: "Keep costs down", emoji: "💸" },
-  { value: "moderate", label: "Moderate", desc: "Treat ourselves a bit", emoji: "💰" },
-  { value: "splurge", label: "Splurge", desc: "No holding back", emoji: "✨" },
-];
 
-const TRAVEL: { value: TravelMethod; label: string; emoji: string }[] = [
-  { value: "car", label: "Car", emoji: "🚗" },
-  { value: "plane", label: "Plane", emoji: "✈️" },
-  { value: "train", label: "Train", emoji: "🚂" },
-  { value: "other", label: "Other", emoji: "🚌" },
-];
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (

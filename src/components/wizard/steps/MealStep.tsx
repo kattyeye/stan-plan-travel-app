@@ -1,8 +1,9 @@
 "use client";
-import { CookInRatio, WizardData } from "@/types/trip";
+import { WizardData } from "@/types/trip";
 import StepCard from "../ui/StepCard";
 import StepNav from "../ui/StepNav";
 import Chip from "../ui/Chip";
+import { COOK_RATIO, DIETARY, CUISINES } from "@/lib/options";
 
 interface Props {
   data: Partial<WizardData>;
@@ -13,14 +14,7 @@ interface Props {
   suggestionsLoading?: boolean;
 }
 
-const COOK_RATIO: { value: CookInRatio; label: string; desc: string; emoji: string }[] = [
-  { value: "mostly-in", label: "Mostly cook in", desc: "Groceries + recipes", emoji: "🍳" },
-  { value: "mix", label: "Mix it up", desc: "Some of both", emoji: "🔀" },
-  { value: "mostly-out", label: "Mostly eat out", desc: "Restaurants & takeout", emoji: "🍽️" },
-];
 
-const DIETARY = ["Vegetarian", "Vegan", "Gluten-free", "Dairy-free", "Nut allergy", "Halal", "Kosher", "Shellfish-free"];
-const CUISINES = ["American", "Italian", "Mexican", "Asian", "Mediterranean", "BBQ", "Seafood", "Farm-to-table", "Comfort food", "Brunch"];
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (

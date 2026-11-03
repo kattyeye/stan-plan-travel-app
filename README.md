@@ -3,6 +3,7 @@
 Personalised, verified trip plans: itinerary, meals and recipes, grocery list, restaurant guide, activities and packing list — built around the group, their planning style, and real opening hours.
 
 - **Architecture & conventions:** [CLAUDE.md](CLAUDE.md)
+- **Mobile app / browser extension API:** [docs/CLIENT_API.md](docs/CLIENT_API.md) · typed client in `src/sdk/irie-client.ts`
 - **Partner integration (Airbnb, VRBO, property managers):** [docs/PARTNER_API.md](docs/PARTNER_API.md)
 - **Configuration:** [.env.example](.env.example)
 

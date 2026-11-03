@@ -62,10 +62,10 @@ export default function GroupStep({ data, onUpdate, onNext, onBack }: Props) {
         Step 2 of 6
       </p>
       <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", color: "var(--color-text)", marginBottom: "0.375rem", lineHeight: 1.2 }}>
-        Who's coming?
+        Who&apos;s coming?
       </h2>
       <p style={{ color: "var(--color-text-muted)", fontSize: "0.9375rem", marginBottom: "1.75rem" }}>
-        We'll tailor activities, meals, and packing lists for your exact group.
+        We&apos;ll tailor activities, meals, and packing lists for your exact group.
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>

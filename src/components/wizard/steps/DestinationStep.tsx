@@ -31,7 +31,8 @@ interface Props {
 }
 
 export default function DestinationStep({ data, onUpdate, onNext, onDestinationSelected, suggestedTripTypes, suggestionsLoading }: Props) {
-  const canContinue = !!(data.destination && data.startDate && data.endDate && data.tripType);
+  const tooLong = (data.nights ?? 0) > 21;
+  const canContinue = !!(data.destination && data.startDate && data.endDate && data.tripType && (data.nights ?? 0) > 0 && !tooLong);
 
   function handleDates(start: string, end: string) {
     if (start && end) {
@@ -72,9 +73,14 @@ export default function DestinationStep({ data, onUpdate, onNext, onDestinationS
             endDate={data.endDate ?? ""}
             onChange={handleDates}
           />
-          {data.nights !== undefined && data.nights > 0 && (
+          {data.nights !== undefined && data.nights > 0 && !tooLong && (
             <p style={{ color: "var(--color-brand)", fontSize: "0.875rem", fontWeight: 500, marginTop: "0.5rem" }}>
               🌙 {data.nights} night{data.nights !== 1 ? "s" : ""}
+            </p>
+          )}
+          {tooLong && (
+            <p role="alert" style={{ color: "var(--color-error-text)", fontSize: "0.875rem", marginTop: "0.5rem" }}>
+              Plans cover up to 21 nights — split longer trips into two plans.
             </p>
           )}
         </div>

@@ -1,73 +1,67 @@
-import { GeneratedTrip, ItineraryDay, Meal } from "@/types/trip";
-import RecipeCard from "./RecipeCard";
+import { AlertTriangle } from "lucide-react";
+import type { GeneratedTrip, ItineraryDay, Restaurant } from "@/types/trip";
+import { shortDate } from "@/lib/pipeline/days";
+import MealRow, { warningStyle } from "./MealRow";
 
 interface Props { trip: GeneratedTrip }
 
-function MealRow({ meal, label, recipes }: { meal: Meal; label: string; recipes: GeneratedTrip["recipes"] }) {
-  const recipe = meal.recipeId ? recipes.find((r) => r.id === meal.recipeId) : null;
+const TIME_PREFIX = /^\s*((?:\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m\.|p\.m\.)?)|morning|midday|afternoon|evening|night|late night)\s*[—–-]\s*/i;
+
+function ScheduleLine({ line }: { line: string }) {
+  const m = line.match(TIME_PREFIX);
+  if (!m) return <>{line}</>;
   return (
-    <div style={{ marginBottom: "0.875rem" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.375rem", flexWrap: "nowrap", minWidth: 0 }}>
-        <span style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--color-text-faint)", flexShrink: 0 }}>{label}</span>
-        <span style={{ color: "var(--color-text)", fontSize: "0.9375rem", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{meal.name}</span>
-        {meal.type === "eat-out" && (
-          <span style={{ fontSize: "0.75rem", padding: "0.125rem 0.5rem", borderRadius: "999px", background: "var(--color-light-bronze-100)", color: "var(--color-light-bronze-700)", fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>eat out</span>
-        )}
-      </div>
-      {recipe && <RecipeCard recipe={recipe} />}
-    </div>
+    <>
+      <span style={{ fontWeight: 600, color: "var(--color-brand)", marginRight: "0.375rem", whiteSpace: "nowrap" }}>{m[1]}</span>
+      {line.slice(m[0].length)}
+    </>
   );
 }
 
-function DayCard({ day, recipes }: { day: ItineraryDay; recipes: GeneratedTrip["recipes"] }) {
+function DayCard({ day, trip, restaurants }: { day: ItineraryDay; trip: GeneratedTrip; restaurants: Map<string, Restaurant> }) {
   return (
-    <div style={{
-      background: "var(--color-bg-card)",
-      border: "1px solid var(--color-border)",
-      borderRadius: "14px",
-      padding: "1.5rem",
-      marginBottom: "1.25rem",
-    }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: "0.75rem", marginBottom: "1.25rem", flexWrap: "wrap" }}>
-        <span style={{ fontFamily: "var(--font-display)", fontSize: "1.375rem", color: "var(--color-heading)", fontWeight: 400 }}>Day {day.day}</span>
-        <span style={{ color: "var(--color-text-muted)", fontSize: "0.875rem", fontWeight: 500 }}>{day.date}</span>
+    <article
+      aria-labelledby={`day-${day.day}`}
+      style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-card)", padding: "1.25rem 1.25rem 0.5rem", marginBottom: "1.25rem", boxShadow: "var(--shadow-card)" }}
+    >
+      <header style={{ display: "flex", alignItems: "baseline", gap: "0.625rem", marginBottom: "1rem", flexWrap: "wrap" }}>
+        <h3 id={`day-${day.day}`} style={{ fontFamily: "var(--font-display)", fontSize: "1.375rem", color: "var(--color-heading)", fontWeight: 400, margin: 0 }}>
+          Day {day.day}
+        </h3>
+        <span style={{ color: "var(--color-text-muted)", fontSize: "0.875rem", fontWeight: 500 }}>{shortDate(day.date)}</span>
         {day.theme && <span style={{ color: "var(--color-accent)", fontSize: "0.875rem", fontStyle: "italic" }}>— {day.theme}</span>}
-      </div>
+      </header>
 
-      {/* Activities */}
+      {day.warnings?.map((w) => (
+        <p key={w} role="note" style={warningStyle}><AlertTriangle size={13} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />{w}</p>
+      ))}
+
       {day.activities.length > 0 && (
-        <div style={{ marginBottom: "1.25rem" }}>
-          <p style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--color-text-faint)", marginBottom: "0.5rem" }}>Activities</p>
-          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.375rem" }}>
-            {day.activities.map((a, i) => (
-              <li key={i} style={{ fontSize: "0.9375rem", color: "var(--color-text)", paddingLeft: "1rem", position: "relative" }}>
-                <span style={{ position: "absolute", left: 0, color: "var(--color-text-faint)" }}>·</span>
-                {a}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <ul style={{ listStyle: "none", padding: 0, margin: "0 0 1.125rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          {day.activities.map((a, i) => (
+            <li key={i} style={{ fontSize: "0.9375rem", color: "var(--color-text)", lineHeight: 1.5, paddingLeft: "0.875rem", borderLeft: "2px solid var(--color-border)" }}>
+              <ScheduleLine line={a} />
+            </li>
+          ))}
+        </ul>
       )}
 
-      {/* Meals */}
-      <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "1rem" }}>
-        <p style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--color-text-faint)", marginBottom: "0.75rem" }}>Meals</p>
-        {day.meals.breakfast && <MealRow meal={day.meals.breakfast} label="Breakfast" recipes={recipes} />}
-        {day.meals.lunch && <MealRow meal={day.meals.lunch} label="Lunch" recipes={recipes} />}
-        {day.meals.dinner && <MealRow meal={day.meals.dinner} label="Dinner" recipes={recipes} />}
+      <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "0.875rem" }}>
+        <MealRow label="Breakfast" meal={day.meals.breakfast} recipes={trip.recipes} restaurants={restaurants} />
+        <MealRow label="Lunch" meal={day.meals.lunch} recipes={trip.recipes} restaurants={restaurants} />
+        <MealRow label="Dinner" meal={day.meals.dinner} recipes={trip.recipes} restaurants={restaurants} />
       </div>
-    </div>
+    </article>
   );
 }
 
 export default function ItinerarySection({ trip }: Props) {
+  const restaurants = new Map(trip.restaurants.map((r) => [r.id, r]));
   return (
     <div>
-      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", color: "var(--color-heading)", marginBottom: "1.5rem" }}>
-        Daily Itinerary
-      </h2>
+      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", color: "var(--color-heading)", marginBottom: "1.25rem" }}>Daily Itinerary</h2>
       {trip.itinerary.map((day) => (
-        <DayCard key={day.day} day={day} recipes={trip.recipes} />
+        <DayCard key={day.day} day={day} trip={trip} restaurants={restaurants} />
       ))}
     </div>
   );

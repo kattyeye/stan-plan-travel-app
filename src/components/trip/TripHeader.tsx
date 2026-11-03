@@ -1,11 +1,13 @@
-import { GeneratedTrip } from "@/types/trip";
-import PrintButton from "./PrintButton";
-import { CalendarDays, Moon, Users, Baby, Home, Sparkles } from "lucide-react";
+import type { GeneratedTrip } from "@/types/trip";
+import { shortDate } from "@/lib/pipeline/days";
+import TripActions from "./TripActions";
+import { CalendarDays, Moon, Users, Baby, Home, Sparkles, ShieldCheck } from "lucide-react";
 
 interface Props {
   trip: GeneratedTrip;
   cityPhoto?: string | null;
   preview?: boolean;
+  slug?: string;
 }
 
 const STYLE_BADGE: Record<string, string> = {
@@ -14,8 +16,8 @@ const STYLE_BADGE: Record<string, string> = {
   flexible: "Go with the flow",
 };
 
-export default function TripHeader({ trip, cityPhoto, preview }: Props) {
-  const { meta, preferences } = trip;
+export default function TripHeader({ trip, cityPhoto, preview, slug }: Props) {
+  const { meta, preferences, quality } = trip;
   const badge = preferences ? (STYLE_BADGE[preferences.planningStyle] ?? preferences.planningStyle) : null;
 
   return (
@@ -57,7 +59,7 @@ export default function TripHeader({ trip, cityPhoto, preview }: Props) {
         zIndex: 1,
         maxWidth: "800px",
         margin: "0 auto",
-        padding: "2.75rem 2rem 2.25rem",
+        padding: "2.5rem 1rem 2rem",
       }}>
 
         {/* Breadcrumb */}
@@ -85,14 +87,13 @@ export default function TripHeader({ trip, cityPhoto, preview }: Props) {
             fontFamily: "var(--font-display)",
             fontSize: "clamp(1.875rem, 5vw, 3rem)",
             lineHeight: 1.1,
-            color: "#ffffff",
+            color: "var(--color-header-text)",
             flex: "1 1 auto",
             margin: 0,
             textShadow: cityPhoto ? "0 2px 16px rgba(0,0,0,0.5)" : "none",
           }}>
             {meta.title}
           </h1>
-          {!preview && <PrintButton />}
         </div>
 
         {/* Destination */}
@@ -110,7 +111,7 @@ export default function TripHeader({ trip, cityPhoto, preview }: Props) {
         {/* Meta pills */}
         <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-            <MetaPill icon={<CalendarDays size={13} />} label={`${meta.dates.start} – ${meta.dates.end}`} photo={!!cityPhoto} />
+            <MetaPill icon={<CalendarDays size={13} />} label={`${shortDate(meta.dates.start)} – ${shortDate(meta.dates.end)}`} photo={!!cityPhoto} />
             <MetaPill icon={<Moon size={13} />} label={`${meta.dates.nights} night${meta.dates.nights !== 1 ? "s" : ""}`} photo={!!cityPhoto} />
             <MetaPill icon={<Users size={13} />} label={`${meta.group.totalPeople} ${meta.group.totalPeople === 1 ? "person" : "people"}`} photo={!!cityPhoto} />
             {meta.group.kids > 0 && (
@@ -123,7 +124,22 @@ export default function TripHeader({ trip, cityPhoto, preview }: Props) {
               <MetaPill icon={<Home size={13} />} label={meta.property} photo={!!cityPhoto} />
             </div>
           )}
+          {quality && quality.venues.total > 0 && (
+            <p style={{ display: "flex", alignItems: "center", gap: "0.375rem", margin: "0.25rem 0 0", fontSize: "0.8125rem", color: cityPhoto ? "rgba(255,255,255,0.85)" : "var(--color-header-muted)" }}>
+              <ShieldCheck size={14} aria-hidden="true" />
+              {quality.venues.verified > 0
+                ? `${quality.venues.verified} of ${quality.venues.total} places confirmed open on Google Maps`
+                : `${quality.venues.total} places checked against current web sources`}
+              {" · "}checked {new Date(quality.checkedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+            </p>
+          )}
         </div>
+
+        {!preview && slug && (
+          <div style={{ marginTop: "1.5rem" }}>
+            <TripActions slug={slug} title={meta.title} />
+          </div>
+        )}
       </div>
     </header>
   );
@@ -147,11 +163,14 @@ function MetaPill({ icon, label, accent, photo }: { icon: React.ReactNode; label
       fontSize: "0.8125rem",
       fontWeight: accent ? 600 : 400,
       color: photo ? "#ffffff" : (accent ? "var(--color-tea-green-300)" : "var(--color-tea-green-200)"),
+      maxWidth: "100%",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
       whiteSpace: "nowrap",
-      lineHeight: 1,
+      lineHeight: 1.2,
     }}>
       <span style={{ opacity: 0.8, display: "flex", alignItems: "center" }}>{icon}</span>
-      <span>{label}</span>
+      <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
     </span>
   );
 }

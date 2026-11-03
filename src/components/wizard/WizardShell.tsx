@@ -59,6 +59,12 @@ function prefillFromUrl(params: URLSearchParams): Partial<WizardData> {
   if (adults) out.numAdults = adults;
   const kids = intParam(params.get("children") ?? params.get("kids"), 15);
   if (kids !== undefined) out.numKids = kids;
+  const diets = params
+    .getAll("diet")
+    .map((d) => d.trim().slice(0, 40))
+    .filter(Boolean)
+    .slice(0, 10);
+  if (diets.length) out.dietaryRestrictions = [...new Set(diets)];
   return out;
 }
 

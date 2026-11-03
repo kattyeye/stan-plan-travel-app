@@ -99,7 +99,8 @@ export default function MealStep({ data, onUpdate, onNext, onBack, suggestedCuis
         <div>
           <SectionTitle>Dietary needs <span style={{ fontWeight: 400, color: "var(--color-text-faint)" }}>(optional)</span></SectionTitle>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-            {DIETARY.map((d) => (
+            {/* Include custom needs added elsewhere (e.g. the landing-page quick start) so they stay visible and removable. */}
+            {[...DIETARY, ...dietary.filter((d) => !DIETARY.includes(d))].map((d) => (
               <Chip key={d} label={d} selected={dietary.includes(d)} onClick={() => toggleDietary(d)} />
             ))}
           </div>

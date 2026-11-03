@@ -1,5 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
+import HeroSearch from "@/components/landing/HeroSearch";
+import QuickStartCard from "@/components/landing/QuickStartCard";
 
 const DESTINATIONS = [
   {
@@ -153,72 +155,7 @@ export default function Home() {
             Not flights. Not hotels. Just everything after you land.
           </p>
 
-          {/* Mini form — a plain GET form, so it works before JS loads; the wizard reads ?destination=&adults= */}
-          <form action="/wizard" method="get" role="search" aria-label="Start planning a trip" style={{
-            display: "flex",
-            gap: "0.75rem",
-            flexWrap: "wrap",
-            marginBottom: "2rem",
-          }}>
-            <input
-              type="text"
-              name="destination"
-              aria-label="Destination"
-              autoComplete="off"
-              maxLength={160}
-              placeholder="Where to?"
-              style={{
-                flex: "1 1 160px",
-                padding: "0.75rem 1rem",
-                background: "var(--color-bg-input)",
-                border: "1px solid var(--color-border)",
-                borderRadius: "var(--radius-input)",
-                fontSize: "0.9375rem",
-                color: "var(--color-text)",
-                outline: "none",
-              }}
-            />
-            <select
-              name="adults"
-              aria-label="Group size"
-              defaultValue=""
-              style={{
-                flex: "0 1 140px",
-                padding: "0.75rem 1rem",
-                background: "var(--color-bg-input)",
-                border: "1px solid var(--color-border)",
-                borderRadius: "var(--radius-input)",
-                fontSize: "0.9375rem",
-                color: "var(--color-text-muted)",
-                outline: "none",
-                cursor: "pointer",
-              }}
-            >
-              <option value="" disabled>Group Size</option>
-              <option value="1">Solo</option>
-              <option value="2">2 people</option>
-              <option value="4">3–5 people</option>
-              <option value="6">6+ people</option>
-            </select>
-            <button type="submit" style={{
-              border: "none",
-              cursor: "pointer",
-              minHeight: 44,
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.4rem",
-              padding: "0.75rem 1.5rem",
-              background: "var(--color-brand)",
-              color: "var(--color-text-inverse)",
-              borderRadius: "999px",
-              fontWeight: 600,
-              fontSize: "0.9375rem",
-              textDecoration: "none",
-              whiteSpace: "nowrap",
-            }}>
-              Build My Itinerary →
-            </button>
-          </form>
+          <HeroSearch />
 
           {/* Social proof */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
@@ -251,62 +188,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Right — wizard preview card */}
-        <div style={{
-          background: "var(--color-bg-card)",
-          border: "1px solid var(--color-border)",
-          borderRadius: "20px",
-          padding: "1.75rem",
-          boxShadow: "var(--shadow-float)",
-        }}>
-          <p style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.5rem" }}>Trip Wizard</p>
-          <p style={{ fontFamily: "var(--font-display)", fontSize: "1.375rem", color: "var(--color-heading)", marginBottom: "1.25rem" }}>What&apos;s the vibe?</p>
-          <div style={{ height: "4px", background: "var(--color-border)", borderRadius: "999px", marginBottom: "1.5rem", overflow: "hidden" }}>
-            <div style={{ width: "40%", height: "100%", background: "var(--color-brand)", borderRadius: "999px" }} />
-          </div>
-          <p style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.75rem" }}>Select Group Type</p>
-          <div style={{ display: "flex", gap: "0.625rem", marginBottom: "1.25rem", flexWrap: "wrap" }}>
-            {["Friends Trip","Couples","Family","Solo"].map((t, i) => (
-              <span key={t} style={{
-                padding: "0.5rem 1rem",
-                borderRadius: "999px",
-                fontSize: "0.8125rem",
-                fontWeight: 500,
-                background: i === 0 ? "var(--color-brand)" : "var(--color-bg-selected)",
-                color: i === 0 ? "var(--color-text-inverse)" : "var(--color-text-muted)",
-                border: i === 0 ? "none" : "1px solid var(--color-border)",
-              }}>{t}</span>
-            ))}
-          </div>
-          <p style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.75rem" }}>Dietary Needs</p>
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            {["Vegan ✕","Gluten-Free ✕","+ Add"].map((tag) => (
-              <span key={tag} style={{
-                padding: "0.375rem 0.875rem",
-                borderRadius: "999px",
-                fontSize: "0.8125rem",
-                background: "var(--color-brand-light)",
-                color: "var(--color-brand)",
-                border: "1px solid var(--color-brand-light)",
-              }}>{tag}</span>
-            ))}
-          </div>
-          <div style={{ marginTop: "1.5rem" }}>
-            <Link href="/wizard" style={{
-              display: "block",
-              textAlign: "center",
-              padding: "0.75rem",
-              background: "var(--color-brand)",
-              color: "var(--color-text-inverse)",
-              borderRadius: "999px",
-              fontWeight: 600,
-              fontSize: "0.9375rem",
-              textDecoration: "none",
-            }}>
-              Continue Building →
-            </Link>
-          </div>
-        </div>
+        {/* Right — quick start into the wizard */}
+        <QuickStartCard />
       </section>
 
       {/* ── POPULAR DESTINATIONS ── */}

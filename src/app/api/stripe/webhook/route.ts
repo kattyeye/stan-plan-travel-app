@@ -1,16 +1,20 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
+import type Stripe from "stripe";
+import { getTripBySlug, updateTrip, updateTripStripeSession } from "@/lib/db";
+import { runPipeline } from "@/lib/pipeline";
 import { constructWebhookEvent } from "@/lib/stripe";
-import { getTripByStripeSession, updateTripStatus, updateTripStripeSession } from "@/lib/db";
-import { generateTripJSON, generateTripHTML } from "@/lib/claude";
-import { saveTripData } from "@/lib/db";
 
+export const maxDuration = 300;
+
+/**
+ * Stripe webhook. Verifies the signature, ignores replays, marks the trip paid
+ * and starts generation after responding (so Stripe never waits on Claude).
+ */
 export async function POST(req: NextRequest) {
   const signature = req.headers.get("stripe-signature");
-  if (!signature) {
-    return NextResponse.json({ error: "Missing signature" }, { status: 400 });
-  }
+  if (!signature) return NextResponse.json({ error: "Missing signature" }, { status: 400 });
 
-  let event;
+  let event: Stripe.Event;
   try {
     const payload = Buffer.from(await req.arrayBuffer());
     event = await constructWebhookEvent(payload, signature);
@@ -19,40 +23,39 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object;
-    const slug = session.metadata?.slug;
+  if (event.type !== "checkout.session.completed" && event.type !== "checkout.session.async_payment_succeeded") {
+    return NextResponse.json({ received: true });
+  }
 
-    if (!slug) {
-      console.error("Webhook: no slug in session metadata", session.id);
+  const session = event.data.object as Stripe.Checkout.Session;
+  const slug = session.metadata?.slug;
+  if (!slug) {
+    console.error("Webhook: no slug in session metadata", session.id);
+    return NextResponse.json({ received: true });
+  }
+  if (session.payment_status !== "paid") {
+    // e.g. bank transfers: wait for async_payment_succeeded.
+    return NextResponse.json({ received: true });
+  }
+
+  try {
+    const trip = await getTripBySlug(slug);
+    if (!trip) {
+      console.error(`Webhook: trip ${slug} not found for session ${session.id}`);
       return NextResponse.json({ received: true });
     }
+    // Replays and late deliveries: the success page may already have started it.
+    if (trip.status === "ready" || trip.status === "generating") return NextResponse.json({ received: true });
 
-    try {
-      // Attach session ID to trip record and mark paid
-      await updateTripStripeSession(slug, session.id);
-      await updateTripStatus(slug, "paid");
-
-      // Fire off generation — webhook must return quickly so we don't await
-      triggerGeneration(slug).catch((err) => {
-        console.error(`Generation failed for ${slug}:`, err);
-        updateTripStatus(slug, "error").catch(() => {});
-      });
-    } catch (err) {
-      console.error(`Webhook processing failed for slug ${slug}:`, err);
-    }
+    if (trip.stripeSessionId !== session.id) await updateTripStripeSession(slug, session.id);
+    await updateTrip(slug, { status: "paid", billing: "stripe" });
+    // Generation is idempotent: a per-trip lock and checkpoints stop double runs.
+    after(() => runPipeline(slug));
+  } catch (err) {
+    console.error(`Webhook processing failed for ${slug}:`, err);
+    // 500 makes Stripe retry later.
+    return NextResponse.json({ error: "Processing failed" }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });
-}
-
-async function triggerGeneration(slug: string) {
-  const { getTripBySlug } = await import("@/lib/db");
-  const trip = await getTripBySlug(slug);
-  if (!trip) throw new Error(`Trip not found: ${slug}`);
-
-  await updateTripStatus(slug, "generating");
-  const generatedData = await generateTripJSON(trip.wizardData);
-  const htmlBlob = await generateTripHTML(generatedData);
-  await saveTripData(slug, generatedData, htmlBlob);
 }

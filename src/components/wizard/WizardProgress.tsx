@@ -14,7 +14,7 @@ export default function WizardProgress({ currentStep, totalSteps }: Props) {
       background: "var(--color-bg-card)",
       borderBottom: "1px solid var(--color-border)",
       position: "sticky",
-      top: 0,
+      top: 60,
       zIndex: 20,
     }}>
       <div style={{ maxWidth: "640px", margin: "0 auto", padding: "0.875rem 1.5rem 0.875rem" }}>

@@ -11,13 +11,24 @@ interface Props {
   onUpdate: (data: Partial<WizardData>) => void;
   onNext?: () => void;
   onBack?: () => void;
+  /** Partner draft id; the server attaches the listing details from it. */
+  draftId?: string;
+  onEditStep?: (step: number) => void;
 }
+
+const FIELD_STEP: Record<string, number> = {
+  destination: 1, startDate: 1, endDate: 1, tripType: 1,
+  numAdults: 2, numKids: 2, kidAges: 2,
+  planningStyle: 3, budget: 3, vibes: 3, travelMethod: 3,
+  cookInRatio: 4, dietaryRestrictions: 4, cuisinePreferences: 4,
+  propertyDescription: 5, propertyAmenities: 5,
+};
 
 function isValidEmail(s: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 }
 
-export default function EmailStep({ data, onUpdate, onBack }: Props) {
+export default function EmailStep({ data, onUpdate, onBack, draftId, onEditStep }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,10 +43,21 @@ export default function EmailStep({ data, onUpdate, onBack }: Props) {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wizardData: data }),
+        body: JSON.stringify({ wizardData: data, draftId }),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Something went wrong");
+      const json = await res.json().catch(() => ({}));
+      if (res.status === 429) throw new Error("You've started a few trips in a row — please wait a few minutes and try again.");
+      if (!res.ok) {
+        const field = Object.keys(json.fields ?? {})[0]?.split(".")[0];
+        const step = field ? FIELD_STEP[field] : undefined;
+        if (step && onEditStep) {
+          setError(`${json.fields[Object.keys(json.fields)[0]]} — taking you back to fix it.`);
+          setTimeout(() => onEditStep(step), 1600);
+          setLoading(false);
+          return;
+        }
+        throw new Error(json.fields?.email ?? json.error ?? "Something went wrong");
+      }
       clearWizardDraft();
       window.location.href = json.url;
     } catch (err) {
@@ -53,7 +75,7 @@ export default function EmailStep({ data, onUpdate, onBack }: Props) {
         Almost there!
       </h2>
       <p style={{ color: "var(--color-text-muted)", fontSize: "0.9375rem", marginBottom: "1.75rem" }}>
-        Give your trip a name and drop your email — we'll send your plan here when it's ready.
+        Give your trip a name and drop your email — we&apos;ll send your plan here when it&apos;s ready.
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
@@ -77,21 +99,21 @@ export default function EmailStep({ data, onUpdate, onBack }: Props) {
             onChange={(e) => onUpdate({ email: e.target.value })}
           />
           <p style={{ color: "var(--color-text-faint)", fontSize: "0.8125rem", marginTop: "0.375rem" }}>
-            We'll send your trip plan here. No spam, ever.
+            We&apos;ll send your trip plan here. No spam, ever.
           </p>
         </div>
 
         <div style={{ padding: "1.25rem", borderRadius: "var(--radius-input)", background: "var(--color-bg)", border: "1px solid var(--color-border)", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           <p style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.875rem", marginBottom: "0.25rem" }}>Your trip summary</p>
-          {data.destination && <SummaryRow emoji="📍" label={data.destination} />}
+          {data.destination && <SummaryRow emoji="📍" label={data.destination} onEdit={onEditStep && (() => onEditStep(1))} />}
           {data.startDate && data.endDate && (
-            <SummaryRow emoji="📅" label={`${data.startDate} → ${data.endDate}${data.nights ? ` (${data.nights} nights)` : ""}`} />
+            <SummaryRow emoji="📅" label={`${data.startDate} → ${data.endDate}${data.nights ? ` (${data.nights} nights)` : ""}`} onEdit={onEditStep && (() => onEditStep(1))} />
           )}
           {(data.numAdults || data.numKids) && (
-            <SummaryRow emoji="👥" label={`${data.numAdults ?? 0} adult${(data.numAdults ?? 0) !== 1 ? "s" : ""}${data.numKids ? ` + ${data.numKids} kid${data.numKids !== 1 ? "s" : ""}` : ""}`} />
+            <SummaryRow emoji="👥" label={`${data.numAdults ?? 0} adult${(data.numAdults ?? 0) !== 1 ? "s" : ""}${data.numKids ? ` + ${data.numKids} kid${data.numKids !== 1 ? "s" : ""}` : ""}`} onEdit={onEditStep && (() => onEditStep(2))} />
           )}
-          {data.budget && <SummaryRow emoji="💰" label={data.budget.charAt(0).toUpperCase() + data.budget.slice(1) + " budget"} />}
-          {data.cookInRatio && <SummaryRow emoji="🍴" label={{ "mostly-in": "Mostly cooking in", "mix": "Mix of cooking & eating out", "mostly-out": "Mostly eating out" }[data.cookInRatio]} />}
+          {data.budget && <SummaryRow emoji="💰" label={`${data.budget.charAt(0).toUpperCase() + data.budget.slice(1)} budget · ${data.planningStyle ?? "balanced"} plan`} onEdit={onEditStep && (() => onEditStep(3))} />}
+          {data.cookInRatio && <SummaryRow emoji="🍴" label={{ "mostly-in": "Mostly cooking in", "mix": "Mix of cooking & eating out", "mostly-out": "Mostly eating out" }[data.cookInRatio] + (data.dietaryRestrictions?.length ? ` · ${data.dietaryRestrictions.join(", ")}` : "")} onEdit={onEditStep && (() => onEditStep(4))} />}
         </div>
       </div>
 
@@ -121,7 +143,7 @@ export default function EmailStep({ data, onUpdate, onBack }: Props) {
           {loading ? "Redirecting to checkout…" : "Build my trip plan →"}
         </button>
         <p style={{ textAlign: "center", color: "var(--color-text-faint)", fontSize: "0.8125rem", marginTop: "0.75rem" }}>
-          $19 · Your plan will be ready in a few minutes.
+          $19 one-time · Ready in about 3–5 minutes · Every restaurant checked against live listings
         </p>
       </div>
 
@@ -138,12 +160,17 @@ export default function EmailStep({ data, onUpdate, onBack }: Props) {
   );
 }
 
-function SummaryRow({ emoji, label }: { emoji: string; label: string | undefined }) {
+function SummaryRow({ emoji, label, onEdit }: { emoji: string; label: string | undefined; onEdit?: () => void }) {
   if (!label) return null;
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-text-muted)", fontSize: "0.875rem" }}>
-      <span>{emoji}</span>
-      <span>{label}</span>
+      <span aria-hidden="true">{emoji}</span>
+      <span style={{ flex: 1 }}>{label}</span>
+      {onEdit && (
+        <button type="button" onClick={onEdit} style={{ background: "none", border: "none", color: "var(--color-brand)", fontSize: "0.8125rem", cursor: "pointer", padding: "0.25rem", textDecoration: "underline" }}>
+          Edit<span className="sr-only"> {label}</span>
+        </button>
+      )}
     </div>
   );
 }

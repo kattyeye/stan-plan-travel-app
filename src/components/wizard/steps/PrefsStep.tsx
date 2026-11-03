@@ -106,7 +106,7 @@ export default function PrefsStep({ data, onUpdate, onNext, onBack, suggestedVib
         Step 3 of 6
       </p>
       <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", color: "var(--color-text)", marginBottom: "0.375rem", lineHeight: 1.2 }}>
-        What's your vibe?
+        What&apos;s your vibe?
       </h2>
       <p style={{ color: "var(--color-text-muted)", fontSize: "0.9375rem", marginBottom: "1.75rem" }}>
         This shapes the whole feel of your plan.

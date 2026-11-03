@@ -21,7 +21,7 @@ export default function Navbar() {
       zIndex: 50,
       background: "var(--color-bg-card)",
       borderBottom: "1px solid var(--color-border)",
-      padding: "0 2rem",
+      padding: "0 1rem",
       height: "60px",
       display: "flex",
       alignItems: "center",
@@ -33,7 +33,7 @@ export default function Navbar() {
       </Link>
 
       {isLanding && (
-        <div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
+        <div className="nav-links" style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
           {NAV_LINKS.map((link) => (
             <Link key={link.label} href={link.href} style={{
               textDecoration: "none",

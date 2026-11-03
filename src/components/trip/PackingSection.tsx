@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
-import { GeneratedTrip, PackingItem } from "@/types/trip";
+import { useCallback } from "react";
+import type { GeneratedTrip, PackingItem } from "@/types/trip";
+import { useStoredChecklist } from "@/hooks/useStoredChecklist";
 
-interface Props { trip: GeneratedTrip }
+interface Props { trip: GeneratedTrip; slug?: string }
 
 type CheckedState = Record<string, boolean>;
 
@@ -29,17 +30,10 @@ function buildInitialState(packing: GeneratedTrip["packingList"]): CheckedState 
   return state;
 }
 
-export default function PackingSection({ trip }: Props) {
+export default function PackingSection({ trip, slug }: Props) {
   const { packingList } = trip;
-  const [checked, setChecked] = useState<CheckedState>(() => buildInitialState(packingList));
-
-  function toggle(key: string) {
-    setChecked((prev) => ({ ...prev, [key]: !prev[key] }));
-  }
-
-  function reset() {
-    setChecked(buildInitialState(packingList));
-  }
+  const initial = useCallback(() => buildInitialState(packingList), [packingList]);
+  const { checked, toggle, reset } = useStoredChecklist(`irie:${slug ?? trip.meta.title}:packing`, initial);
 
   const total = Object.keys(checked).length;
   const done = Object.values(checked).filter(Boolean).length;
@@ -48,7 +42,7 @@ export default function PackingSection({ trip }: Props) {
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem", flexWrap: "wrap", gap: "0.75rem" }}>
         <div>
-          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", color: "var(--color-text)", marginBottom: "0.25rem" }}>
+          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", color: "var(--color-heading)", marginBottom: "0.25rem" }}>
             Packing List
           </h2>
           <p aria-live="polite" aria-atomic="true" style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>
@@ -58,7 +52,7 @@ export default function PackingSection({ trip }: Props) {
         <button
           onClick={reset}
           aria-label="Reset all items to unchecked"
-          style={{ padding: "0.5rem 1rem", borderRadius: "8px", border: "1px solid var(--color-tea-green-300)", background: "transparent", color: "var(--color-text-muted)", fontSize: "0.875rem", cursor: "pointer" }}
+          style={{ padding: "0.5rem 1rem", borderRadius: "8px", border: "1px solid var(--color-border)", background: "transparent", color: "var(--color-text-muted)", fontSize: "0.875rem", cursor: "pointer" }}
         >
           Reset
         </button>
@@ -73,14 +67,14 @@ export default function PackingSection({ trip }: Props) {
         aria-label={`${done} of ${total} items packed`}
         style={{ height: "6px", background: "var(--color-border)", borderRadius: "999px", marginBottom: "1.75rem", overflow: "hidden" }}
       >
-        <div style={{ height: "100%", background: "var(--color-text-muted)", borderRadius: "999px", width: `${(done / total) * 100}%`, transition: "width 0.2s" }} />
+        <div style={{ height: "100%", background: "var(--color-brand)", borderRadius: "999px", width: `${total ? (done / total) * 100 : 0}%`, transition: "width 0.2s" }} />
       </div>
 
       {(Object.entries(packingList) as [keyof typeof packingList, PackingItem[]][])
         .filter(([, items]) => items.length > 0)
         .map(([section, items]) => (
           <div key={section} style={{ marginBottom: "1.5rem" }}>
-            <h3 style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem", marginBottom: "0.625rem" }}>
+            <h3 style={{ fontFamily: "var(--font-sans)", fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem", marginBottom: "0.625rem" }}>
               {SECTION_LABELS[section] ?? section}
             </h3>
             <div style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: "10px", overflow: "hidden" }}>
@@ -95,6 +89,7 @@ export default function PackingSection({ trip }: Props) {
                       alignItems: "center",
                       gap: "0.75rem",
                       padding: "0.625rem 1rem",
+                      minHeight: 44,
                       borderBottom: i < items.length - 1 ? "1px solid var(--color-border)" : "none",
                       cursor: "pointer",
                       userSelect: "none",
@@ -104,7 +99,7 @@ export default function PackingSection({ trip }: Props) {
                       type="checkbox"
                       checked={isChecked}
                       onChange={() => toggle(key)}
-                      style={{ width: "1rem", height: "1rem", accentColor: "var(--color-text-muted)", flexShrink: 0 }}
+                      style={{ width: "1.125rem", height: "1.125rem", accentColor: "var(--color-brand)", flexShrink: 0 }}
                     />
                     <span style={{
                       fontSize: "0.875rem",

@@ -1,173 +1,328 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { readFile } from "fs/promises";
-import path from "path";
-import { WizardData, GeneratedTrip } from "@/types/trip";
+import type {
+  BetaContentBlock,
+  BetaMessage,
+  BetaMessageParam,
+  BetaTool,
+  BetaToolUnion,
+} from "@anthropic-ai/sdk/resources/beta/messages/messages";
+import { z } from "zod";
+import type { SourceLink } from "@/types/trip";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// ─── Configuration ───────────────────────────────────────────────────────────
 
-const MODEL = "claude-haiku-4-5-20251001"; // dev: swap to claude-sonnet-4-20250514 for production
+export type Effort = "low" | "medium" | "high" | "xhigh" | "max";
 
-async function loadPrompt(filename: string): Promise<string> {
-  const filePath = path.join(process.cwd(), "src", "prompts", filename);
-  return readFile(filePath, "utf-8");
+/** All model choices live here and can be overridden per environment. */
+export const MODELS = {
+  /** Research, planning and recipes. */
+  planner: process.env.IRIE_MODEL ?? "claude-opus-5-5",
+  /** Cheap, latency-sensitive helpers (wizard suggestions). */
+  fast: process.env.IRIE_FAST_MODEL ?? "claude-haiku-5-5",
+};
+
+function effortFromEnv(name: string, fallback: Effort): Effort {
+  const v = process.env[name];
+  return v === "low" || v === "medium" || v === "high" || v === "xhigh" || v === "max" ? v : fallback;
 }
 
-export function buildUserPrompt(wizardData: WizardData): string {
-  const {
-    destination,
-    startDate,
-    endDate,
-    nights,
-    tripType,
-    planningStyle,
-    budget,
-    travelMethod,
-    cookInRatio,
-    propertyDescription,
-    tripNickname,
-  } = wizardData;
+export const EFFORT = {
+  research: effortFromEnv("IRIE_RESEARCH_EFFORT", "medium"),
+  plan: effortFromEnv("IRIE_PLAN_EFFORT", "medium"),
+  recipes: effortFromEnv("IRIE_RECIPES_EFFORT", "low"),
+  packing: effortFromEnv("IRIE_PACKING_EFFORT", "low"),
+};
 
-  // Safe defaults for optional/array fields so .join() never throws
-  const numAdults = wizardData.numAdults ?? 2;
-  const numKids = wizardData.numKids ?? 0;
-  const kidAges = wizardData.kidAges ?? [];
-  const vibes = wizardData.vibes ?? [];
-  const dietaryRestrictions = wizardData.dietaryRestrictions ?? [];
-  const cuisinePreferences = wizardData.cuisinePreferences ?? [];
-  const propertyAmenities = wizardData.propertyAmenities ?? [];
-  const sections = wizardData.sections ?? ["itinerary", "meals", "grocery", "restaurants", "activities", "packing"];
-
-  const totalPeople = numAdults + numKids;
-  const kidsLine = numKids > 0
-    ? `${numKids} kids (ages: ${kidAges.length > 0 ? kidAges.join(", ") : "unspecified"})`
-    : "no kids";
-  const dietLine = dietaryRestrictions.length > 0
-    ? dietaryRestrictions.join(", ")
-    : "none";
-  const cuisineLine = cuisinePreferences.length > 0
-    ? cuisinePreferences.join(", ")
-    : "no preference";
-  const amenitiesLine = propertyAmenities.length > 0
-    ? propertyAmenities.join(", ")
-    : "unknown";
-  const sectionsLine = sections.join(", ");
-
-  return `Plan a trip with the following details:
-
-TRIP: ${tripNickname || destination}
-DESTINATION: ${destination}
-DATES: ${startDate} to ${endDate} (${nights} nights)
-TYPE: ${tripType}
-TRAVEL METHOD: ${travelMethod}
-
-GROUP:
-- ${numAdults} adults, ${kidsLine}
-- Total: ${totalPeople} people
-
-PREFERENCES:
-- Planning style: ${planningStyle}
-- Budget: ${budget}
-- Vibes: ${vibes.join(", ")}
-
-FOOD:
-- Cook-in ratio: ${cookInRatio}
-- Dietary restrictions: ${dietLine}
-- Cuisine preferences: ${cuisineLine}
-
-PROPERTY:
-- Description: ${propertyDescription || "vacation rental"}
-- Amenities: ${amenitiesLine}
-
-SECTIONS TO INCLUDE: ${sectionsLine}
-
-Generate a complete, specific, and genuinely useful trip plan for this group. Use web search to verify all restaurants are real and currently operating at this destination. Scale all recipes to serve ${totalPeople} people exactly.
-
-IMPORTANT — property description sanity check: The property description above was typed by the user and may contain amenities that are geographically impossible or irrelevant (e.g. "beach access" for an inland city, "ski-in/ski-out" for a beach town). Before writing the plan, silently discard any amenities that don't make sense for ${destination} and only reference the ones that are plausible. Do not mention or flag the discrepancy — just build the plan around the amenities that actually apply.`;
+let client: Anthropic | null = null;
+function getClient(): Anthropic {
+  client ??= new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  return client;
 }
 
-async function fetchPlaceWebsite(name: string, address: string): Promise<string | undefined> {
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-  if (!apiKey) return undefined;
-  try {
-    const query = encodeURIComponent(`${name} ${address}`);
-    const res = await fetch(
-      `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${query}&inputtype=textquery&fields=website,formatted_address&key=${apiKey}`
-    );
-    const data = await res.json();
-    return data?.candidates?.[0]?.website ?? undefined;
-  } catch {
-    return undefined;
+/**
+ * Server-side refusal fallback: if the model's safety classifier declines a
+ * request, the API re-runs it on Anthropic's recommended fallback model inside
+ * the same call. Haiku-class models don't support it.
+ */
+function fallbackParams(model: string): { betas: string[]; fallbacks: "default" } | Record<string, never> {
+  return /haiku/.test(model) ? {} : { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" };
+}
+
+// ─── Errors & usage ──────────────────────────────────────────────────────────
+
+export class GenerationError extends Error {
+  constructor(
+    message: string,
+    readonly code: "refusal" | "truncated" | "invalid_output" | "no_result" | "timeout",
+    readonly retryable: boolean
+  ) {
+    super(message);
+    this.name = "GenerationError";
   }
 }
 
-async function enrichRestaurants(trip: GeneratedTrip): Promise<GeneratedTrip> {
-  if (!process.env.GOOGLE_MAPS_API_KEY) return trip;
-  const enriched = await Promise.all(
-    trip.restaurants.map(async (r) => {
-      if (r.link) return r; // already has a website, skip
-      const website = await fetchPlaceWebsite(r.name, r.address ?? "");
-      return website ? { ...r, link: website } : r;
-    })
-  );
-  return { ...trip, restaurants: enriched };
+export interface Usage {
+  inputTokens: number;
+  outputTokens: number;
+  webSearches: number;
 }
 
-export async function generateTripJSON(wizardData: WizardData): Promise<GeneratedTrip> {
-  const [systemPrompt, schemaPrompt] = await Promise.all([
-    loadPrompt("system.txt"),
-    loadPrompt("json-schema.txt"),
-  ]);
+export const emptyUsage = (): Usage => ({ inputTokens: 0, outputTokens: 0, webSearches: 0 });
 
-  const userPrompt = buildUserPrompt(wizardData);
+export function addUsage(a: Usage, b: Usage): Usage {
+  return {
+    inputTokens: a.inputTokens + b.inputTokens,
+    outputTokens: a.outputTokens + b.outputTokens,
+    webSearches: a.webSearches + b.webSearches,
+  };
+}
 
-  const response = await client.messages.stream({
-    model: MODEL,
-    max_tokens: 32000,
-    system: `${systemPrompt}\n\n${schemaPrompt}`,
-    messages: [{ role: "user", content: userPrompt }],
-  }).finalMessage();
+function usageOf(msg: BetaMessage): Usage {
+  const u = msg.usage;
+  return {
+    inputTokens: (u.input_tokens ?? 0) + (u.cache_read_input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0),
+    outputTokens: u.output_tokens ?? 0,
+    webSearches: msg.content.filter((b) => b.type === "server_tool_use" && b.name === "web_search").length,
+  };
+}
 
-  const raw = response.content
-    .filter((b) => b.type === "text")
-    .map((b) => (b as { type: "text"; text: string }).text)
+function checkStop(msg: BetaMessage, label: string) {
+  if (msg.stop_reason === "refusal") {
+    throw new GenerationError(`${label}: the model declined this request`, "refusal", false);
+  }
+  if (msg.stop_reason === "max_tokens") {
+    throw new GenerationError(`${label}: output hit max_tokens and was cut off`, "truncated", true);
+  }
+}
+
+// ─── JSON schema for structured outputs / strict tools ───────────────────────
+
+const SUPPORTED_FORMATS = new Set(["date-time", "time", "date", "duration", "email", "hostname", "uri", "ipv4", "ipv6", "uuid"]);
+
+/**
+ * Converts a Zod schema to the JSON-schema subset structured outputs accept:
+ * every object closed (`additionalProperties: false`), enums kept as real
+ * constraints, numeric/length limits dropped (Zod re-checks them on parse).
+ */
+export function toStrictJsonSchema(schema: z.ZodType): Record<string, unknown> {
+  const raw = z.toJSONSchema(schema, { target: "draft-2020-12", unrepresentable: "any" }) as Record<string, unknown>;
+  const walk = (node: unknown): unknown => {
+    if (Array.isArray(node)) return node.map(walk);
+    if (!node || typeof node !== "object") return node;
+    const n = node as Record<string, unknown>;
+    // `type: ["string", "null"]` → `anyOf`, which structured outputs document support for.
+    if (Array.isArray(n.type)) {
+      const { type, description, ...rest } = n;
+      const variants = (type as string[]).map((t) => (t === "null" ? { type: "null" } : walk({ ...rest, type: t })));
+      return description ? { description, anyOf: variants } : { anyOf: variants };
+    }
+    const out: Record<string, unknown> = {};
+    for (const key of ["type", "description", "enum", "const", "$ref"]) if (key in n) out[key] = n[key];
+    if (typeof n.format === "string" && SUPPORTED_FORMATS.has(n.format)) out.format = n.format;
+    if (n.anyOf) out.anyOf = walk(n.anyOf);
+    if (n.oneOf) out.anyOf = walk(n.oneOf);
+    if (n.allOf) out.allOf = walk(n.allOf);
+    if (n.items) out.items = walk(n.items);
+    if (n.$defs) out.$defs = Object.fromEntries(Object.entries(n.$defs as object).map(([k, v]) => [k, walk(v)]));
+    if (n.properties) {
+      out.properties = Object.fromEntries(Object.entries(n.properties as object).map(([k, v]) => [k, walk(v)]));
+      out.required = n.required ?? [];
+      out.additionalProperties = false;
+    } else if (n.type === "object") {
+      out.properties = {};
+      out.required = [];
+      out.additionalProperties = false;
+    }
+    return out;
+  };
+  return walk(raw) as Record<string, unknown>;
+}
+
+function textOf(content: BetaContentBlock[]): string {
+  return content
+    .filter((b): b is Extract<BetaContentBlock, { type: "text" }> => b.type === "text")
+    .map((b) => b.text)
     .join("");
-
-  // Strip markdown fences if Claude wraps in them despite instructions
-  const cleaned = raw.replace(/^```(?:json)?\n?/m, "").replace(/\n?```$/m, "").trim();
-
-  let parsed: GeneratedTrip;
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch (e) {
-    console.error("Claude returned invalid JSON:", cleaned.slice(0, 500));
-    throw new Error("Claude returned malformed JSON");
-  }
-
-  return enrichRestaurants(parsed);
 }
 
-export async function generateTripHTML(trip: GeneratedTrip): Promise<string> {
-  const [systemPrompt, htmlTemplate] = await Promise.all([
-    loadPrompt("system.txt"),
-    loadPrompt("html-template.txt"),
-  ]);
+function describeZodError(err: z.ZodError): string {
+  return err.issues
+    .slice(0, 8)
+    .map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`)
+    .join("; ");
+}
 
-  const response = await client.messages.stream({
-    model: MODEL,
-    max_tokens: 16000,
-    system: `${systemPrompt}\n\n${htmlTemplate}\n\nReturn valid HTML only. No markdown, no preamble, no explanation. Start with <!DOCTYPE html>.`,
-    messages: [
-      {
-        role: "user",
-        content: `Render this trip plan as a self-contained HTML file:\n\n${JSON.stringify(trip, null, 2)}`,
+// ─── Structured generation (no tools) ────────────────────────────────────────
+
+export async function generateStructured<T>(opts: {
+  label: string;
+  system: string;
+  prompt: string;
+  schema: z.ZodType<T>;
+  maxTokens: number;
+  effort: Effort;
+  timeoutMs: number;
+  model?: string;
+}): Promise<{ data: T; usage: Usage; model: string }> {
+  const model = opts.model ?? MODELS.planner;
+  const stream = getClient().beta.messages.stream(
+    {
+      model,
+      max_tokens: opts.maxTokens,
+      system: opts.system,
+      messages: [{ role: "user", content: opts.prompt }],
+      output_config: {
+        effort: opts.effort,
+        format: { type: "json_schema", schema: toStrictJsonSchema(opts.schema) },
       },
-    ],
-  }).finalMessage();
+      ...fallbackParams(model),
+    },
+    { timeout: opts.timeoutMs, maxRetries: 1 }
+  );
+  const msg = await stream.finalMessage();
+  checkStop(msg, opts.label);
 
-  const html = response.content
-    .filter((b) => b.type === "text")
-    .map((b) => (b as { type: "text"; text: string }).text)
-    .join("");
+  const text = textOf(msg.content);
+  let json: unknown;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    console.error(`[${opts.label}] invalid JSON (first 500 chars):`, text.slice(0, 500));
+    throw new GenerationError(`${opts.label}: response was not valid JSON`, "invalid_output", true);
+  }
+  const parsed = opts.schema.safeParse(json);
+  if (!parsed.success) {
+    console.error(`[${opts.label}] schema mismatch:`, describeZodError(parsed.error));
+    throw new GenerationError(`${opts.label}: ${describeZodError(parsed.error)}`, "invalid_output", true);
+  }
+  return { data: parsed.data, usage: usageOf(msg), model: msg.model ?? model };
+}
 
-  return html.trim();
+// ─── Research with web search ────────────────────────────────────────────────
+
+/**
+ * Lets the model search the web, then hand back its findings through a strict
+ * "submit" tool (structured outputs can't be combined with web-search
+ * citations). Handles `pause_turn` continuations and nudges once if the model
+ * answers in prose instead of calling the tool.
+ *
+ * The request prefix (system, tools, earlier turns) is never edited between
+ * continuations — only appended to — so replayed thinking blocks stay valid.
+ */
+export async function researchWithWebSearch<T>(opts: {
+  label: string;
+  system: string;
+  prompt: string;
+  submitTool: { name: string; description: string; schema: z.ZodType<T> };
+  maxSearches: number;
+  maxTokens: number;
+  effort: Effort;
+  /** Epoch ms by which the whole loop must finish. */
+  deadline: number;
+  model?: string;
+}): Promise<{ data: T; usage: Usage; sources: SourceLink[]; model: string }> {
+  const model = opts.model ?? MODELS.planner;
+  const tools: BetaToolUnion[] = [
+    { type: "web_search_20260209", name: "web_search", max_uses: opts.maxSearches },
+    {
+      name: opts.submitTool.name,
+      description: opts.submitTool.description,
+      input_schema: toStrictJsonSchema(opts.submitTool.schema) as BetaTool["input_schema"],
+      strict: true,
+    },
+  ];
+
+  const messages: BetaMessageParam[] = [{ role: "user", content: opts.prompt }];
+  const sources = new Map<string, SourceLink>();
+  let usage = emptyUsage();
+  let servedBy = model;
+  let nudges = 0;
+
+  for (let turn = 0; turn < 8; turn++) {
+    const remaining = opts.deadline - Date.now();
+    if (remaining < 15_000) {
+      throw new GenerationError(`${opts.label}: ran out of time before research was submitted`, "timeout", true);
+    }
+
+    const msg = await getClient()
+      .beta.messages.stream(
+        {
+          model,
+          max_tokens: opts.maxTokens,
+          system: opts.system,
+          messages,
+          tools,
+          tool_choice: { type: "auto" },
+          output_config: { effort: opts.effort },
+          ...fallbackParams(model),
+        },
+        { timeout: remaining, maxRetries: 1 }
+      )
+      .finalMessage();
+
+    usage = addUsage(usage, usageOf(msg));
+    servedBy = msg.model ?? servedBy;
+
+    for (const block of msg.content) {
+      if (block.type === "web_search_tool_result" && Array.isArray(block.content)) {
+        for (const r of block.content) {
+          if (r.type === "web_search_result" && r.url && !sources.has(r.url)) {
+            sources.set(r.url, { title: r.title || r.url, url: r.url });
+          }
+        }
+      }
+    }
+
+    const submit = msg.content.find(
+      (b): b is Extract<BetaContentBlock, { type: "tool_use" }> => b.type === "tool_use" && b.name === opts.submitTool.name
+    );
+    if (submit) {
+      const parsed = opts.submitTool.schema.safeParse(submit.input);
+      if (parsed.success) {
+        return { data: parsed.data, usage, sources: [...sources.values()], model: servedBy };
+      }
+      if (nudges >= 2) {
+        throw new GenerationError(`${opts.label}: ${describeZodError(parsed.error)}`, "invalid_output", true);
+      }
+      nudges++;
+      messages.push({ role: "assistant", content: msg.content });
+      messages.push({
+        role: "user",
+        content: [
+          {
+            type: "tool_result",
+            tool_use_id: submit.id,
+            is_error: true,
+            content: `The submission didn't match the schema: ${describeZodError(parsed.error)}. Fix these fields and call ${opts.submitTool.name} again.`,
+          },
+        ],
+      });
+      continue;
+    }
+
+    if (msg.stop_reason === "pause_turn") {
+      // The server-side search loop paused; send the turn back so it resumes.
+      messages.push({ role: "assistant", content: msg.content });
+      continue;
+    }
+
+    checkStop(msg, opts.label);
+
+    if (nudges >= 2) break;
+    nudges++;
+    messages.push({ role: "assistant", content: msg.content });
+    messages.push({
+      role: "user",
+      content: `Please call ${opts.submitTool.name} now with everything you've confirmed. Don't run more searches unless something essential is missing.`,
+    });
+  }
+
+  throw new GenerationError(`${opts.label}: research was never submitted`, "no_result", true);
+}
+
+// ─── Small helpers ───────────────────────────────────────────────────────────
+
+/** Today's date in a form the model can't misread. */
+export function todayForPrompt(): string {
+  return new Date().toISOString().slice(0, 10);
 }

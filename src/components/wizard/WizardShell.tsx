@@ -115,7 +115,7 @@ export default function WizardShell() {
       setCurrentStep(Math.min(Math.max(1, step), TOTAL_STEPS));
       setDraftId(partnerDraft);
       setHydrated(true);
-      if (data.destination && data.startDate) fetchSuggestions(data.destination, data.numKids ?? 0);
+      if (data.destination) fetchSuggestions(data.destination, data.numKids ?? 0);
     }
     void init();
     return () => {

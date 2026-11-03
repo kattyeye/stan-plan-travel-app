@@ -153,8 +153,8 @@ export default function Home() {
             Not flights. Not hotels. Just everything after you land.
           </p>
 
-          {/* Mini form */}
-          <div style={{
+          {/* Mini form — a plain GET form, so it works before JS loads; the wizard reads ?destination=&adults= */}
+          <form action="/wizard" method="get" role="search" aria-label="Start planning a trip" style={{
             display: "flex",
             gap: "0.75rem",
             flexWrap: "wrap",
@@ -162,6 +162,10 @@ export default function Home() {
           }}>
             <input
               type="text"
+              name="destination"
+              aria-label="Destination"
+              autoComplete="off"
+              maxLength={160}
               placeholder="Where to?"
               style={{
                 flex: "1 1 160px",
@@ -175,6 +179,8 @@ export default function Home() {
               }}
             />
             <select
+              name="adults"
+              aria-label="Group size"
               defaultValue=""
               style={{
                 flex: "0 1 140px",
@@ -189,12 +195,15 @@ export default function Home() {
               }}
             >
               <option value="" disabled>Group Size</option>
-              <option>Solo</option>
-              <option>2 people</option>
-              <option>3–5 people</option>
-              <option>6+ people</option>
+              <option value="1">Solo</option>
+              <option value="2">2 people</option>
+              <option value="4">3–5 people</option>
+              <option value="6">6+ people</option>
             </select>
-            <Link href="/wizard" style={{
+            <button type="submit" style={{
+              border: "none",
+              cursor: "pointer",
+              minHeight: 44,
               display: "inline-flex",
               alignItems: "center",
               gap: "0.4rem",
@@ -208,8 +217,8 @@ export default function Home() {
               whiteSpace: "nowrap",
             }}>
               Build My Itinerary →
-            </Link>
-          </div>
+            </button>
+          </form>
 
           {/* Social proof */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>

@@ -34,14 +34,14 @@ The key differentiator is the **planning style axis**: `structured` (exact times
 
 See `.env.example` for the full list with notes. Required: `ANTHROPIC_API_KEY`, `PLAN_UPSTASH_KV_REST_API_URL`, `PLAN_UPSTASH_KV_REST_API_TOKEN`, `NEXT_PUBLIC_APP_URL`, `ADMIN_TOKEN`. Strongly recommended: `GOOGLE_MAPS_API_KEY` (server key, Places API (New)), `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`.
 
-Without `STRIPE_SECRET_KEY`, trips generate for free (dev/beta mode). Without `GOOGLE_MAPS_API_KEY`, venues are only "web-sourced", not "verified".
+**Pricing:** each email's first plan is free (`src/lib/billing.ts`: one per normalised email, `IRIE_FREE_PER_IP_PER_DAY`, and a site-wide `IRIE_FREE_DAILY_CAP`); later plans go through Stripe. Without `STRIPE_SECRET_KEY`, only free plans are possible. Without `GOOGLE_MAPS_API_KEY`, venues are only "web-sourced", not "verified".
 
 ---
 
 ## Generation pipeline (`src/lib/pipeline/`)
 
 ```
-wizard → POST /api/stripe/checkout (validates, creates trip "pending") → Stripe
+wizard → POST /api/stripe/checkout (validates; first plan free → "paid" immediately; else trip "pending") → Stripe
 Stripe webhook (or the success page's resume call, which verifies the session) → status "paid"
       ↓
 runPipeline(slug) — each stage holds a per-trip lock and checkpoints its output

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from "next/server";
 import { createTrip, updateTripStripeSession } from "@/lib/db";
 import { getDraft } from "@/lib/partners/drafts";
 import { runPipeline } from "@/lib/pipeline";
+import { claimFreePlan, releaseFreePlan } from "@/lib/billing";
 import { clientIp, rateLimit, tooManyRequests } from "@/lib/security";
 import { generateSlug } from "@/lib/slug";
 import { createCheckoutSession, stripeEnabled } from "@/lib/stripe";
@@ -10,9 +11,9 @@ import { parseWizardData } from "@/lib/validation";
 export const maxDuration = 300;
 
 /**
- * Wizard submit. Validates the trip server-side, stores it, and either sends
- * the guest to Stripe (generation starts when payment is confirmed) or, when
- * payments aren't configured, starts generating immediately.
+ * Wizard submit. Validates the trip server-side and stores it. A guest's first
+ * plan is free (see lib/billing.ts) and starts generating immediately; later
+ * plans go through Stripe and start when payment is confirmed.
  */
 export async function POST(req: NextRequest) {
   const limit = await rateLimit("checkout", clientIp(req), 8, 3600);
@@ -45,12 +46,28 @@ export async function POST(req: NextRequest) {
 
   try {
     const slug = generateSlug();
+    const ip = clientIp(req);
+    const free = await claimFreePlan(wizardData.email, ip);
+
+    if (free.free) {
+      // First plan for this email: no checkout, start building right away.
+      try {
+        await createTrip({ slug, email: wizardData.email, tripNickname: wizardData.tripNickname, wizardData, status: "paid", billing: "free", partner });
+      } catch (err) {
+        await releaseFreePlan(wizardData.email).catch(() => {});
+        throw err;
+      }
+      after(() => runPipeline(slug, "research"));
+      return NextResponse.json({ url: `${origin}/trip/${slug}/generating`, slug, free: true });
+    }
 
     if (!stripeEnabled()) {
-      // Payments not configured (local dev or free beta): generate right away.
-      await createTrip({ slug, email: wizardData.email, tripNickname: wizardData.tripNickname, wizardData, status: "paid", billing: "free", partner });
-      after(() => runPipeline(slug, "research"));
-      return NextResponse.json({ url: `${origin}/trip/${slug}/generating`, slug });
+      // Payments aren't switched on yet, so there's no way to pay for another plan.
+      const message =
+        free.reason === "used"
+          ? "You've already used your free plan with this email. Paid plans are coming soon."
+          : "We've hit today's limit for free plans — please try again tomorrow.";
+      return NextResponse.json({ error: message, reason: free.reason }, { status: 402 });
     }
 
     await createTrip({ slug, email: wizardData.email, tripNickname: wizardData.tripNickname, wizardData, billing: "stripe", partner });
@@ -61,9 +78,17 @@ export async function POST(req: NextRequest) {
       origin: process.env.NEXT_PUBLIC_APP_URL ?? origin,
     });
     await updateTripStripeSession(slug, sessionId);
-    return NextResponse.json({ url, slug });
+    return NextResponse.json({ url, slug, free: false, reason: free.reason });
   } catch (error) {
     console.error("Checkout error:", error);
-    return NextResponse.json({ error: "We couldn't start checkout. Please try again in a moment." }, { status: 500 });
+    const storageDown = /ENOTFOUND|fetch failed|Redis is not configured/i.test(`${error} ${(error as { cause?: unknown })?.cause ?? ""}`);
+    return NextResponse.json(
+      {
+        error: storageDown
+          ? "We can't save new trips right now — we're on it. Your answers are kept, so please try again shortly."
+          : "We couldn't start checkout. Please try again in a moment.",
+      },
+      { status: storageDown ? 503 : 500 }
+    );
   }
 }

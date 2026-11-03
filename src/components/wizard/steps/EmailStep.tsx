@@ -140,10 +140,10 @@ export default function EmailStep({ data, onUpdate, onBack, draftId, onEditStep 
             letterSpacing: "0.01em", transition: "background 0.15s",
           }}
         >
-          {loading ? "Redirecting to checkout…" : "Build my trip plan →"}
+          {loading ? "Starting your plan…" : "Build my trip plan →"}
         </button>
         <p style={{ textAlign: "center", color: "var(--color-text-faint)", fontSize: "0.8125rem", marginTop: "0.75rem" }}>
-          $19 one-time · Ready in about 3–5 minutes · Every restaurant checked against live listings
+          Your first plan is free · then $19 per trip · Ready in about 3–5 minutes
         </p>
       </div>
 

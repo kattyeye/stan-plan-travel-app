@@ -154,6 +154,32 @@ function describeZodError(err: z.ZodError): string {
 
 // ─── Structured generation (no tools) ────────────────────────────────────────
 
+/**
+ * Claude's API compiles strict schemas into a grammar and rejects ones that are
+ * too large. When that happens we fall back to prompting for JSON and
+ * validating it ourselves with zod — the output is checked just as strictly.
+ * Labels that hit the limit skip the doomed first attempt for the rest of the
+ * process's life.
+ */
+const grammarTooLarge = new Set<string>();
+
+export function isGrammarTooLarge(err: unknown): boolean {
+  return err instanceof Anthropic.BadRequestError && /grammar is too large|schema is too (large|complex)|too many strict/i.test(err.message);
+}
+
+/** Pulls a JSON object out of a reply that may include fences or stray prose. */
+export function extractJson(text: string): unknown {
+  const unfenced = text.replace(/^\s*```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "");
+  try {
+    return JSON.parse(unfenced);
+  } catch {
+    const first = unfenced.indexOf("{");
+    const last = unfenced.lastIndexOf("}");
+    if (first >= 0 && last > first) return JSON.parse(unfenced.slice(first, last + 1));
+    throw new Error("no JSON object found");
+  }
+}
+
 export async function generateStructured<T>(opts: {
   label: string;
   system: string;
@@ -165,27 +191,46 @@ export async function generateStructured<T>(opts: {
   model?: string;
 }): Promise<{ data: T; usage: Usage; model: string }> {
   const model = opts.model ?? MODELS.planner;
-  const stream = getClient().beta.messages.stream(
-    {
-      model,
-      max_tokens: opts.maxTokens,
-      system: opts.system,
-      messages: [{ role: "user", content: opts.prompt }],
-      output_config: {
-        effort: opts.effort,
-        format: { type: "json_schema", schema: toStrictJsonSchema(opts.schema) },
+  const jsonSchema = toStrictJsonSchema(opts.schema);
+
+  const run = async (constrained: boolean) => {
+    const stream = getClient().beta.messages.stream(
+      {
+        model,
+        max_tokens: opts.maxTokens,
+        system: constrained
+          ? opts.system
+          : `${opts.system}\n\nRespond with only one JSON object — no prose, no code fences — that conforms exactly to this JSON Schema (every listed property is required; use null where allowed):\n${JSON.stringify(jsonSchema)}`,
+        messages: [{ role: "user", content: opts.prompt }],
+        output_config: constrained
+          ? { effort: opts.effort, format: { type: "json_schema", schema: jsonSchema } }
+          : { effort: opts.effort },
+        ...fallbackParams(model),
       },
-      ...fallbackParams(model),
-    },
-    { timeout: opts.timeoutMs, maxRetries: 1 }
-  );
-  const msg = await stream.finalMessage();
+      { timeout: opts.timeoutMs, maxRetries: 1 }
+    );
+    return stream.finalMessage();
+  };
+
+  let msg: BetaMessage;
+  if (grammarTooLarge.has(opts.label)) {
+    msg = await run(false);
+  } else {
+    try {
+      msg = await run(true);
+    } catch (err) {
+      if (!isGrammarTooLarge(err)) throw err;
+      console.warn(`[${opts.label}] schema too large for constrained decoding; falling back to validated JSON prompting`);
+      grammarTooLarge.add(opts.label);
+      msg = await run(false);
+    }
+  }
   checkStop(msg, opts.label);
 
   const text = textOf(msg.content);
   let json: unknown;
   try {
-    json = JSON.parse(text);
+    json = extractJson(text);
   } catch {
     console.error(`[${opts.label}] invalid JSON (first 500 chars):`, text.slice(0, 500));
     throw new GenerationError(`${opts.label}: response was not valid JSON`, "invalid_output", true);
@@ -201,7 +246,7 @@ export async function generateStructured<T>(opts: {
 // ─── Research with web search ────────────────────────────────────────────────
 
 /**
- * Lets the model search the web, then hand back its findings through a strict
+ * Lets the model search the web, then hand back its findings through a
  * "submit" tool (structured outputs can't be combined with web-search
  * citations). Handles `pause_turn` continuations and nudges once if the model
  * answers in prose instead of calling the tool.
@@ -228,7 +273,9 @@ export async function researchWithWebSearch<T>(opts: {
       name: opts.submitTool.name,
       description: opts.submitTool.description,
       input_schema: toStrictJsonSchema(opts.submitTool.schema) as BetaTool["input_schema"],
-      strict: true,
+      // Not `strict`: this schema is too large for Claude's grammar compiler
+      // ("compiled grammar is too large"). Every submission is validated with
+      // zod below, and schema errors go back to the model to fix.
     },
   ];
 

@@ -200,7 +200,10 @@ export async function runStage(slug: string, stage: PipelineStage): Promise<Pipe
       console.error(`[pipeline ${slug}] ${stage} failed (attempt ${state.attempts[stage]}):`, err);
       state.lastError = `${stage}: ${message}`;
       await savePipelineState(slug, state);
-      const retryable = !(err instanceof GenerationError) || err.retryable;
+      // A request the API rejects as invalid (4xx other than rate limits/timeouts) fails the same way every time.
+      const status = (err as { status?: unknown })?.status;
+      const badRequest = typeof status === "number" && status >= 400 && status < 500 && ![408, 409, 429].includes(status);
+      const retryable = !badRequest && (!(err instanceof GenerationError) || err.retryable);
       if (retryable && state.attempts[stage]! < MAX_ATTEMPTS) return stage;
       await failTrip(trip, state, slug, message);
       return null;

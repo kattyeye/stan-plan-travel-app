@@ -6,19 +6,8 @@ import FieldLabel from "../ui/FieldLabel";
 import Chip from "../ui/Chip";
 import PlacesAutocomplete from "../ui/PlacesAutocomplete";
 import DateRangePicker from "../ui/DateRangePicker";
+import { TRIP_TYPES } from "@/lib/options";
 
-const TRIP_TYPES = [
-  { value: "beach house", label: "Beach house", emoji: "🏖️" },
-  { value: "ski cabin", label: "Ski cabin", emoji: "⛷️" },
-  { value: "city trip", label: "City trip", emoji: "🏙️" },
-  { value: "national park", label: "National park", emoji: "🏔️" },
-  { value: "cruise", label: "Cruise", emoji: "🚢" },
-  { value: "road trip", label: "Road trip", emoji: "🚗" },
-  { value: "honeymoon", label: "Honeymoon", emoji: "💍" },
-  { value: "camping", label: "Camping", emoji: "⛺" },
-  { value: "villa", label: "Villa / resort", emoji: "🏡" },
-  { value: "other", label: "Other", emoji: "✈️" },
-];
 
 interface Props {
   data: Partial<WizardData>;

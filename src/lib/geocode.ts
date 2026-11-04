@@ -1,3 +1,5 @@
+import { getKV } from "./kv";
+
 /**
  * Destination autocomplete, served from our own API so the browser needs no
  * Google key.
@@ -103,6 +105,33 @@ async function google(q: string, sessionToken?: string): Promise<DestinationSugg
   });
   if (!res.ok) throw new Error(`Places autocomplete ${res.status}: ${(await res.text()).slice(0, 200)}`);
   return parseGoogle(await res.json());
+}
+
+/** Cached lookup used by both the website and the client API. Never throws. */
+export async function autocompleteCached(
+  rawQuery: string,
+  sessionToken?: string
+): Promise<{ suggestions: DestinationSuggestion[]; provider: GeocodeProvider; degraded?: true }> {
+  const q = rawQuery.trim().replace(/\s+/g, " ").slice(0, 80);
+  const provider = autocompleteProvider();
+  if (q.length < 2) return { suggestions: [], provider };
+  const key = `geo:v1:${provider}:${q.toLowerCase()}`;
+  try {
+    const cached = await getKV().get<DestinationSuggestion[]>(key);
+    if (cached) return { suggestions: cached, provider };
+  } catch {
+    /* cache unavailable — fall through */
+  }
+  try {
+    const suggestions = await searchDestinations(q, sessionToken);
+    await getKV()
+      .set(key, suggestions, { ex: 60 * 60 * 24 * 30 })
+      .catch(() => {});
+    return { suggestions, provider };
+  } catch (err) {
+    console.error("autocomplete failed:", err);
+    return { suggestions: [], provider, degraded: true };
+  }
 }
 
 export async function searchDestinations(q: string, sessionToken?: string): Promise<DestinationSuggestion[]> {

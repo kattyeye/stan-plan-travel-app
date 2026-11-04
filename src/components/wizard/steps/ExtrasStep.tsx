@@ -3,6 +3,7 @@ import { TripSection, WizardData } from "@/types/trip";
 import StepCard from "../ui/StepCard";
 import StepNav from "../ui/StepNav";
 import FieldLabel from "../ui/FieldLabel";
+import { AMENITIES, SECTIONS } from "@/lib/options";
 
 interface Props {
   data: Partial<WizardData>;
@@ -13,16 +14,7 @@ interface Props {
   suggestionsLoading?: boolean;
 }
 
-const SECTIONS: { value: TripSection; label: string; desc: string; emoji: string }[] = [
-  { value: "itinerary", label: "Daily itinerary", desc: "Day-by-day activity plan", emoji: "📅" },
-  { value: "meals", label: "Meal plan", desc: "Breakfast, lunch & dinner", emoji: "🍴" },
-  { value: "grocery", label: "Grocery list", desc: "Organized shopping list", emoji: "🛒" },
-  { value: "restaurants", label: "Restaurant picks", desc: "Local spots to try", emoji: "🍜" },
-  { value: "activities", label: "Activities & tips", desc: "Things to do & local intel", emoji: "🎯" },
-  { value: "packing", label: "Packing list", desc: "Tailored to your trip", emoji: "🧳" },
-];
 
-const AMENITIES = ["Full kitchen", "Gas grill", "Pool", "Hot tub", "Beach access", "Washer/dryer", "Fire pit", "Game room", "Outdoor shower", "Kayaks/paddleboards"];
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (

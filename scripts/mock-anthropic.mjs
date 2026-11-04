@@ -10,6 +10,8 @@
  * plausible, schema-valid output. Research deliberately pauses once
  * (`pause_turn`) to exercise the continuation path. Every request body is
  * appended to MOCK_LOG (default: .mock-anthropic.log) for inspection.
+ * MOCK_REJECT_GRAMMAR=1 rejects strict tools / output formats the way the real
+ * API does for schemas it considers too large.
  * The places it returns are fictional — this is for testing plumbing only.
  */
 import http from "node:http";
@@ -168,6 +170,13 @@ const server = http.createServer(async (req, res) => {
   for await (const chunk of req) raw += chunk;
   const body = JSON.parse(raw);
   fs.appendFileSync(LOG, JSON.stringify({ at: new Date().toISOString(), beta: req.headers["anthropic-beta"] ?? null, version: req.headers["anthropic-version"] ?? null, body }) + "\n");
+
+  // MOCK_REJECT_GRAMMAR=1 mimics the real API refusing large strict schemas.
+  if (process.env.MOCK_REJECT_GRAMMAR === "1" && (body.output_config?.format || (body.tools ?? []).some((t) => t.strict))) {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "The compiled grammar is too large, which would cause performance issues. Simplify your tool schemas or reduce the number of strict tools." } }));
+    return;
+  }
 
   const system = systemOf(body);
   const firstPrompt = textOf(body.messages[0].content);

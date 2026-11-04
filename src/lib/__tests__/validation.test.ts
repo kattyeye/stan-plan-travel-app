@@ -96,3 +96,13 @@ describe("HTML export", () => {
     expect(html.match(/<script>/g)).toHaveLength(1); // only our own tab script
   });
 });
+
+describe("JSON fallback parsing", () => {
+  it("accepts plain, fenced, or chatty JSON replies", async () => {
+    const { extractJson } = await import("../claude");
+    expect(extractJson('{"a":1}')).toEqual({ a: 1 });
+    expect(extractJson('```json\n{"a":2}\n```')).toEqual({ a: 2 });
+    expect(extractJson('Here you go: {"a":{"b":3}} hope that helps')).toEqual({ a: { b: 3 } });
+    expect(() => extractJson("no json here")).toThrow();
+  });
+});

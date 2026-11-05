@@ -9,7 +9,7 @@ Read this file at the start of every session. It describes the system as it actu
 Irie is a travel-planning SaaS. A guest fills out a short wizard about their trip, pays via Stripe, and gets a personalised plan: day-by-day itinerary, meal plan with recipes, grocery list, restaurant guide, activities, and packing list.
 
 Each trip gets:
-1. A live page at `/trip/[slug]` to share with the travel group (no login; unguessable slug)
+1. A live page at `/trip/[slug]` to share with the travel group (no login; unguessable slug) — an app-like page with five tabs, day route maps, trip mode, a voice-capable command bar and shared group edits (see "Trip page" below)
 2. A self-contained offline `.html` download (`/api/trip/[slug]/download`)
 
 **Product promise: nothing in a plan is made up.** Every venue comes from live web research, is checked against Google Places, and meals are scheduled around real opening hours. Code — not the model — does dates, arithmetic, reference checks, and dietary checks. If you change generation, keep that promise.
@@ -73,6 +73,22 @@ runPipeline(slug) — each stage holds a per-trip lock and checkpoints its outpu
 
 ---
 
+## Trip page (`/trip/[slug]`)
+
+`TripTabs` is the orchestrator: five tabs — **Overview · Days · Food · Explore · Lists** — as a bottom bar on phones and a sticky top bar on laptops (`TripNav`). Hashes deep-link (`#days-3`, `#food-eat`, `#lists-groceries`); the old six-tab hashes (`#grocery`, `#itinerary`, …) still work (`parseHash`). Shared state lives in `TripContext` (`useTripUI()`: trip, tab/day, `go()`, live clock, edits).
+
+- **View logic is pure and tested** in `src/lib/trip-view.ts`: `buildDayTimeline` merges schedule lines and meals (a meal mentioned in a line is attached to it, not duplicated), orders by clock or time-of-day, matches researched activities/restaurants and letters mapped stops A, B, C to match Google's embed. Also `tripPhase`, `upNext`, `hoursForWeekday`, map URL builders, `explainStop`. Stop keys are `d{day}-s{i}` (schedule line) or `d{day}-{slot}` (meal not in the schedule).
+- **Planning style changes the Days timeline**: structured → exact times; balanced → Morning/Midday/Afternoon/Evening; flexible → idea cards and swipeable meal options.
+- **Predictive / adaptive** (`useTripLive`): before the trip Overview shows a countdown and "Before you go"; during it the page opens on today with a now/next card and past stops dimmed; after it, "Plan your next trip" (wizard prefilled with the group). First-visit tips (`CoachMarks`), offline banner, last view remembered per trip.
+- **"Why this?"** (`WhyThisSheet`) lists reasons built in code from stored facts, each labelled with its source (Google Maps / web research / your answers / Irie's checks / AI pick).
+- **Group edits** (`src/lib/trips/edits.ts`, `/api/trip/[slug]/edits`): swap a meal, skip / tick off a stop, report a problem, reset — shared by everyone with the link, with optimistic UI + Undo (`useTripEdits`). Edits are stored in `TripRecord.edits`, never written into `generatedData`; `withEdits()` applies them on read (page, download, client API). Swaps may only target the meal's original pick, its alternatives, or a researched place that serves that meal and isn't known to be closed that weekday. `saveTripData` clears edits (a regenerated plan has new stops).
+- **Command bar** (`CommandBar`, `src/lib/trip-search.ts`): typed or spoken. Common phrasing is parsed in the browser (`parseQueryLocal`); only low-confidence queries go to `/api/trip/[slug]/ask` (Haiku, rate-limited, cached 7 days), which may only return a `PlanFilter` over the plan's own data — never an answer — and is sanitised by `sanitizeFilter`.
+- **Maps**: Google Maps Embed API iframes (free) keyed by `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, using verified `placeId`s. No key, offline, or on a phone before tapping → the "Open the day's route in Google Maps" deep link (no key needed). Google's terms forbid Places data on non-Google maps — don't swap in another map provider.
+- **Voice** (`useSpeechInput` + `components/voice/VoiceButton`): the browser's Web Speech API, used in the wizard's destination and stay-description fields and the command bar. The mic hides itself where unsupported.
+- Panels stay mounted (`hidden`) and sub-views use `.print-show`, so printing still outputs every section.
+
+---
+
 ## Project Structure
 
 ```
@@ -86,7 +102,7 @@ src/
 │   ├── admin/trips/page.tsx             admin console (ADMIN_TOKEN)
 │   └── api/
 │       ├── stripe/checkout, stripe/webhook
-│       ├── trip (status) · trip/[slug]/resume · trip/[slug]/download
+│       ├── trip (status) · trip/[slug]/resume · trip/[slug]/download · trip/[slug]/edits · trip/[slug]/ask
 │       ├── internal/pipeline            stage hand-off (internal secret)
 │       ├── suggest                      wizard chip suggestions (Haiku, cached, rate-limited)
 │       ├── drafts/[id]                  partner prefill drafts
@@ -96,10 +112,14 @@ src/
 ├── components/
 │   ├── ui/          Tailwind UI kit — DO NOT modify
 │   ├── wizard/      WizardShell, WizardProgress, steps/*, ui/* (wizard primitives)
-│   └── trip/        TripHeader, TripActions, TripTabs, ItinerarySection, MealRow, MealPlanSection,
-│                    RecipeCard, GrocerySection, RestaurantSection, TipsSection, PackingSection,
-│                    VerifiedBadge, PaywallGate
-├── hooks/useStoredChecklist.ts          localStorage-backed checkboxes (grocery, packing)
+│   ├── trip/        TripTabs (orchestrator), TripNav, TripContext, TripHeader, PhasePill, TripActions,
+│   │                OverviewSection, ItinerarySection (Days), DayTimeline, StopCard, DayMap, WhyThisSheet,
+│   │                FoodSection, MealPlanSection, MealRow, RecipeCard, RestaurantSection, TipsSection (Explore),
+│   │                ListsSection, PackingSection, GrocerySection, CommandBar, Sheet, Segmented, UndoToast,
+│   │                CoachMarks, VerifiedBadge, PaywallGate, useTripEdits, checklists, ui.ts, trip.module.css
+│   └── voice/       VoiceButton (Web Speech mic)
+├── hooks/           useStoredChecklist (synced across copies), useTripLive (phase/clock/online),
+│                    useSpeechInput (voice), useMediaQuery, useHydrated
 ├── lib/
 │   ├── claude.ts        model config, structured + web-search helpers
 │   ├── pipeline/        index (orchestrator), prompts, schemas, normalize, dietary, days
@@ -108,7 +128,9 @@ src/
 │   ├── validation.ts    zod input validation (wizard + partner)
 │   ├── security.ts      admin/internal auth, rate limiting, origins
 │   ├── stripe.ts · notify.ts · export-html.ts · utils.ts (quantities, grocery aggregation)
-│   ├── trips/           startTrip (pricing + validation) and resumeTrip — shared by web + client API
+│   ├── trips/           startTrip (pricing + validation), resumeTrip, edits (group edits) — shared by web + client API
+│   ├── trip-view.ts     pure trip-page logic: timeline, phase, map URLs, explanations, hash routing
+│   ├── trip-search.ts · trip-ask.ts   command bar: local index/parser, AI filter fallback
 │   ├── options.ts       every wizard option list (web wizard and /api/v1/client/config)
 │   ├── suggest.ts · geocode.ts   destination suggestions and autocomplete
 │   ├── api/client.ts    client-API response envelope + CORS
@@ -153,7 +175,9 @@ docs/PARTNER_API.md          partner integration guide
 7. **Never start generation for an unpaid trip** and never accept wizard data from the client at generation time — the pipeline reads the stored trip.
 8. **The planning style must change the output everywhere** — itinerary phrasing, meal options, UI badges.
 9. Run `npm run typecheck`, `npm test` and `npm run build` before pushing.
-10. **Commit messages:** `feat:`, `fix:`, `style:`, `deps:`, `refactor:`, `test:`, `docs:` prefixes.
+10. **Group edits never rewrite `generatedData`** — store them in `TripRecord.edits`, validate in `lib/trips/edits.ts`, and apply with `withEdits()` wherever a plan is shown. Swaps only ever pick researched places.
+11. **The command bar's model call only produces filters** over the plan (`PlanFilter`), never prose answers.
+12. **Commit messages:** `feat:`, `fix:`, `style:`, `deps:`, `refactor:`, `test:`, `docs:` prefixes.
 
 ---
 
@@ -174,9 +198,11 @@ Without Redis env vars the app uses an in-memory store (dev only). The mock retu
 - **Trip stuck on the waiting page:** check `/admin/trips` → Details for the pipeline's last error. The page's resume call restarts stalled stages automatically; "Regenerate" starts fresh.
 - **"Admin is disabled":** set `ADMIN_TOKEN`.
 - **No "Verified" badges:** `GOOGLE_MAPS_API_KEY` missing, or Places API (New) not enabled for that key.
+- **No map on the Days tab (just "Open in Google Maps"):** `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` missing, Maps Embed API not enabled on it, or the key's referrer restriction doesn't include the site. On phones the map loads only after tapping "Show route map".
+- **Mic button missing:** the browser has no Web Speech API (e.g. Firefox) — expected; typing still works.
 - **Function timeouts:** each stage must stay under the plan's limit (Hobby 300s). Lower `IRIE_MAX_SEARCHES` or effort if research runs long.
 - **White screen on a client page:** missing `"use client"` or a browser API used during SSR.
 
 ---
 
-*Last updated: November 2026 — grounded generation pipeline, partner API, security hardening.*
+*Last updated: November 2026 — trip page redesign (five tabs, day maps, trip mode, group edits, command bar, voice), grounded generation pipeline, partner API, security hardening.*

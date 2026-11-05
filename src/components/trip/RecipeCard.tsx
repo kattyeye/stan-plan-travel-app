@@ -3,9 +3,13 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import type { Recipe } from "@/types/trip";
 
-interface Props { recipe: Recipe }
+interface Props {
+  recipe: Recipe;
+  /** The dish name is already shown above (timeline stops), so the toggle reads "Recipe". */
+  compact?: boolean;
+}
 
-export default function RecipeCard({ recipe }: Props) {
+export default function RecipeCard({ recipe, compact }: Props) {
   const [open, setOpen] = useState(false);
   const flagged = recipe.dietaryNotes?.filter((n) => /^contains /i.test(n)) ?? [];
   const notes = recipe.dietaryNotes?.filter((n) => !/^contains /i.test(n)) ?? [];
@@ -20,7 +24,7 @@ export default function RecipeCard({ recipe }: Props) {
         style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", background: "none", border: "none", cursor: "pointer", textAlign: "left", gap: "0.75rem", color: "inherit" }}
       >
         <span>
-          <span style={{ display: "block", fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem" }}>{recipe.name}</span>
+          <span style={{ display: "block", fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem" }}>{compact ? (open ? "Hide recipe" : "📖 Recipe") : recipe.name}</span>
           <span style={{ display: "block", color: "var(--color-text-muted)", fontSize: "0.8125rem", marginTop: "0.125rem" }}>
             Prep {recipe.prepTime} · Cook {recipe.cookTime} · Serves {recipe.servings}
             {flagged.length > 0 && <span style={{ color: "var(--color-warning-text)", fontWeight: 600 }}> · check dietary note</span>}

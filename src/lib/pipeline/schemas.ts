@@ -176,3 +176,19 @@ export const SuggestSchema = z.object({
   cuisines: z.array(z.string()),
   amenities: z.array(z.string()),
 });
+
+// ─── Trip page command bar ───────────────────────────────────────────────────
+
+/** A traveller's question, interpreted as a filter over their plan — never a written answer. */
+export const PlanFilterSchema = z.object({
+  days: z.array(z.number().int()).describe("Trip day numbers the question is about; empty if none"),
+  slots: z.array(z.enum(["breakfast", "lunch", "dinner"])),
+  kinds: z.array(z.enum(["stop", "restaurant", "activity", "recipe", "event", "grocery", "packing"])).describe("What sort of results; empty for any"),
+  tags: z.array(z.string()).describe("Only tags from the provided vocabulary"),
+  kidFriendly: z.boolean().nullable(),
+  bookingRequired: z.boolean().nullable(),
+  verifiedOnly: z.boolean().nullable(),
+  dietary: z.array(z.enum(["vegetarian", "vegan", "gluten-free", "dairy-free", "nut-free", "halal", "kosher", "pescatarian"])),
+  text: z.array(z.string()).describe("At most 4 short keywords likely to appear in place names or descriptions"),
+});
+export type PlanFilterDraft = z.infer<typeof PlanFilterSchema>;

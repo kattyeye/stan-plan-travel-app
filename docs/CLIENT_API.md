@@ -27,7 +27,8 @@ POST /trips { trip }             → 201 { id, payment, checkoutUrl }
                             Chrome Custom Tab / new tab); the build starts when Stripe confirms
 GET  /trips/{id}?plan=false      → poll every ~4s: status + progress { stage, percent, message }
 POST /trips/{id}/resume          → every ~30s while waiting (restarts stalled work; safe to repeat)
-GET  /trips/{id}                 → when status is "ready", `plan` holds the full GeneratedTrip
+GET  /trips/{id}                 → when status is "ready", `plan` holds the full GeneratedTrip, with the travel
+                                   group's edits from the trip page applied (meal swaps; skipped stops removed)
 GET  /trips/{id}/download        → offline HTML copy (save for airplane mode)
 ```
 

@@ -1,0 +1,222 @@
+/* Responsive layout for the trip page. Colours are design tokens only. */
+
+/* ── Navigation: bottom bar on phones, sticky top bar on laptops ── */
+.nav {
+  position: sticky;
+  top: 60px;
+  z-index: 20;
+  background: var(--color-bg-card);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+}
+.navInner {
+  display: flex;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 0.25rem;
+}
+.navTab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-height: 56px;
+  padding: 0.5rem 0.25rem;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  position: relative;
+  font-weight: 500;
+  -webkit-tap-highlight-color: transparent;
+}
+.navTab[aria-selected="true"] {
+  color: var(--color-heading);
+  font-weight: 700;
+}
+.navTab:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: -3px;
+  border-radius: 8px;
+}
+.navLabel {
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+}
+.navIndicator {
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  bottom: 0;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--color-brand);
+}
+.navLock {
+  position: absolute;
+  top: 6px;
+  right: 18%;
+  font-size: 0.5rem;
+}
+
+@media (max-width: 767px) {
+  .nav {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 40;
+    border-bottom: none;
+    border-top: 1px solid var(--color-border);
+    box-shadow: var(--shadow-float);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .navIndicator {
+    top: 0;
+    bottom: auto;
+    border-radius: 0 0 3px 3px;
+  }
+}
+
+/* ── Content area ── */
+.content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 4rem;
+}
+.contentWide {
+  max-width: 1120px;
+}
+@media (max-width: 767px) {
+  .content {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+}
+
+/* ── Horizontal carousels (scroll-snap) ── */
+.carousel {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 1rem;
+  padding: 0.25rem 1rem 0.75rem;
+  margin: 0 -1rem;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.carousel::-webkit-scrollbar {
+  display: none;
+}
+.carousel > * {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+}
+
+/* ── Days: day strip + timeline/map split ── */
+.dayStrip {
+  position: sticky;
+  top: 116px;
+  z-index: 15;
+  background: var(--color-bg);
+  margin: 0 -1rem;
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+@media (max-width: 767px) {
+  .dayStrip {
+    top: 60px;
+  }
+}
+.dayLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+.mapCol {
+  min-width: 0;
+}
+@media (min-width: 1024px) {
+  .dayLayout {
+    grid-template-columns: minmax(0, 1fr) 440px;
+    gap: 2rem;
+  }
+  .mapCol {
+    position: sticky;
+    top: 188px;
+    order: 2;
+  }
+}
+
+/* ── Grids ── */
+.grid2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+@media (min-width: 768px) {
+  .grid2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .statGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.onlyMobile {
+  display: initial;
+}
+.onlyDesktop {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .onlyMobile {
+    display: none;
+  }
+  .onlyDesktop {
+    display: initial;
+  }
+}
+
+/* Printing is a laptop thing — keep the phone header to two actions. */
+@media (max-width: 767px) {
+  .hidePhone {
+    display: none !important;
+  }
+}
+
+/* ── Highlight a stop the command bar or overview jumped to ── */
+@keyframes flash {
+  0% { box-shadow: 0 0 0 0 var(--color-brand); }
+  100% { box-shadow: 0 0 0 10px transparent; }
+}
+.flash {
+  animation: flash 1.2s ease-out 2;
+}
+@media (prefers-reduced-motion: reduce) {
+  .flash {
+    animation: none;
+    outline: 2px solid var(--color-brand);
+  }
+}
+
+/* ── Print: every section, no chrome ── */
+@media print {
+  .nav,
+  .dayStrip,
+  .mapCol {
+    display: none !important;
+  }
+  .content {
+    padding-bottom: 1rem;
+  }
+}

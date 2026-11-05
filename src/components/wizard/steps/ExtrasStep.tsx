@@ -1,5 +1,8 @@
 "use client";
+import { useEffect, useRef } from "react";
 import { TripSection, WizardData } from "@/types/trip";
+import { useSpeechInput } from "@/hooks/useSpeechInput";
+import VoiceButton from "@/components/voice/VoiceButton";
 import StepCard from "../ui/StepCard";
 import StepNav from "../ui/StepNav";
 import FieldLabel from "../ui/FieldLabel";
@@ -108,21 +111,11 @@ export default function ExtrasStep({ data, onUpdate, onNext, onBack, suggestedAm
           <FieldLabel htmlFor="propertyDesc">
             Property description <span style={{ fontWeight: 400, color: "var(--color-text-faint)" }}>(optional)</span>
           </FieldLabel>
-          <textarea
+          <DictatedTextarea
             id="propertyDesc"
             placeholder="e.g. 4BR beachfront house in Outer Banks with private pool and full kitchen"
             value={data.propertyDescription ?? ""}
-            onChange={(e) => onUpdate({ propertyDescription: e.target.value })}
-            rows={3}
-            style={{
-              width: "100%", padding: "0.625rem 0.875rem",
-              borderRadius: "var(--radius-input)",
-              border: "1px solid var(--color-border)",
-              background: "var(--color-bg-input)",
-              color: "var(--color-text)",
-              fontSize: "0.9375rem", outline: "none", resize: "vertical",
-              boxSizing: "border-box", fontFamily: "inherit",
-            }}
+            onChange={(v) => onUpdate({ propertyDescription: v })}
           />
         </div>
 
@@ -163,5 +156,57 @@ export default function ExtrasStep({ data, onUpdate, onNext, onBack, suggestedAm
 
       <StepNav onBack={onBack} onNext={onNext} nextDisabled={sections.length === 0} />
     </StepCard>
+  );
+}
+
+const MAX_DESCRIPTION = 1200; // matches propertyDescription in src/lib/validation.ts
+
+/** The stay description, typed or spoken: dictated phrases are appended, and words show as you speak. */
+function DictatedTextarea({ id, value, placeholder, onChange }: { id: string; value: string; placeholder: string; onChange: (v: string) => void }) {
+  const latest = useRef(value);
+  useEffect(() => {
+    latest.current = value;
+  }, [value]);
+  const speech = useSpeechInput(
+    (heard) => {
+      const cur = latest.current.trimEnd();
+      const sentence = heard.charAt(0).toUpperCase() + heard.slice(1);
+      const next = `${cur}${cur && !/[.!?]$/.test(cur) ? "." : ""}${cur ? " " : ""}${sentence}`.slice(0, MAX_DESCRIPTION);
+      latest.current = next;
+      onChange(next);
+    },
+    { continuous: true }
+  );
+  return (
+    <div>
+      <div style={{ position: "relative" }}>
+        <textarea
+          id={id}
+          placeholder={speech.listening ? "Listening… describe the place" : placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          maxLength={MAX_DESCRIPTION}
+          rows={3}
+          style={{
+            width: "100%", padding: speech.supported ? "0.625rem 3.5rem 0.625rem 0.875rem" : "0.625rem 0.875rem",
+            borderRadius: "var(--radius-input)",
+            border: `1px solid ${speech.listening ? "var(--color-border-focus)" : "var(--color-border)"}`,
+            background: "var(--color-bg-input)",
+            color: "var(--color-text)",
+            fontSize: "0.9375rem", outline: "none", resize: "vertical",
+            boxSizing: "border-box", fontFamily: "inherit",
+          }}
+        />
+        <span style={{ position: "absolute", right: 6, top: 6 }}>
+          <VoiceButton speech={speech} label="Describe your stay by voice" />
+        </span>
+      </div>
+      {speech.listening && (
+        <p aria-live="polite" style={{ margin: "0.375rem 0 0", fontSize: "0.8125rem", color: "var(--color-text-muted)", fontStyle: "italic", minHeight: "1.2em" }}>
+          {speech.interim ? `Hearing: ${speech.interim}` : "Listening — say things like “three bedrooms, hot tub, ten minutes from the beach”."}
+        </p>
+      )}
+      {speech.error && <p role="alert" style={{ margin: "0.375rem 0 0", fontSize: "0.8125rem", color: "var(--color-warning-text)" }}>{speech.error}</p>}
+    </div>
   );
 }

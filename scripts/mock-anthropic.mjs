@@ -204,6 +204,21 @@ const server = http.createServer(async (req, res) => {
   else if (system.includes("write recipes")) payload = recipes(firstPrompt);
   else if (system.includes("trip-planning form"))
     payload = { tripTypes: ["beach house", "villa"], vibes: ["laid-back", "family-fun", "foodie", "nature"], cuisines: ["Outer Banks seafood", "Southern breakfast"], amenities: ["beach access", "outdoor shower", "grill"] };
+  else if (system.includes("search filter")) {
+    // Trip-page command bar: keep a couple of meaningful words as keywords.
+    const q = (firstPrompt.match(/<guest_query>([\s\S]*?)<\/guest_query>/)?.[1] ?? "").toLowerCase();
+    payload = {
+      days: [],
+      slots: /dinner|supper|tonight/.test(q) ? ["dinner"] : [],
+      kinds: [],
+      tags: [],
+      kidFriendly: /kid|family|child/.test(q) ? true : null,
+      bookingRequired: null,
+      verifiedOnly: null,
+      dietary: [],
+      text: q.split(/[^a-z]+/).filter((w) => w.length > 4).slice(0, 2),
+    };
+  }
   else payload = { note: "unrecognised request" };
 
   stream(res, { model, stopReason: "end_turn", blocks: [{ type: "text", text: JSON.stringify(payload) }] });

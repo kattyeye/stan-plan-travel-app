@@ -1,30 +1,51 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 
+const EVENT = "irie:checklist";
+
 /**
  * Checkbox state that survives reloads (per trip, per device). Starts from
- * `initial` on the server render, then hydrates from localStorage.
+ * `initial` on the server render, then hydrates from localStorage. Every copy
+ * of the same list on the page stays in step (e.g. Overview's progress and
+ * the Lists tab).
  */
 export function useStoredChecklist(storageKey: string, initial: () => Record<string, boolean>) {
   const [checked, setChecked] = useState<Record<string, boolean>>(initial);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(storageKey);
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate from storage after mount
-      if (raw) setChecked((prev) => ({ ...prev, ...JSON.parse(raw) }));
-    } catch {
-      /* storage unavailable (private mode) — keep in-memory state */
-    }
-  }, [storageKey]);
+    const load = () => {
+      try {
+        const raw = localStorage.getItem(storageKey);
+        setChecked(raw ? { ...initial(), ...JSON.parse(raw) } : initial());
+      } catch {
+        /* storage unavailable (private mode) — keep in-memory state */
+      }
+    };
+    load();
+    const onChange = (e: Event) => {
+      if ((e as CustomEvent<string>).detail === storageKey) load();
+    };
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === storageKey) load();
+    };
+    window.addEventListener(EVENT, onChange);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener(EVENT, onChange);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, [storageKey, initial]);
 
   const save = useCallback(
-    (next: Record<string, boolean>) => {
+    (next: Record<string, boolean> | null) => {
       try {
-        localStorage.setItem(storageKey, JSON.stringify(next));
+        if (next) localStorage.setItem(storageKey, JSON.stringify(next));
+        else localStorage.removeItem(storageKey);
       } catch {
         /* ignore */
       }
+      // Let other copies of this list re-read after this render.
+      setTimeout(() => window.dispatchEvent(new CustomEvent(EVENT, { detail: storageKey })), 0);
     },
     [storageKey]
   );
@@ -40,14 +61,9 @@ export function useStoredChecklist(storageKey: string, initial: () => Record<str
   );
 
   const reset = useCallback(() => {
-    const next = initial();
-    setChecked(next);
-    try {
-      localStorage.removeItem(storageKey);
-    } catch {
-      /* ignore */
-    }
-  }, [initial, storageKey]);
+    setChecked(initial());
+    save(null);
+  }, [initial, save]);
 
   return { checked, toggle, reset };
 }

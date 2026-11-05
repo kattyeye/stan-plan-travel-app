@@ -1,6 +1,7 @@
 import { after } from "next/server";
 import type { TripRecord } from "@/types/trip";
 import { claimFreePlan, releaseFreePlan, type FreeDecision } from "../billing";
+import { claimBetaPlan } from "../beta";
 import { createTrip, updateTripStripeSession } from "../db";
 import { getDraft } from "../partners/drafts";
 import { runPipeline } from "../pipeline";
@@ -45,6 +46,13 @@ export async function startTrip(input: {
     const wizardData = { ...parsed.data, ...(partner ? { partner } : {}) };
     const base = { email: wizardData.email, tripNickname: wizardData.tripNickname, wizardData, partner } satisfies Partial<Parameters<typeof createTrip>[0]>;
     const slug = generateSlug();
+
+    // Beta testers ("evergreen" users added in the admin dashboard): always free, never limited by the free-plan rules.
+    if (await claimBetaPlan(wizardData.email)) {
+      await createTrip({ slug, ...base, status: "paid", billing: "comp" });
+      after(() => runPipeline(slug, "research"));
+      return { ok: true, slug, payment: "free", nextUrl: `${input.origin}/trip/${slug}/generating` };
+    }
 
     const free = await claimFreePlan(wizardData.email, input.ip);
     if (free.free) {

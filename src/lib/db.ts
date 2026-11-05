@@ -1,5 +1,7 @@
 import { randomUUID } from "crypto";
 import { getKV } from "./kv";
+import { normalizeEmail } from "./billing";
+import { sha256 } from "./security";
 import type {
   GeneratedTrip,
   PartnerRef,
@@ -16,6 +18,9 @@ const sessionKey = (sessionId: string) => `session:${sessionId}`;
 const pipelineKey = (slug: string) => `pipeline:${slug}`;
 const lockKey = (name: string) => `lock:${name}`;
 const TRIP_INDEX = "trips:index";
+/** Every trip made with one inbox (aliases collapse — see normalizeEmail). */
+const userTripsKey = (email: string) => `user:${sha256(normalizeEmail(email))}:trips`;
+const USER_INDEX_FLAG = "userindex:v1";
 
 // ─── Trips ───────────────────────────────────────────────────────────────────
 
@@ -58,6 +63,7 @@ export async function createTrip(data: {
 
   await kv.set(tripKey(data.slug), record);
   await kv.zadd(TRIP_INDEX, Date.parse(now), data.slug);
+  if (data.email) await kv.zadd(userTripsKey(data.email), Date.parse(now), data.slug);
   if (data.stripeSessionId) await kv.set(sessionKey(data.stripeSessionId), data.slug);
   if (data.partner) await kv.zadd(`partner:${data.partner.partnerId}:trips`, Date.parse(now), data.slug);
 
@@ -136,6 +142,29 @@ export async function listTrips(offset = 0, limit = 50): Promise<{ trips: TripRe
   const slugs = await kv.zrevrange(TRIP_INDEX, offset, offset + limit - 1);
   const trips = await Promise.all(slugs.map((s) => kv.get<TripRecord>(tripKey(s))));
   return { trips: trips.filter((t): t is TripRecord => !!t), total };
+}
+
+/**
+ * A traveller's trips, newest first (the "My trips" page). Trips made before
+ * accounts existed are indexed once, the first time anyone lists their trips.
+ */
+export async function listUserTrips(email: string, limit = 100): Promise<TripRecord[]> {
+  const kv = getKV();
+  if ((await kv.get(USER_INDEX_FLAG)) === null) await backfillUserIndex();
+  const slugs = await kv.zrevrange(userTripsKey(email), 0, limit - 1);
+  const trips = await Promise.all(slugs.map((s) => kv.get<TripRecord>(tripKey(s))));
+  return trips.filter((t): t is TripRecord => !!t);
+}
+
+async function backfillUserIndex(): Promise<void> {
+  const kv = getKV();
+  const BATCH = 100;
+  for (let offset = 0; ; offset += BATCH) {
+    const { trips, total } = await listTrips(offset, BATCH);
+    for (const t of trips) if (t.email) await kv.zadd(userTripsKey(t.email), Date.parse(t.createdAt) || t.id, t.slug);
+    if (offset + BATCH >= total) break;
+  }
+  await kv.set(USER_INDEX_FLAG, new Date().toISOString());
 }
 
 export async function listPartnerTrips(partnerId: string, limit = 50): Promise<TripRecord[]> {

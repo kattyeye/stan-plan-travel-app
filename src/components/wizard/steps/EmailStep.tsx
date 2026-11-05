@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { WizardData } from "@/types/trip";
 import StepCard from "../ui/StepCard";
 import FieldLabel from "../ui/FieldLabel";
@@ -31,6 +31,23 @@ function isValidEmail(s: string) {
 export default function EmailStep({ data, onUpdate, onBack, draftId, onEditStep }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Signed-in travellers don't retype their email; their plan lands in My trips.
+  const hasEmail = !!data.email;
+  useEffect(() => {
+    if (hasEmail) return;
+    let cancelled = false;
+    fetch("/api/auth/session", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((s: { signedIn: boolean; email?: string }) => {
+        if (!cancelled && s.signedIn && s.email) onUpdate({ email: s.email });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, only while the field is empty
+  }, []);
 
   const emailValid = isValidEmail(data.email ?? "");
   const canSubmit = emailValid && !!(data.tripNickname ?? "").trim();

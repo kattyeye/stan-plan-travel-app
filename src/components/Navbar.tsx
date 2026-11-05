@@ -1,7 +1,9 @@
 "use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { LayoutDashboard, UserRound } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_LINKS = [
@@ -10,9 +12,22 @@ const NAV_LINKS = [
   { label: "Stories", href: "/#testimonials" },
 ];
 
+interface Viewer {
+  signedIn: boolean;
+  isAdmin?: boolean;
+}
+
 export default function Navbar() {
   const pathname = usePathname();
   const isLanding = pathname === "/";
+  const [viewer, setViewer] = useState<Viewer | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/session", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((v: Viewer) => setViewer(v))
+      .catch(() => setViewer({ signedIn: false }));
+  }, [pathname]);
 
   return (
     <nav style={{
@@ -47,7 +62,26 @@ export default function Navbar() {
         </div>
       )}
 
-      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <style>{`
+          .nav-account { display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; height: 36px; min-width: 36px; padding: 0 0.625rem; border-radius: 999px; border: 1px solid var(--color-border); color: var(--color-text); font-size: 0.875rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+          .nav-account-label { display: none; }
+          @media (min-width: 640px) { .nav-account-label { display: inline; } }
+          /* Phones: admins reach the dashboard from My trips; keep the bar uncrowded. */
+          @media (max-width: 479px) { .nav-admin { display: none; } }
+        `}</style>
+        {viewer?.isAdmin && (
+          <Link href="/admin" className="nav-account nav-admin" aria-label="Admin dashboard" title="Admin dashboard">
+            <LayoutDashboard size={16} aria-hidden="true" />
+            <span className="nav-account-label">Admin</span>
+          </Link>
+        )}
+        {viewer && (
+          <Link href={viewer.signedIn ? "/account" : "/login"} className="nav-account" aria-label={viewer.signedIn ? "My trips" : "Sign in"}>
+            <UserRound size={16} aria-hidden="true" />
+            <span className="nav-account-label">{viewer.signedIn ? "My trips" : "Sign in"}</span>
+          </Link>
+        )}
         <Link href="/wizard" style={{
           display: "inline-flex",
           alignItems: "center",

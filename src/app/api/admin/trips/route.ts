@@ -3,7 +3,7 @@ import { listTrips } from "@/lib/db";
 import { requireAdmin } from "@/lib/security";
 
 export async function GET(req: NextRequest) {
-  const denied = requireAdmin(req);
+  const denied = await requireAdmin(req);
   if (denied) return denied;
   const offset = Math.max(0, Number(req.nextUrl.searchParams.get("offset") ?? 0) || 0);
   const limit = Math.min(200, Math.max(1, Number(req.nextUrl.searchParams.get("limit") ?? 50) || 50));

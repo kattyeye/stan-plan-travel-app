@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/security";
 
 /** Full record for support: quality report, pipeline checkpoint status and last error. */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
-  const denied = requireAdmin(req);
+  const denied = await requireAdmin(req);
   if (denied) return denied;
   const { slug } = await params;
   const trip = await getTripBySlug(slug);

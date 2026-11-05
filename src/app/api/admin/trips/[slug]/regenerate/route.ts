@@ -7,7 +7,7 @@ export const maxDuration = 300;
 
 /** Rebuilds a trip from scratch (fresh research included). */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
-  const denied = requireAdmin(req);
+  const denied = await requireAdmin(req);
   if (denied) return denied;
   const { slug } = await params;
   const trip = await getTripBySlug(slug);

@@ -46,6 +46,8 @@ export default function AdminTripsPage() {
   const [details, setDetails] = useState<Record<string, Detail>>({});
   const [newPartner, setNewPartner] = useState<{ name: string; billing: "guest" | "partner"; webhookUrl: string }>({ name: "", billing: "guest", webhookUrl: "" });
   const [partnerResult, setPartnerResult] = useState<string | null>(null);
+  // Signed-in admins (ADMIN_EMAILS) don't need the token; it's only asked for when the session isn't enough.
+  const [needToken, setNeedToken] = useState(false);
 
   useEffect(() => {
     try {
@@ -57,11 +59,12 @@ export default function AdminTripsPage() {
 
   const api = useCallback(
     async (path: string, init?: RequestInit) => {
-      const res = await fetch(path, { ...init, headers: { ...(init?.headers ?? {}), Authorization: `Bearer ${token}`, "Content-Type": "application/json" } });
+      const res = await fetch(path, { ...init, headers: { ...(init?.headers ?? {}), ...(token ? { Authorization: `Bearer ${token}` } : {}), "Content-Type": "application/json" } });
       const json = await res.json().catch(() => ({}));
-      if (res.status === 401) {
+      if (res.status === 401 || res.status === 503) {
         sessionStorage.removeItem(TOKEN_KEY);
         setToken(null);
+        setNeedToken(true);
       }
       if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
       return json;
@@ -70,7 +73,6 @@ export default function AdminTripsPage() {
   );
 
   const load = useCallback(async () => {
-    if (!token) return;
     setLoading(true);
     setError(null);
     try {
@@ -82,7 +84,7 @@ export default function AdminTripsPage() {
     } finally {
       setLoading(false);
     }
-  }, [api, token]);
+  }, [api]);
 
   useEffect(() => {
     void load();
@@ -129,7 +131,7 @@ export default function AdminTripsPage() {
     }
   }
 
-  if (!token) {
+  if (needToken && !token) {
     return (
       <Page>
         <form
@@ -137,10 +139,14 @@ export default function AdminTripsPage() {
             e.preventDefault();
             sessionStorage.setItem(TOKEN_KEY, tokenInput);
             setToken(tokenInput);
+            setNeedToken(false);
           }}
           style={{ ...card, maxWidth: 420 }}
         >
           <h1 style={h1}>Admin sign-in</h1>
+          <p style={{ fontSize: "0.875rem", color: "var(--color-text-muted)", margin: "0 0 0.75rem" }}>
+            Easiest: <a href="/login?next=/admin/trips" style={{ color: "var(--color-brand)", fontWeight: 600 }}>sign in with your admin email</a> (listed in ADMIN_EMAILS). Or paste the token:
+          </p>
           <label htmlFor="admin-token" style={{ display: "block", fontSize: "0.875rem", color: "var(--color-text-muted)", marginBottom: "0.375rem" }}>
             Admin token (the ADMIN_TOKEN environment variable)
           </label>

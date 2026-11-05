@@ -1,6 +1,7 @@
 import { createHash, createHmac, timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { getKV } from "./kv";
+import { adminEmails, isAdminEmail, sessionFromCookieHeader } from "./auth";
 
 export function safeEqual(a: string, b: string): boolean {
   const ab = Buffer.from(a);
@@ -19,22 +20,47 @@ export function bearerToken(req: Request): string | null {
 }
 
 /**
- * Admin routes require `Authorization: Bearer $ADMIN_TOKEN`. When ADMIN_TOKEN
- * isn't configured the admin API is disabled rather than open.
+ * Admin routes accept either `Authorization: Bearer $ADMIN_TOKEN` (scripts) or
+ * a signed-in session whose email is in ADMIN_EMAILS (the dashboard). Changes
+ * made with a session must come from this site (Origin check) — SameSite=Lax
+ * cookies already block most cross-site requests; this closes the rest. With
+ * neither configured the admin API is disabled rather than open.
  */
-export function requireAdmin(req: Request): NextResponse | null {
+export async function requireAdmin(req: Request): Promise<NextResponse | null> {
   const expected = process.env.ADMIN_TOKEN;
-  if (!expected) {
+  const token = bearerToken(req);
+  if (expected && token && safeEqual(token, expected)) return null;
+
+  const session = sessionFromCookieHeader(req.headers.get("cookie"));
+  if (session && isAdminEmail(session.email)) {
+    const unsafe = !["GET", "HEAD", "OPTIONS"].includes(req.method.toUpperCase());
+    if (unsafe && !sameOrigin(req)) return NextResponse.json({ error: "Cross-site request blocked" }, { status: 403 });
+    return null;
+  }
+
+  if (!expected && adminEmails().length === 0) {
     return NextResponse.json(
-      { error: "Admin is disabled. Set the ADMIN_TOKEN environment variable to enable it." },
+      { error: "Admin is disabled. Set ADMIN_EMAILS (and sign in) or ADMIN_TOKEN to enable it." },
       { status: 503 }
     );
   }
-  const token = bearerToken(req);
-  if (!token || !safeEqual(token, expected)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  return null;
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
+
+/** The request's Origin (or Referer) is this deployment or the public app URL. */
+export function sameOrigin(req: Request): boolean {
+  const origin = req.headers.get("origin") ?? (() => {
+    try {
+      return new URL(req.headers.get("referer") ?? "").origin;
+    } catch {
+      return null;
+    }
+  })();
+  if (!origin) return false;
+  const allowed = new Set([new URL(req.url).origin, appOrigin()]);
+  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
+  if (host) allowed.add(`https://${host}`).add(`http://${host}`);
+  return allowed.has(origin);
 }
 
 /**

@@ -1,118 +1,210 @@
 "use client";
-import { useEffect, useState } from "react";
-import type { GeneratedTrip } from "@/types/trip";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { MotionConfig, motion, useAnimationControls } from "framer-motion";
+import { Download, WifiOff } from "lucide-react";
+import type { GeneratedTrip, TripEdits } from "@/types/trip";
+import { parseHash, TAB_IDS, type FoodView, type HashState, type ListsView, type TabId } from "@/lib/trip-view";
+import { withEdits } from "@/lib/trips/edits";
+import { useTripLive } from "@/hooks/useTripLive";
+import TripNav from "./TripNav";
+import OverviewSection from "./OverviewSection";
 import ItinerarySection from "./ItinerarySection";
-import MealPlanSection from "./MealPlanSection";
-import GrocerySection from "./GrocerySection";
-import RestaurantSection from "./RestaurantSection";
+import FoodSection from "./FoodSection";
 import TipsSection from "./TipsSection";
-import PackingSection from "./PackingSection";
-import { CalendarDays, Utensils, ShoppingCart, MapPin, Compass, Luggage } from "lucide-react";
+import ListsSection from "./ListsSection";
+import UndoToast from "./UndoToast";
+import CoachMarks from "./CoachMarks";
+import CommandBar from "./CommandBar";
+import { TripUIProvider, type GoTo, type TripUI } from "./TripContext";
+import { useTripEdits } from "./useTripEdits";
+import s from "./trip.module.css";
 
-interface Props { trip: GeneratedTrip; slug?: string }
+interface Props {
+  trip: GeneratedTrip;
+  slug?: string;
+  /** Browser key for the Maps Embed API. Without it, maps fall back to "Open in Google Maps" links. */
+  mapsKey?: string;
+  edits?: TripEdits;
+  /** Sample plan behind the paywall: Days only, other tabs locked. */
+  preview?: boolean;
+  /** Rendered after the content (the paywall on previews). */
+  children?: React.ReactNode;
+}
 
-const TABS = [
-  { id: "itinerary", label: "Itinerary", Icon: CalendarDays },
-  { id: "meals", label: "Meals", Icon: Utensils },
-  { id: "grocery", label: "Grocery", Icon: ShoppingCart },
-  { id: "restaurants", label: "Eat out", Icon: MapPin },
-  { id: "tips", label: "To do", Icon: Compass },
-  { id: "packing", label: "Packing", Icon: Luggage },
-] as const;
+interface View {
+  tab: TabId;
+  day: number;
+  food: FoodView;
+  lists: ListsView;
+}
 
-type TabId = (typeof TABS)[number]["id"];
-const isTab = (v: string): v is TabId => TABS.some((t) => t.id === v);
+const hashFor = (v: View) =>
+  v.tab === "days" ? `#days-${v.day}` : v.tab === "food" ? `#food-${v.food}` : v.tab === "lists" ? `#lists-${v.lists}` : `#${v.tab}`;
 
-export default function TripTabs({ trip, slug }: Props) {
-  const [active, setActive] = useState<TabId>("itinerary");
-
-  // Deep links (#grocery) and the back button both work.
+/** The trip page as a small app: five tabs, deep links, group edits, trip mode. */
+export default function TripTabs({ trip: original, slug, mapsKey, edits: initialEdits, preview = false, children }: Props) {
+  const firstDay = original.itinerary[0]?.day ?? 1;
+  const [view, setView] = useState<View>({ tab: preview ? "days" : "overview", day: firstDay, food: "plan", lists: "packing" });
+  const [highlight, setHighlight] = useState<string | undefined>();
+  const live = useTripLive(original.meta.dates);
+  const edits = useTripEdits(preview ? undefined : slug, original, initialEdits, live.online);
+  const trip = useMemo(() => withEdits(original, edits?.edits), [original, edits?.edits]);
+  const viewKey = `irie:${slug ?? original.meta.title}:view`;
+  const initialised = useRef(false);
+  const viewRef = useRef(view);
   useEffect(() => {
-    const sync = () => {
-      const hash = window.location.hash.slice(1);
-      if (isTab(hash)) setActive(hash);
+    viewRef.current = view;
+  }, [view]);
+
+  const validDay = useCallback((d: number | undefined) => (d && original.itinerary.some((x) => x.day === d) ? d : undefined), [original.itinerary]);
+
+  const apply = useCallback(
+    (to: Partial<HashState>, prev: View): View => ({
+      tab: preview ? "days" : (to.tab ?? prev.tab),
+      day: validDay(to.day) ?? prev.day,
+      food: to.food ?? prev.food,
+      lists: to.lists ?? prev.lists,
+    }),
+    [preview, validDay]
+  );
+
+  // Pick the opening view once the viewer's clock is known:
+  // a deep link wins, then "today" during the trip, then where they left off.
+  useEffect(() => {
+    if (!live.hydrated || initialised.current) return;
+    initialised.current = true;
+    const fromHash = parseHash(window.location.hash);
+    let next: Partial<HashState> | null = fromHash;
+    if (!next && live.todayDay && validDay(live.todayDay)) next = { tab: "days", day: live.todayDay };
+    if (!next) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(viewKey) ?? "null") as Partial<View> | null;
+        if (saved && (TAB_IDS as readonly string[]).includes(saved.tab ?? "")) next = saved;
+      } catch {
+        /* no saved view */
+      }
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial view depends on hash, clock and storage (client only)
+    if (next) setView((prev) => apply(next!, prev));
+  }, [live.hydrated, live.todayDay, apply, validDay, viewKey]);
+
+  // Back/forward and pasted links.
+  useEffect(() => {
+    const onHash = () => {
+      const h = parseHash(window.location.hash);
+      if (h) setView((prev) => apply(h, prev));
     };
-    sync();
-    window.addEventListener("hashchange", sync);
-    return () => window.removeEventListener("hashchange", sync);
-  }, []);
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, [apply]);
 
-  function select(id: TabId, focus = false) {
-    setActive(id);
-    history.replaceState(null, "", `#${id}`);
-    if (focus) document.getElementById(`tab-${id}`)?.focus();
-    const bar = document.getElementById("trip-tabs");
-    if (bar && bar.getBoundingClientRect().top < 60) window.scrollTo({ top: bar.offsetTop - 60, behavior: "smooth" });
-  }
+  // Keep the URL and the remembered view in step.
+  useEffect(() => {
+    if (!initialised.current) return;
+    history.replaceState(null, "", hashFor(view));
+    try {
+      localStorage.setItem(viewKey, JSON.stringify(view));
+    } catch {
+      /* ignore */
+    }
+  }, [view, viewKey]);
 
-  function handleKeyDown(e: React.KeyboardEvent, index: number) {
-    const map: Record<string, number> = { ArrowRight: index + 1, ArrowLeft: index - 1, Home: 0, End: TABS.length - 1 };
-    if (!(e.key in map)) return;
-    e.preventDefault();
-    select(TABS[(map[e.key] + TABS.length) % TABS.length].id, true);
-  }
+  const go = useCallback(
+    (to: GoTo) => {
+      if (preview && to.tab && to.tab !== "days") {
+        document.getElementById("paywall")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      const prev = viewRef.current;
+      const next = apply(to, prev);
+      viewRef.current = next;
+      setView(next);
+      setHighlight(to.highlight);
+      if (next.tab !== prev.tab) {
+        const content = document.getElementById("trip-content");
+        if (content) {
+          const offset = window.matchMedia("(min-width: 768px)").matches ? 120 : 64;
+          const top = content.getBoundingClientRect().top + window.scrollY - offset;
+          if (window.scrollY > top) window.scrollTo({ top, behavior: "smooth" });
+        }
+      }
+    },
+    [apply, preview]
+  );
+
+  const ui: TripUI = {
+    trip,
+    original,
+    slug,
+    mapsKey,
+    preview,
+    tab: view.tab,
+    day: view.day,
+    food: view.food,
+    lists: view.lists,
+    highlight,
+    go,
+    live,
+    edits,
+  };
 
   return (
-    <div style={{ background: "var(--color-bg)", minHeight: "60vh" }}>
-      <style>{`
-        .trip-tab-bar::-webkit-scrollbar { display: none; }
-        @media print {
-          .trip-tab-bar, .no-print { display: none !important; }
-          [role="tabpanel"] { display: block !important; }
-          .recipe-body { display: block !important; }
-        }
-        [role="tab"]:focus-visible { outline: 2px solid var(--color-brand); outline-offset: -2px; border-radius: 4px; }
-      `}</style>
+    <TripUIProvider value={ui}>
+      <MotionConfig reducedMotion="user">
+        <div style={{ background: "var(--color-bg)", minHeight: "60vh" }}>
+          <style>{`
+            @media print {
+              [role="tabpanel"], .print-show { display: block !important; }
+              .recipe-body { display: block !important; }
+            }
+          `}</style>
 
-      <div
-        id="trip-tabs"
-        role="tablist"
-        aria-label="Trip sections"
-        className="trip-tab-bar"
-        style={{ position: "sticky", top: 60, zIndex: 10, background: "var(--color-bg-card)", borderBottom: "1px solid var(--color-border)", overflowX: "auto", scrollbarWidth: "none", boxShadow: "var(--shadow-card)" }}
-      >
-        <div style={{ display: "flex", maxWidth: "800px", margin: "0 auto", padding: "0 0.25rem" }}>
-          {TABS.map((tab, index) => {
-            const selected = active === tab.id;
-            return (
-              <button
-                key={tab.id}
-                id={`tab-${tab.id}`}
-                role="tab"
-                type="button"
-                aria-selected={selected}
-                aria-controls={`panel-${tab.id}`}
-                tabIndex={selected ? 0 : -1}
-                onClick={() => select(tab.id)}
-                onKeyDown={(e) => handleKeyDown(e, index)}
-                style={{
-                  flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "0.25rem",
-                  padding: "0.75rem 0.25rem 0.625rem", minWidth: "3.5rem", minHeight: 52, border: "none",
-                  borderBottom: selected ? "2.5px solid var(--color-brand)" : "2.5px solid transparent",
-                  background: "transparent", color: selected ? "var(--color-heading)" : "var(--color-text-muted)",
-                  fontWeight: selected ? 700 : 500, cursor: "pointer", whiteSpace: "nowrap", transition: "color 0.12s, border-color 0.12s",
-                }}
-              >
-                <tab.Icon size={17} aria-hidden="true" />
-                <span style={{ textTransform: "uppercase", letterSpacing: "0.05em", fontSize: "0.625rem" }}>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+          <TripNav active={view.tab} onSelect={(id, focus) => {
+            go({ tab: id });
+            if (focus) requestAnimationFrame(() => document.getElementById(`tab-${id}`)?.focus());
+          }} locked={preview ? TAB_IDS.filter((t) => t !== "days") : []} />
 
-      <div style={{ maxWidth: "800px", margin: "0 auto", padding: "1.75rem 1rem 4rem" }}>
-        {TABS.map((tab) => (
-          <div key={tab.id} id={`panel-${tab.id}`} role="tabpanel" aria-labelledby={`tab-${tab.id}`} hidden={active !== tab.id} tabIndex={0}>
-            {tab.id === "itinerary" && <ItinerarySection trip={trip} />}
-            {tab.id === "meals" && <MealPlanSection trip={trip} />}
-            {tab.id === "grocery" && <GrocerySection trip={trip} slug={slug} />}
-            {tab.id === "restaurants" && <RestaurantSection trip={trip} />}
-            {tab.id === "tips" && <TipsSection trip={trip} />}
-            {tab.id === "packing" && <PackingSection trip={trip} slug={slug} />}
+          {!live.online && (
+            <div role="status" className="no-print" style={{ background: "var(--color-warning-bg)", color: "var(--color-warning-text)", borderBottom: "1px solid var(--color-warning-border)", fontSize: "0.8125rem" }}>
+              <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0.5rem 1rem", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                <WifiOff size={15} aria-hidden="true" />
+                <span style={{ flex: 1 }}>You&apos;re offline. Your plan still works; maps and group changes come back when you reconnect.</span>
+                {slug && <a href={`/api/trip/${slug}/download`} download style={{ color: "inherit", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "0.25rem" }}><Download size={14} aria-hidden="true" /> Offline copy</a>}
+              </div>
+            </div>
+          )}
+
+          <div id="trip-content" className={`${s.content} ${view.tab === "days" ? s.contentWide : ""}`}>
+            {!preview && <CommandBar />}
+            {(preview ? (["days"] as const) : TAB_IDS).map((id) => (
+              <Panel key={id} id={id} active={view.tab === id}>
+                {id === "overview" && <OverviewSection />}
+                {id === "days" && <ItinerarySection />}
+                {id === "food" && <FoodSection trip={trip} />}
+                {id === "explore" && <TipsSection trip={trip} />}
+                {id === "lists" && <ListsSection trip={trip} slug={slug} />}
+              </Panel>
+            ))}
+            {children}
           </div>
-        ))}
-      </div>
+
+          {edits && <UndoToast toast={edits.toast} onDismiss={edits.dismissToast} />}
+          {!preview && live.hydrated && <CoachMarks />}
+        </div>
+      </MotionConfig>
+    </TripUIProvider>
+  );
+}
+
+/** A tab panel that stays mounted (state survives, print shows all) and fades in when it becomes active. */
+function Panel({ id, active, children }: { id: TabId; active: boolean; children: React.ReactNode }) {
+  const controls = useAnimationControls();
+  useEffect(() => {
+    if (active) controls.start({ opacity: [0, 1], y: [6, 0], transition: { duration: 0.2, ease: "easeOut" } });
+  }, [active, controls]);
+  return (
+    <div id={`panel-${id}`} role="tabpanel" aria-labelledby={`tab-${id}`} hidden={!active} tabIndex={-1} style={{ outline: "none" }}>
+      <motion.div animate={controls}>{children}</motion.div>
     </div>
   );
 }

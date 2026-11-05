@@ -1,8 +1,8 @@
 "use client";
 import { useCallback, useMemo, useState } from "react";
 import type { AggregatedIngredient, GeneratedTrip, RecipeIngredient } from "@/types/trip";
-import { aggregateIngredients } from "@/lib/utils";
 import { useStoredChecklist } from "@/hooks/useStoredChecklist";
+import { groceryMaster, groceryStorageKey } from "./checklists";
 import VerifiedBadge from "./VerifiedBadge";
 
 interface Props { trip: GeneratedTrip; slug?: string }
@@ -26,12 +26,7 @@ export default function GrocerySection({ trip, slug }: Props) {
   const [view, setView] = useState<"master" | "by-meal">("master");
   const { groceryList } = trip;
 
-  const master: AggregatedIngredient[] = useMemo(
-    () =>
-      groceryList.master ??
-      aggregateIngredients([...groceryList.byMeal.map((m) => ({ recipeId: m.recipeId, ingredients: m.ingredients })), { ingredients: groceryList.staples }]),
-    [groceryList]
-  );
+  const master: AggregatedIngredient[] = useMemo(() => groceryMaster(trip), [trip]);
   const byCategory = useMemo(() => {
     const out = new Map<string, AggregatedIngredient[]>();
     for (const m of master) out.set(m.category, [...(out.get(m.category) ?? []), m]);
@@ -39,7 +34,7 @@ export default function GrocerySection({ trip, slug }: Props) {
   }, [master]);
 
   const initial = useCallback(() => ({}) as Record<string, boolean>, []);
-  const { checked, toggle, reset } = useStoredChecklist(`irie:${slug ?? trip.meta.title}:grocery`, initial);
+  const { checked, toggle, reset } = useStoredChecklist(groceryStorageKey(slug, trip), initial);
   const done = master.filter((m) => checked[m.item]).length;
 
   return (

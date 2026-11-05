@@ -30,7 +30,7 @@ export default async function TripPage({ params }: Props) {
   return (
     <div style={{ minHeight: "100vh", background: "var(--color-bg)" }}>
       <TripHeader trip={trip.generatedData} cityPhoto={cityPhoto} slug={slug} />
-      <TripTabs trip={trip.generatedData} slug={slug} />
+      <TripTabs trip={trip.generatedData} slug={slug} edits={trip.edits} mapsKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || undefined} />
     </div>
   );
 }

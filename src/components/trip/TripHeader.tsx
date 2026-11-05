@@ -1,7 +1,9 @@
 import type { GeneratedTrip } from "@/types/trip";
 import { shortDate } from "@/lib/pipeline/days";
+import { STYLE_INFO } from "@/lib/trip-view";
 import TripActions from "./TripActions";
-import { CalendarDays, Moon, Users, Baby, Home, Sparkles, ShieldCheck } from "lucide-react";
+import PhasePill from "./PhasePill";
+import { CalendarDays, Moon, Users, Baby, Sparkles, ShieldCheck } from "lucide-react";
 
 interface Props {
   trip: GeneratedTrip;
@@ -10,18 +12,12 @@ interface Props {
   slug?: string;
 }
 
-const STYLE_BADGE: Record<string, string> = {
-  structured: "Minute-by-minute plan",
-  balanced: "Balanced itinerary",
-  flexible: "Go with the flow",
-};
-
 export default function TripHeader({ trip, cityPhoto, preview, slug }: Props) {
   const { meta, preferences, quality } = trip;
-  const badge = preferences ? (STYLE_BADGE[preferences.planningStyle] ?? preferences.planningStyle) : null;
+  const badge = preferences ? (STYLE_INFO[preferences.planningStyle]?.badge ?? preferences.planningStyle) : null;
 
   return (
-    <header style={{ position: "relative", overflow: "hidden", minHeight: "320px" }}>
+    <header className="trip-header" style={{ position: "relative", overflow: "hidden", minHeight: "clamp(260px, 40vh, 340px)" }}>
       {/* Background: city photo or fallback solid */}
       {cityPhoto ? (
         <img
@@ -59,7 +55,7 @@ export default function TripHeader({ trip, cityPhoto, preview, slug }: Props) {
         zIndex: 1,
         maxWidth: "800px",
         margin: "0 auto",
-        padding: "2.5rem 1rem 2rem",
+        padding: "clamp(1.5rem, 5vw, 2.5rem) 1rem 1.75rem",
       }}>
 
         {/* Breadcrumb */}
@@ -81,6 +77,12 @@ export default function TripHeader({ trip, cityPhoto, preview, slug }: Props) {
           </span>
         </div>
 
+        {!preview && (
+          <div style={{ marginBottom: "0.75rem" }}>
+            <PhasePill dates={meta.dates} />
+          </div>
+        )}
+
         {/* Title row */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1.5rem", flexWrap: "wrap", marginBottom: "0.625rem" }}>
           <h1 style={{
@@ -101,7 +103,7 @@ export default function TripHeader({ trip, cityPhoto, preview, slug }: Props) {
           color: cityPhoto ? "rgba(255,255,255,0.75)" : "var(--color-tea-green-400)",
           fontSize: "1rem",
           fontWeight: 400,
-          marginBottom: "2rem",
+          marginBottom: "1.25rem",
           letterSpacing: "0.01em",
           textShadow: cityPhoto ? "0 1px 6px rgba(0,0,0,0.4)" : "none",
         }}>
@@ -119,18 +121,12 @@ export default function TripHeader({ trip, cityPhoto, preview, slug }: Props) {
             )}
             {badge && <MetaPill icon={<Sparkles size={13} />} label={badge} accent photo={!!cityPhoto} />}
           </div>
-          {meta.property && (
-            <div>
-              <MetaPill icon={<Home size={13} />} label={meta.property} photo={!!cityPhoto} />
-            </div>
-          )}
           {quality && quality.venues.total > 0 && (
             <p style={{ display: "flex", alignItems: "center", gap: "0.375rem", margin: "0.25rem 0 0", fontSize: "0.8125rem", color: cityPhoto ? "rgba(255,255,255,0.85)" : "var(--color-header-muted)" }}>
               <ShieldCheck size={14} aria-hidden="true" />
               {quality.venues.verified > 0
                 ? `${quality.venues.verified} of ${quality.venues.total} places confirmed open on Google Maps`
                 : `${quality.venues.total} places checked against current web sources`}
-              {" · "}checked {new Date(quality.checkedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
             </p>
           )}
         </div>

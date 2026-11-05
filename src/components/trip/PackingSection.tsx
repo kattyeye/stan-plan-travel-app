@@ -2,10 +2,9 @@
 import { useCallback } from "react";
 import type { GeneratedTrip, PackingItem } from "@/types/trip";
 import { useStoredChecklist } from "@/hooks/useStoredChecklist";
+import { packingInitial, packingStorageKey } from "./checklists";
 
 interface Props { trip: GeneratedTrip; slug?: string }
-
-type CheckedState = Record<string, boolean>;
 
 const SECTION_LABELS: Record<keyof GeneratedTrip["packingList"], string> = {
   clothingAdults: "👕 Clothing — Adults",
@@ -19,21 +18,10 @@ const SECTION_LABELS: Record<keyof GeneratedTrip["packingList"], string> = {
   propertyProvides: "🏠 Property Provides",
 };
 
-function buildInitialState(packing: GeneratedTrip["packingList"]): CheckedState {
-  const state: CheckedState = {};
-  for (const [section, items] of Object.entries(packing) as [keyof typeof packing, PackingItem[]][]) {
-    for (const item of items) {
-      const key = `${section}::${item.item}`;
-      state[key] = item.propertyProvides ?? false;
-    }
-  }
-  return state;
-}
-
 export default function PackingSection({ trip, slug }: Props) {
   const { packingList } = trip;
-  const initial = useCallback(() => buildInitialState(packingList), [packingList]);
-  const { checked, toggle, reset } = useStoredChecklist(`irie:${slug ?? trip.meta.title}:packing`, initial);
+  const initial = useCallback(() => packingInitial(packingList), [packingList]);
+  const { checked, toggle, reset } = useStoredChecklist(packingStorageKey(slug, trip), initial);
 
   const total = Object.keys(checked).length;
   const done = Object.values(checked).filter(Boolean).length;

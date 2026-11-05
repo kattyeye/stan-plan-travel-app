@@ -366,6 +366,45 @@ export interface TripProgress {
   startedAt?: string;
 }
 
+// ============================================================
+// GROUP EDITS — changes travellers make on the shared trip page
+// ============================================================
+
+export type ReportReason = "closed" | "wrong_hours" | "not_a_fit" | "other";
+
+/**
+ * One change to a ready plan. Swaps may only pick places Irie already
+ * researched; everything is validated in code (src/lib/trips/edits.ts).
+ */
+export type EditOp =
+  | { type: "swap_meal"; day: number; slot: MealType; restaurantId: string }
+  | { type: "hide_stop" | "unhide_stop" | "done_stop" | "undone_stop"; day: number; key: string }
+  | { type: "report"; day?: number; venueId?: string; reason: ReportReason; note?: string }
+  | { type: "reset" };
+
+export interface TripReport {
+  at: string;
+  day?: number;
+  venueId?: string;
+  venueName?: string;
+  reason: ReportReason;
+  note?: string;
+}
+
+/** Stored next to the generated plan, which is never rewritten. */
+export interface TripEdits {
+  /** Increments on every change, so viewers can tell when the group changed something. */
+  version: number;
+  /** "day:slot" → restaurant id the group picked instead. */
+  mealSwaps: Record<string, string>;
+  /** Timeline stop keys the group skipped / did. */
+  hidden: string[];
+  done: string[];
+  reports: TripReport[];
+  log: { at: string; summary: string }[];
+  updatedAt: string;
+}
+
 export interface TripRecord {
   id: number;
   slug: string;
@@ -385,4 +424,6 @@ export interface TripRecord {
   partner?: PartnerRef;
   /** Legacy: LLM-rendered HTML from v1 trips. New trips render HTML on demand. */
   htmlBlob?: string;
+  /** The travel group's changes to the plan (swaps, skips, reports). */
+  edits?: TripEdits;
 }

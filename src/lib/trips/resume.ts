@@ -34,15 +34,15 @@ export async function resumeTrip(slug: string, opts: { sessionId?: string; retry
 
   if (trip.status === "pending") {
     if (!stripeEnabled() || !opts.sessionId) return done(false);
-    let paid = false;
+    let payment: Awaited<ReturnType<typeof verifyStripeSession>> = null;
     try {
-      paid = await verifyStripeSession(opts.sessionId, slug);
+      payment = await verifyStripeSession(opts.sessionId, slug);
     } catch (err) {
       console.error(`resume: could not verify session for ${slug}:`, err);
     }
-    if (!paid) return done(false);
+    if (!payment) return done(false);
     await updateTripStripeSession(slug, opts.sessionId);
-    trip = await updateTrip(slug, { status: "paid", billing: "stripe" });
+    trip = await updateTrip(slug, { status: "paid", billing: "stripe", payment });
   }
 
   if (trip.status === "error") {

@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import type { TripRecord } from "@/types/trip";
 import { appOrigin } from "./security";
 
 let stripe: Stripe | null = null;
@@ -41,7 +42,12 @@ export async function createCheckoutSession(data: {
       },
     ],
     metadata: { slug: data.slug },
-    payment_intent_data: { metadata: { slug: data.slug } },
+    // Promotion codes are created in the Stripe dashboard (e.g. a 100%-off beta code).
+    allow_promotion_codes: true,
+    // A receipt is emailed for every live payment, whatever the dashboard's email settings.
+    payment_intent_data: { metadata: { slug: data.slug }, receipt_email: data.email },
+    // Sales tax/VAT via Stripe Tax — only once it's set up in the dashboard, or Checkout errors.
+    ...(process.env.STRIPE_AUTOMATIC_TAX === "true" ? { automatic_tax: { enabled: true } } : {}),
     success_url: `${appUrl}/trip/${data.slug}/generating?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appUrl}/wizard?cancelled=true`,
   });
@@ -49,10 +55,28 @@ export async function createCheckoutSession(data: {
   return { url: session.url, sessionId: session.id };
 }
 
-/** Confirms a Checkout Session is paid and belongs to this trip. */
-export async function verifyStripeSession(sessionId: string, slug: string): Promise<boolean> {
+/**
+ * Paid, or free because a 100%-off promotion code brought the total to zero
+ * (Stripe reports those as "no_payment_required").
+ */
+export function isSessionSettled(session: Pick<Stripe.Checkout.Session, "payment_status">): boolean {
+  return session.payment_status === "paid" || session.payment_status === "no_payment_required";
+}
+
+/** What was actually charged, for the trip record and the admin dashboard. */
+export function paymentFromSession(session: Pick<Stripe.Checkout.Session, "amount_total" | "currency" | "total_details">): NonNullable<TripRecord["payment"]> {
+  return {
+    amountCents: session.amount_total ?? 0,
+    discountCents: session.total_details?.amount_discount ?? 0,
+    currency: session.currency ?? "usd",
+    at: new Date().toISOString(),
+  };
+}
+
+/** Confirms a Checkout Session is settled and belongs to this trip; returns what was charged. */
+export async function verifyStripeSession(sessionId: string, slug: string): Promise<NonNullable<TripRecord["payment"]> | null> {
   const session = await getStripe().checkout.sessions.retrieve(sessionId);
-  return session.payment_status === "paid" && session.metadata?.slug === slug;
+  return isSessionSettled(session) && session.metadata?.slug === slug ? paymentFromSession(session) : null;
 }
 
 export async function constructWebhookEvent(payload: Buffer, signature: string): Promise<Stripe.Event> {

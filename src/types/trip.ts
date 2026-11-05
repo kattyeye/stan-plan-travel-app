@@ -419,8 +419,10 @@ export interface TripRecord {
   progress?: TripProgress;
   /** Customer-safe error message when status is "error". */
   errorMessage?: string;
-  /** How the trip was paid for. */
-  billing?: "stripe" | "partner" | "free";
+  /** How the trip was paid for. "comp" = a beta tester's plan (never charged). */
+  billing?: "stripe" | "partner" | "free" | "comp";
+  /** What Stripe charged, recorded when the Checkout Session completes. */
+  payment?: { amountCents: number; discountCents: number; currency: string; at: string };
   partner?: PartnerRef;
   /** Legacy: LLM-rendered HTML from v1 trips. New trips render HTML on demand. */
   htmlBlob?: string;

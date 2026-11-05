@@ -2,7 +2,7 @@ import { NextRequest, NextResponse, after } from "next/server";
 import type Stripe from "stripe";
 import { getTripBySlug, updateTrip, updateTripStripeSession } from "@/lib/db";
 import { runPipeline } from "@/lib/pipeline";
-import { constructWebhookEvent } from "@/lib/stripe";
+import { constructWebhookEvent, isSessionSettled, paymentFromSession } from "@/lib/stripe";
 
 export const maxDuration = 300;
 
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     console.error("Webhook: no slug in session metadata", session.id);
     return NextResponse.json({ received: true });
   }
-  if (session.payment_status !== "paid") {
+  if (!isSessionSettled(session)) {
     // e.g. bank transfers: wait for async_payment_succeeded.
     return NextResponse.json({ received: true });
   }
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     if (trip.status === "ready" || trip.status === "generating") return NextResponse.json({ received: true });
 
     if (trip.stripeSessionId !== session.id) await updateTripStripeSession(slug, session.id);
-    await updateTrip(slug, { status: "paid", billing: "stripe" });
+    await updateTrip(slug, { status: "paid", billing: "stripe", payment: paymentFromSession(session) });
     // Generation is idempotent: a per-trip lock and checkpoints stop double runs.
     after(() => runPipeline(slug));
   } catch (err) {

@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useId, useRef, useState } from "react";
 import { MapPin } from "lucide-react";
+import { useSpeechInput } from "@/hooks/useSpeechInput";
+import VoiceButton from "@/components/voice/VoiceButton";
 
 interface Suggestion {
   id: string;
@@ -23,7 +25,8 @@ interface Props {
 
 /**
  * Destination search box. Suggestions come from /api/places/autocomplete, so
- * no browser API key is needed; typing a place freely always works too.
+ * no browser API key is needed; typing a place freely always works too. Where
+ * the browser supports it, a mic lets people say the place instead.
  */
 export default function PlacesAutocomplete({ value, onChange, onSelect, placeholder = "e.g. Outer Banks, NC", id, ariaLabel, inputStyle }: Props) {
   const listId = useId();
@@ -65,6 +68,12 @@ export default function PlacesAutocomplete({ value, onChange, onSelect, placehol
       if (abortRef.current === controller) setLoading(false);
     }
   }
+
+  const speech = useSpeechInput((heard) => {
+    const text = heard.replace(/[.?!]+$/, "").slice(0, 160);
+    onChange(text);
+    fetchSuggestions(text);
+  });
 
   function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
     const val = e.target.value;
@@ -110,8 +119,8 @@ export default function PlacesAutocomplete({ value, onChange, onSelect, placehol
         aria-controls={listId}
         aria-autocomplete="list"
         aria-activedescendant={active >= 0 ? `${listId}-${active}` : undefined}
-        placeholder={placeholder}
-        value={value}
+        placeholder={speech.listening ? "Listening…" : placeholder}
+        value={speech.listening && speech.interim ? speech.interim : value}
         onChange={handleInput}
         onKeyDown={handleKeyDown}
         onFocus={() => {
@@ -137,15 +146,25 @@ export default function PlacesAutocomplete({ value, onChange, onSelect, placehol
           boxSizing: "border-box",
           minHeight: 44,
           ...inputStyle,
+          ...(speech.supported ? { paddingRight: "3.25rem" } : null),
         }}
       />
-      <span aria-hidden="true" style={{ position: "absolute", right: "0.875rem", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-faint)", display: "flex" }}>
-        {loading ? (
-          <span style={{ width: 14, height: 14, border: "2px solid var(--color-border)", borderTopColor: "var(--color-brand)", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
-        ) : (
-          <MapPin size={16} />
-        )}
-      </span>
+      {speech.supported ? (
+        <span style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)", display: "flex" }}>
+          <VoiceButton speech={speech} label="Say your destination" size={40} />
+        </span>
+      ) : (
+        <span aria-hidden="true" style={{ position: "absolute", right: "0.875rem", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-faint)", display: "flex" }}>
+          {loading ? (
+            <span style={{ width: 14, height: 14, border: "2px solid var(--color-border)", borderTopColor: "var(--color-brand)", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+          ) : (
+            <MapPin size={16} />
+          )}
+        </span>
+      )}
+      {speech.error && (
+        <p role="alert" style={{ margin: "0.375rem 0 0", fontSize: "0.8125rem", color: "var(--color-warning-text)", textAlign: "left" }}>{speech.error}</p>
+      )}
 
       {open && suggestions.length > 0 && (
         <ul

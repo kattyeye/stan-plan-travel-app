@@ -18,7 +18,10 @@ interface TripRow {
 }
 
 interface Detail {
-  trip: { generatedData?: { quality?: { issues: { severity: string; message: string }[] } } };
+  trip: {
+    generatedData?: { quality?: { issues: { severity: string; message: string }[] } };
+    edits?: { version: number; reports: { at: string; day?: number; venueName?: string; reason: string; note?: string }[] };
+  };
   pipeline: { stagesDone: string[]; attempts: Record<string, number>; usage: Record<string, number>; models: string[]; lastError: string | null } | null;
 }
 
@@ -207,6 +210,18 @@ export default function AdminTripsPage() {
                     </li>
                   ))}
                 </ul>
+                {(details[t.slug].trip.edits?.reports.length ?? 0) > 0 && (
+                  <>
+                    <p style={{ margin: "0.75rem 0 0.25rem", fontWeight: 600 }}>Traveller reports ({details[t.slug].trip.edits!.reports.length}) · {details[t.slug].trip.edits!.version} group edits</p>
+                    <ul style={{ margin: 0, paddingLeft: "1.125rem" }}>
+                      {details[t.slug].trip.edits!.reports.map((r, k) => (
+                        <li key={k} style={{ color: "var(--color-warning-text)" }}>
+                          {new Date(r.at).toLocaleDateString()} · {r.reason.replace("_", " ")}{r.venueName ? ` · ${r.venueName}` : ""}{r.day ? ` (day ${r.day})` : ""}{r.note ? ` — “${r.note}”` : ""}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
               </div>
             )}
           </div>

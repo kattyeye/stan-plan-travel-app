@@ -110,6 +110,8 @@ export async function saveTripData(slug: string, generatedData: GeneratedTrip): 
     status: "ready",
     errorMessage: undefined,
     htmlBlob: undefined,
+    // A fresh plan has new stops and places, so earlier group edits no longer apply.
+    edits: undefined,
     progress: {
       stage: "done",
       message: "Your plan is ready",

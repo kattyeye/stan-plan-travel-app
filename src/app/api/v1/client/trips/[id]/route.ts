@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { fail, ok, preflight } from "@/lib/api/client";
 import { getTripBySlug } from "@/lib/db";
 import { tripStatusView } from "@/lib/trips/start";
+import { withEdits } from "@/lib/trips/edits";
 
 export const OPTIONS = preflight;
 
@@ -23,7 +24,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const includePlan = req.nextUrl.searchParams.get("plan") !== "false";
   return ok(
     req,
-    { trip: tripStatusView(trip), plan: includePlan && trip.status === "ready" ? trip.generatedData ?? null : null },
+    {
+      trip: tripStatusView(trip),
+      // The group's swaps are applied and skipped stops removed, so apps show the same plan as the trip page.
+      plan: includePlan && trip.status === "ready" && trip.generatedData ? withEdits(trip.generatedData, trip.edits, { dropHidden: true }) : null,
+    },
     { headers: { "Cache-Control": "no-store" } }
   );
 }

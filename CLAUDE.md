@@ -32,9 +32,16 @@ The key differentiator is the **planning style axis**: `structured` (exact times
 
 ### Environment variables
 
-See `.env.example` for the full list with notes. Required: `ANTHROPIC_API_KEY`, `PLAN_UPSTASH_KV_REST_API_URL`, `PLAN_UPSTASH_KV_REST_API_TOKEN`, `NEXT_PUBLIC_APP_URL`, `ADMIN_TOKEN`. Strongly recommended: `GOOGLE_MAPS_API_KEY` (server key, Places API (New)), `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`.
+See `.env.example` for the full list with notes, and **`docs/GO_LIVE.md`** for the step-by-step launch setup (Stripe, Resend, keys, Vercel Pro). Required: `ANTHROPIC_API_KEY`, `PLAN_UPSTASH_KV_REST_API_URL`, `PLAN_UPSTASH_KV_REST_API_TOKEN`, `NEXT_PUBLIC_APP_URL`, `ADMIN_EMAILS`. Strongly recommended: `GOOGLE_MAPS_API_KEY` (server key, Places API (New)), `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY` (required for sign-in in production), `AUTH_SECRET`.
 
-**Pricing:** each email's first plan is free (`src/lib/billing.ts`: one per normalised email, `IRIE_FREE_PER_IP_PER_DAY`, and a site-wide `IRIE_FREE_DAILY_CAP`); later plans go through Stripe. Without `STRIPE_SECRET_KEY`, only free plans are possible. Without `GOOGLE_MAPS_API_KEY`, venues are only "web-sourced", not "verified".
+**Pricing:** each email's first plan is free (`src/lib/billing.ts`: one per normalised email, `IRIE_FREE_PER_IP_PER_DAY`, and a site-wide `IRIE_FREE_DAILY_CAP`); later plans go through Stripe Checkout (one-time, `TRIP_PRICE_CENTS`; promotion codes allowed; receipts emailed; Stripe Tax when `STRIPE_AUTOMATIC_TAX=true`). A 100%-off code settles as `no_payment_required` — treat it like `paid` (`isSessionSettled`). **Beta testers** (`src/lib/beta.ts`, managed in /admin) get `billing: "comp"` plans that skip the free-plan rules and Stripe (daily cap `IRIE_BETA_DAILY_LIMIT`). Without `STRIPE_SECRET_KEY`, only free/comp plans are possible. Without `GOOGLE_MAPS_API_KEY`, venues are only "web-sourced", not "verified".
+
+### Accounts and admin
+
+- **Passwordless sign-in** (`src/lib/auth.ts`): `/login` → `/api/auth/request` emails a single-use link (token hashed in KV, 15 min) → `/login/verify` POSTs it to `/api/auth/verify` (POST so email link-scanners can't burn it) → signed httpOnly `irie_session` cookie (30 days, HMAC with `AUTH_SECRET`). No user table: trips already carry their email. Server code reads the session with `getSession()` (`src/lib/session.ts`); routes with a plain Request use `sessionFromCookieHeader`.
+- **My trips** (`/account`) lists `listUserTrips(email)` from a per-inbox index (`user:{hash}:trips`, aliases collapse via `normalizeEmail`), backfilled once for older trips.
+- **Admins** are the emails in `ADMIN_EMAILS`. `requireAdmin(req)` (async) accepts an admin session (unsafe methods must pass a same-origin check) or `Bearer $ADMIN_TOKEN` for scripts. `/admin` is the dashboard (setup checklist, KPIs, trips/day, needs-attention, beta testers, travellers) built from `computeStats` / `setupChecklist` in `src/lib/admin-stats.ts` (pure, tested); `/admin/trips` is the per-trip console (details, regenerate, partners).
+- Stripe payments are recorded on the trip (`payment: { amountCents, discountCents, currency }`) by the webhook and the resume path; the dashboard's revenue reads those.
 
 ---
 
@@ -99,14 +106,18 @@ src/
 │   ├── trip/[slug]/page.tsx             trip view (redirects to /generating until ready)
 │   ├── trip/[slug]/generating/page.tsx  live progress, resume, retry
 │   ├── preview/[city]/page.tsx          sample plans behind a paywall gate
-│   ├── admin/trips/page.tsx             admin console (ADMIN_TOKEN)
+│   ├── login/page.tsx · login/verify     passwordless sign-in
+│   ├── account/page.tsx                 My trips (signed in)
+│   ├── admin/page.tsx                   admin dashboard (ADMIN_EMAILS)
+│   ├── admin/trips/page.tsx             per-trip admin console
 │   └── api/
 │       ├── stripe/checkout, stripe/webhook
 │       ├── trip (status) · trip/[slug]/resume · trip/[slug]/download · trip/[slug]/edits · trip/[slug]/ask
 │       ├── internal/pipeline            stage hand-off (internal secret)
 │       ├── suggest                      wizard chip suggestions (Haiku, cached, rate-limited)
 │       ├── drafts/[id]                  partner prefill drafts
-│       ├── admin/trips[/slug[/regenerate]] · admin/partners
+│       ├── auth/request · auth/verify · auth/logout · auth/session
+│       ├── admin/trips[/slug[/regenerate]] · admin/partners · admin/beta
 │       ├── v1/client/*                  public API for mobile apps & extensions — docs/CLIENT_API.md
 │       └── v1/trips[/id] · v1/openapi.json   partner API — see docs/PARTNER_API.md
 ├── components/
@@ -117,7 +128,9 @@ src/
 │   │                FoodSection, MealPlanSection, MealRow, RecipeCard, RestaurantSection, TipsSection (Explore),
 │   │                ListsSection, PackingSection, GrocerySection, CommandBar, Sheet, Segmented, UndoToast,
 │   │                CoachMarks, VerifiedBadge, PaywallGate, useTripEdits, checklists, ui.ts, trip.module.css
-│   └── voice/       VoiceButton (Web Speech mic)
+│   ├── voice/       VoiceButton (Web Speech mic)
+│   ├── account/     LoginForm, VerifyLogin, SignOutButton
+│   └── admin/       TripsChart, BetaManager
 ├── hooks/           useStoredChecklist (synced across copies), useTripLive (phase/clock/online),
 │                    useSpeechInput (voice), useMediaQuery, useHydrated
 ├── lib/
@@ -126,7 +139,10 @@ src/
 │   ├── places.ts        Google Places verification + opening-hours math
 │   ├── db.ts / kv.ts    storage, locks, checkpoints
 │   ├── validation.ts    zod input validation (wizard + partner)
-│   ├── security.ts      admin/internal auth, rate limiting, origins
+│   ├── security.ts      admin/internal auth, rate limiting, origins, same-origin check
+│   ├── auth.ts · session.ts   sign-in tokens, session cookie, admin emails
+│   ├── beta.ts          beta testers (comp plans)
+│   ├── admin-stats.ts   dashboard numbers + setup checklist (pure)
 │   ├── stripe.ts · notify.ts · export-html.ts · utils.ts (quantities, grocery aggregation)
 │   ├── trips/           startTrip (pricing + validation), resumeTrip, edits (group edits) — shared by web + client API
 │   ├── trip-view.ts     pure trip-page logic: timeline, phase, map URLs, explanations, hash routing
@@ -177,7 +193,8 @@ docs/PARTNER_API.md          partner integration guide
 9. Run `npm run typecheck`, `npm test` and `npm run build` before pushing.
 10. **Group edits never rewrite `generatedData`** — store them in `TripRecord.edits`, validate in `lib/trips/edits.ts`, and apply with `withEdits()` wherever a plan is shown. Swaps only ever pick researched places.
 11. **The command bar's model call only produces filters** over the plan (`PlanFilter`), never prose answers.
-12. **Commit messages:** `feat:`, `fix:`, `style:`, `deps:`, `refactor:`, `test:`, `docs:` prefixes.
+12. **Never trust the client for identity or price**: who's signed in comes only from the signed session cookie; admin rights only from `ADMIN_EMAILS`; comp plans only from the server-side beta list; amounts only from Stripe.
+13. **Commit messages:** `feat:`, `fix:`, `style:`, `deps:`, `refactor:`, `test:`, `docs:` prefixes.
 
 ---
 
@@ -186,8 +203,10 @@ docs/PARTNER_API.md          partner integration guide
 ```bash
 npm install
 npm run dev:mock    # terminal 1: mock Claude API on :4010 (no credits used)
-ANTHROPIC_BASE_URL=http://127.0.0.1:4010 ANTHROPIC_API_KEY=mock ADMIN_TOKEN=dev npm run dev
+ANTHROPIC_BASE_URL=http://127.0.0.1:4010 ANTHROPIC_API_KEY=mock ADMIN_EMAILS=you@example.com npm run dev
 ```
+
+Sign in at /login with that email — without `RESEND_API_KEY` the sign-in link is shown on screen in development.
 
 Without Redis env vars the app uses an in-memory store (dev only). The mock returns fictional places — use a real key to judge plan quality.
 
@@ -196,7 +215,8 @@ Without Redis env vars the app uses an in-memory store (dev only). The mock retu
 ## Common Issues
 
 - **Trip stuck on the waiting page:** check `/admin/trips` → Details for the pipeline's last error. The page's resume call restarts stalled stages automatically; "Regenerate" starts fresh.
-- **"Admin is disabled":** set `ADMIN_TOKEN`.
+- **"Admin is disabled":** set `ADMIN_EMAILS` (and sign in at /login) or `ADMIN_TOKEN`.
+- **Sign-in says email isn't switched on:** set `RESEND_API_KEY` and an `EMAIL_FROM` on a domain verified in Resend. In local dev the link is shown on screen instead.
 - **No "Verified" badges:** `GOOGLE_MAPS_API_KEY` missing, or Places API (New) not enabled for that key.
 - **No map on the Days tab (just "Open in Google Maps"):** `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` missing, Maps Embed API not enabled on it, or the key's referrer restriction doesn't include the site. On phones the map loads only after tapping "Show route map".
 - **Mic button missing:** the browser has no Web Speech API (e.g. Firefox) — expected; typing still works.
@@ -205,4 +225,4 @@ Without Redis env vars the app uses an in-memory store (dev only). The mock retu
 
 ---
 
-*Last updated: November 2026 — trip page redesign (five tabs, day maps, trip mode, group edits, command bar, voice), grounded generation pipeline, partner API, security hardening.*
+*Last updated: November 2026 — accounts (magic-link sign-in, My trips), admin dashboard, beta testers, Stripe promo codes; trip page redesign (five tabs, day maps, trip mode, group edits, command bar, voice), grounded generation pipeline, partner API, security hardening.*

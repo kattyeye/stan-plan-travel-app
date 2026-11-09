@@ -68,17 +68,19 @@ export default function ExtrasStep({ data, onUpdate, onNext, onBack, suggestedAm
       <div style={{ display: "flex", flexDirection: "column", gap: "1.75rem" }}>
         <div>
           <SectionTitle>Include in my plan</SectionTitle>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.625rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "0.625rem" }}>
             {SECTIONS.map((s) => {
               const selected = sections.includes(s.value);
               return (
                 <button
                   key={s.value}
                   type="button"
+                  aria-pressed={selected}
                   onClick={() => toggleSection(s.value)}
                   style={{
-                    display: "flex", alignItems: "flex-start", gap: "0.75rem",
-                    padding: "0.875rem 1rem",
+                    display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "0.375rem",
+                    minWidth: 0, minHeight: 44, boxSizing: "border-box",
+                    padding: "0.75rem 0.875rem",
                     borderRadius: "var(--radius-input)",
                     border: selected ? "2px solid var(--color-brand)" : "1.5px solid var(--color-border)",
                     background: selected ? "var(--color-bg-selected)" : "transparent",
@@ -86,13 +88,14 @@ export default function ExtrasStep({ data, onUpdate, onNext, onBack, suggestedAm
                     position: "relative",
                   }}
                 >
-                  <span style={{ fontSize: "1.25rem", lineHeight: 1.2 }}>{s.emoji}</span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.875rem" }}>{s.label}</div>
-                    <div style={{ color: "var(--color-text-muted)", fontSize: "0.78125rem", marginTop: "0.125rem" }}>{s.desc}</div>
-                  </div>
-                  <span style={{
-                    width: "1.125rem", height: "1.125rem", borderRadius: "50%", flexShrink: 0, marginTop: "0.125rem",
+                  <span aria-hidden="true" style={{ fontSize: "1.25rem", lineHeight: 1.2 }}>{s.emoji}</span>
+                  <span style={{ display: "block", minWidth: 0, maxWidth: "100%", overflowWrap: "break-word", hyphens: "auto" }}>
+                    <span style={{ display: "block", fontWeight: 600, color: "var(--color-text)", fontSize: "0.875rem", lineHeight: 1.3 }}>{s.label}</span>
+                    <span style={{ display: "block", color: "var(--color-text-muted)", fontSize: "0.78125rem", marginTop: "0.125rem", lineHeight: 1.35 }}>{s.desc}</span>
+                  </span>
+                  <span aria-hidden="true" style={{
+                    position: "absolute", top: "0.75rem", right: "0.75rem",
+                    width: "1.125rem", height: "1.125rem", borderRadius: "50%",
                     border: selected ? "none" : "1.5px solid var(--color-border)",
                     background: selected ? "var(--color-brand)" : "transparent",
                     display: "flex", alignItems: "center", justifyContent: "center",

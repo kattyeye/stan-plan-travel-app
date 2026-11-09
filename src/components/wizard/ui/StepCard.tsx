@@ -8,7 +8,8 @@ export default function StepCard({ children }: { children: React.ReactNode }) {
         border: "1px solid var(--color-border)",
         borderRadius: "var(--radius-card)",
         boxShadow: "var(--shadow-card)",
-        padding: "2rem",
+        padding: "clamp(1.25rem, 5vw, 2rem)",
+        minWidth: 0,
       }}
     >
       {children}

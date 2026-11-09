@@ -184,7 +184,7 @@ export default function DateRangePicker({ startDate, endDate, onChange }: Props)
           </div>
 
           {/* Month grid(s) */}
-          <div style={{ display: "grid", gridTemplateColumns: twoMonths ? "1fr 1fr" : "1fr", gap: "1.5rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: twoMonths ? "repeat(2, minmax(0, 1fr))" : "minmax(0, 1fr)", gap: "1.5rem" }}>
             {months.map(({ year, month }) => (
               <MonthGrid
                 key={`${year}-${month}`}
@@ -255,13 +255,13 @@ function MonthGrid({ year, month, today, getDayState, onDayClick, onDayHover, sh
         </p>
       )}
       {/* Day headers */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px", marginBottom: "4px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: "2px", marginBottom: "4px" }}>
         {DAYS.map(d => (
           <div key={d} style={{ textAlign: "center", fontSize: "0.6875rem", fontWeight: 600, color: "var(--color-tea-green-400)", padding: "0.25rem 0" }}>{d}</div>
         ))}
       </div>
       {/* Day cells */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: "2px" }}>
         {cells.map((ymd, i) => {
           if (!ymd) return <div key={i} />;
           const { isStart, isEnd, inRange, isPast } = getDayState(ymd);

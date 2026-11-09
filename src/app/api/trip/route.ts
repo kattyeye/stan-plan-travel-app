@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTripBySlug } from "@/lib/db";
+import { emailEnabled, maskEmail } from "@/lib/notify";
 
 /**
  * Public status endpoint for the waiting screen. Returns only what that screen
@@ -20,6 +21,9 @@ export async function GET(req: NextRequest) {
       destination: trip.wizardData.destination,
       progress: trip.progress ?? null,
       errorMessage: trip.status === "error" ? trip.errorMessage ?? "Something went wrong." : null,
+      // Lets the waiting page promise an email only when one will actually be sent.
+      emailEnabled: emailEnabled() && !!trip.email,
+      emailTo: emailEnabled() && trip.email ? maskEmail(trip.email) : null,
     },
     { headers: { "Cache-Control": "no-store" } }
   );

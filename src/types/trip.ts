@@ -426,4 +426,15 @@ export interface TripRecord {
   htmlBlob?: string;
   /** The travel group's changes to the plan (swaps, skips, reports). */
   edits?: TripEdits;
+  /** What happened to each email we tried to send for this trip (admin visibility). */
+  emails?: Partial<Record<"started" | "ready" | "failed", EmailLogEntry>>;
+}
+
+export interface EmailLogEntry {
+  at: string;
+  ok: boolean;
+  /** Provider message id when sent. */
+  id?: string;
+  /** Why it wasn't sent: provider error, or "not_configured". */
+  error?: string;
 }

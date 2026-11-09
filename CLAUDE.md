@@ -25,7 +25,7 @@ The key differentiator is the **planning style axis**: `structured` (exact times
 - **Storage:** Upstash Redis via `src/lib/kv.ts` (in-memory fallback for local dev). All persistence goes through `src/lib/db.ts` — swap the backend there if moving to Postgres/MySQL.
 - **Verification:** Google Places API (New) Text Search (`src/lib/places.ts`)
 - **Payments:** Stripe Checkout + webhook
-- **Email:** Resend (optional)
+- **Email:** Resend (`src/lib/notify.ts`): "started", "ready" and "failed" emails, each sent once and recorded on `TripRecord.emails`; needs `RESEND_API_KEY` + `EMAIL_FROM` on a verified domain. Test from `/admin/trips` → "Check trip emails".
 - **Validation:** zod (input validation + model output contracts)
 - **Tests:** vitest (`npm test`)
 - **Hosting:** Vercel (auto-deploys on push to main). **The project is on the Hobby plan: 300s max function duration, and Hobby's terms don't allow commercial use — move to Pro before charging customers.**
@@ -195,6 +195,7 @@ Without Redis env vars the app uses an in-memory store (dev only). The mock retu
 
 ## Common Issues
 
+- **Nobody gets emails:** `RESEND_API_KEY` not set, or `EMAIL_FROM`'s domain isn't verified in Resend (irietravel.app DNS is at Squarespace). `/admin/trips` → "Check trip emails" shows the exact error; each trip's Details shows what was sent.
 - **Trip stuck on the waiting page:** check `/admin/trips` → Details for the pipeline's last error. The page's resume call restarts stalled stages automatically; "Regenerate" starts fresh.
 - **"Admin is disabled":** set `ADMIN_TOKEN`.
 - **No "Verified" badges:** `GOOGLE_MAPS_API_KEY` missing, or Places API (New) not enabled for that key.

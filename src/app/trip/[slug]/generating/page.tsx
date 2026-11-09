@@ -10,6 +10,8 @@ interface StatusResponse {
   tripNickname: string;
   progress: TripProgress | null;
   errorMessage: string | null;
+  emailEnabled?: boolean;
+  emailTo?: string | null;
 }
 
 const STEPS = [
@@ -208,7 +210,10 @@ function Generating() {
 
           <p style={{ ...smallStyle, marginTop: "2rem", maxWidth: 380 }}>
             {elapsed > 0 && <>{Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")} elapsed · </>}
-            Usually 3–5 minutes, because we check every place against live listings. You can close this tab — we&apos;ll email you the link.
+            Usually 3–5 minutes, because we check every place against live listings.{" "}
+            {data?.emailEnabled
+              ? <>You can close this tab — we&apos;ll email {data.emailTo ?? "you"} the link when it&apos;s ready.</>
+              : <>Bookmark this page to come back to it — the link works on any device.</>}
           </p>
         </>
       )}

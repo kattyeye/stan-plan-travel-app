@@ -47,6 +47,17 @@ export default function DateRangePicker({ startDate, endDate, onChange }: Props)
   const [picking, setPicking] = useState<"start" | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  // Phones get one month at a time; two side by side only when the field is wide enough.
+  const [twoMonths, setTwoMonths] = useState(false);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const measure = () => setTwoMonths(el.getBoundingClientRect().width >= 520);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -94,10 +105,10 @@ export default function DateRangePicker({ startDate, endDate, onChange }: Props)
     else setViewMonth(m => m + 1);
   }
 
-  // Build the two months to display
+  // Build the month(s) to display
   const months = [
     { year: viewYear, month: viewMonth },
-    viewMonth === 11 ? { year: viewYear + 1, month: 0 } : { year: viewYear, month: viewMonth + 1 },
+    ...(twoMonths ? [viewMonth === 11 ? { year: viewYear + 1, month: 0 } : { year: viewYear, month: viewMonth + 1 }] : []),
   ];
 
   const start = parseYMD(startDate);
@@ -151,26 +162,29 @@ export default function DateRangePicker({ startDate, endDate, onChange }: Props)
         <div style={{
           position: "absolute",
           top: "calc(100% + 6px)",
+          // Exactly as wide as the date field, so it never spills past the card or screen edge.
           left: 0,
+          right: 0,
           zIndex: 50,
-          background: "#ffffff",
-          border: "1px solid var(--color-tea-green-200)",
-          borderRadius: "14px",
-          boxShadow: "0 8px 32px rgba(21,24,12,0.12)",
-          padding: "1.25rem",
-          minWidth: "min(640px, 90vw)",
+          background: "var(--color-bg-card)",
+          border: "1px solid var(--color-border)",
+          borderRadius: "var(--radius-card)",
+          boxShadow: "var(--shadow-float)",
+          padding: twoMonths ? "1.25rem" : "1rem 0.75rem",
+          boxSizing: "border-box",
         }}>
           {/* Header */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
             <button type="button" aria-label="Previous month" onClick={prevMonth} style={navBtnStyle}><span aria-hidden="true">‹</span></button>
             <span style={{ color: "var(--color-tea-green-800)", fontWeight: 600, fontSize: "0.9375rem" }}>
-              {MONTHS[months[0].month]} {months[0].year} – {MONTHS[months[1].month]} {months[1].year}
+              {MONTHS[months[0].month]} {months[0].year}
+              {months[1] && <> – {MONTHS[months[1].month]} {months[1].year}</>}
             </span>
             <button type="button" aria-label="Next month" onClick={nextMonth} style={navBtnStyle}><span aria-hidden="true">›</span></button>
           </div>
 
-          {/* Two-month grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+          {/* Month grid(s) */}
+          <div style={{ display: "grid", gridTemplateColumns: twoMonths ? "1fr 1fr" : "1fr", gap: "1.5rem" }}>
             {months.map(({ year, month }) => (
               <MonthGrid
                 key={`${year}-${month}`}
@@ -180,13 +194,14 @@ export default function DateRangePicker({ startDate, endDate, onChange }: Props)
                 getDayState={getDayState}
                 onDayClick={handleDayClick}
                 onDayHover={setHovered}
+                showTitle={twoMonths}
               />
             ))}
           </div>
 
           {/* Footer hint */}
           <p aria-live="polite" aria-atomic="true" style={{ marginTop: "0.875rem", color: "var(--color-tea-green-500)", fontSize: "0.8125rem", textAlign: "center" }}>
-            {!startDate ? "Click your arrival date" : !endDate ? "Now click your departure date" : `${endDate ? `${Math.round((parseYMD(endDate)!.getTime() - parseYMD(startDate)!.getTime()) / 86400000)} nights selected` : ""}`}
+            {!startDate ? "Pick your arrival date" : !endDate ? "Now pick your departure date" : `${endDate ? `${Math.round((parseYMD(endDate)!.getTime() - parseYMD(startDate)!.getTime()) / 86400000)} nights selected` : ""}`}
           </p>
         </div>
       )}
@@ -213,9 +228,11 @@ interface MonthGridProps {
   getDayState: (ymd: string) => { isStart: boolean | null; isEnd: boolean | null; inRange: boolean | null; isPast: boolean };
   onDayClick: (ymd: string) => void;
   onDayHover: (ymd: string | null) => void;
+  /** The header already names the month when only one is shown. */
+  showTitle?: boolean;
 }
 
-function MonthGrid({ year, month, today, getDayState, onDayClick, onDayHover }: MonthGridProps) {
+function MonthGrid({ year, month, today, getDayState, onDayClick, onDayHover, showTitle = true }: MonthGridProps) {
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
@@ -232,9 +249,11 @@ function MonthGrid({ year, month, today, getDayState, onDayClick, onDayHover }: 
 
   return (
     <div>
-      <p style={{ fontWeight: 600, color: "var(--color-tea-green-700)", fontSize: "0.875rem", marginBottom: "0.625rem" }}>
-        {MONTHS[month]} {year}
-      </p>
+      {showTitle && (
+        <p style={{ fontWeight: 600, color: "var(--color-tea-green-700)", fontSize: "0.875rem", marginBottom: "0.625rem" }}>
+          {MONTHS[month]} {year}
+        </p>
+      )}
       {/* Day headers */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px", marginBottom: "4px" }}>
         {DAYS.map(d => (

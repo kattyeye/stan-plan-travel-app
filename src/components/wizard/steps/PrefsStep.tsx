@@ -36,6 +36,10 @@ function RadioCard({ selected, onClick, label, children }: { selected: boolean; 
       onClick={onClick}
       style={{
         flex: 1,
+        minWidth: 0,
+        minHeight: 44,
+        boxSizing: "border-box",
+        overflowWrap: "break-word",
         padding: "0.75rem 1rem",
         borderRadius: "var(--radius-input)",
         border: selected ? "2px solid var(--color-brand)" : "1.5px solid var(--color-border)",
@@ -106,7 +110,7 @@ export default function PrefsStep({ data, onUpdate, onNext, onBack, suggestedVib
 
         <div>
           <SectionTitle>Planning style</SectionTitle>
-          <div role="radiogroup" aria-label="Planning style" style={{ display: "flex", gap: "0.75rem" }}>
+          <div role="radiogroup" aria-label="Planning style" className="wizard-choice-row wizard-choice-row--stack">
             {PLANNING.map((p) => (
               <RadioCard key={p.value} label={`${p.label} — ${p.desc}`} selected={data.planningStyle === p.value} onClick={() => onUpdate({ planningStyle: p.value })}>
                 <div style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem" }}>{p.label}</div>
@@ -118,7 +122,7 @@ export default function PrefsStep({ data, onUpdate, onNext, onBack, suggestedVib
 
         <div>
           <SectionTitle>Budget</SectionTitle>
-          <div role="radiogroup" aria-label="Budget" style={{ display: "flex", gap: "0.75rem" }}>
+          <div role="radiogroup" aria-label="Budget" className="wizard-choice-row">
             {BUDGET.map((b) => (
               <RadioCard key={b.value} label={`${b.label} — ${b.desc}`} selected={data.budget === b.value} onClick={() => onUpdate({ budget: b.value })}>
                 <div aria-hidden="true" style={{ fontSize: "1.25rem", marginBottom: "0.25rem" }}>{b.emoji}</div>

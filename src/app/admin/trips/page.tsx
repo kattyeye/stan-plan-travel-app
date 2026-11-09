@@ -21,6 +21,7 @@ interface Detail {
   trip: {
     generatedData?: { quality?: { issues: { severity: string; message: string }[] } };
     edits?: { version: number; reports: { at: string; day?: number; venueName?: string; reason: string; note?: string }[] };
+    emails?: Record<string, { at: string; ok: boolean; id?: string; error?: string }>;
   };
   pipeline: { stagesDone: string[]; attempts: Record<string, number>; usage: Record<string, number>; models: string[]; lastError: string | null } | null;
 }
@@ -46,6 +47,8 @@ export default function AdminTripsPage() {
   const [details, setDetails] = useState<Record<string, Detail>>({});
   const [newPartner, setNewPartner] = useState<{ name: string; billing: "guest" | "partner"; webhookUrl: string }>({ name: "", billing: "guest", webhookUrl: "" });
   const [partnerResult, setPartnerResult] = useState<string | null>(null);
+  const [testEmail, setTestEmail] = useState("");
+  const [emailResult, setEmailResult] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -112,6 +115,26 @@ export default function AdminTripsPage() {
       setDetails((prev) => ({ ...prev, [slug]: d }));
     } catch (e) {
       alert(String(e));
+    }
+  }
+
+  async function sendTestEmail(e: React.FormEvent) {
+    e.preventDefault();
+    setEmailResult("Sending…");
+    try {
+      const res = await fetch("/api/admin/email-test", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ to: testEmail }),
+      });
+      const json = await res.json();
+      setEmailResult(
+        json.ok
+          ? `Sent ✓ from ${json.from} (id ${json.id}). Check the inbox and spam folder.`
+          : `Not sent: ${json.error ?? `HTTP ${res.status}`}${json.hint ? `\n${json.hint}` : ""}`
+      );
+    } catch (err) {
+      setEmailResult(`Failed: ${err instanceof Error ? err.message : err}`);
     }
   }
 
@@ -203,6 +226,16 @@ export default function AdminTripsPage() {
                 ) : (
                   <p style={{ margin: "0 0 0.5rem" }}>No pipeline checkpoint (legacy trip or expired).</p>
                 )}
+                <p style={{ margin: "0 0 0.5rem" }}>
+                  Emails:{" "}
+                  {details[t.slug].trip.emails && Object.keys(details[t.slug].trip.emails!).length
+                    ? Object.entries(details[t.slug].trip.emails!).map(([kind, e]) => (
+                        <span key={kind} style={{ marginRight: "0.75rem", color: e.ok ? "var(--color-success-text)" : "var(--color-error-text)" }}>
+                          {kind} {e.ok ? "✓ sent" : `✗ ${e.error === "not_configured" ? "email not set up" : e.error}`}
+                        </span>
+                      ))
+                    : "none attempted"}
+                </p>
                 <ul style={{ margin: 0, paddingLeft: "1.125rem" }}>
                   {(details[t.slug].trip.generatedData?.quality?.issues ?? []).map((i, k) => (
                     <li key={k} style={{ color: i.severity === "error" ? "var(--color-error-text)" : i.severity === "warning" ? "var(--color-warning-text)" : "var(--color-text-muted)" }}>
@@ -227,6 +260,18 @@ export default function AdminTripsPage() {
           </div>
         ))}
       </div>
+
+      <form onSubmit={sendTestEmail} style={{ ...card, marginTop: "2rem" }}>
+        <h2 style={{ ...h1, fontSize: "1.125rem" }}>Check trip emails</h2>
+        <p style={{ fontSize: "0.8125rem", color: "var(--color-text-muted)", margin: "0 0 0.625rem" }}>
+          Sends a test email the same way trip emails are sent, and shows exactly what the email provider replied.
+        </p>
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <input aria-label="Send test email to" type="email" placeholder="you@example.com" value={testEmail} onChange={(e) => setTestEmail(e.target.value)} style={{ ...input, flex: "1 1 220px", width: "auto" }} />
+          <button type="submit" style={btn} disabled={!testEmail.includes("@")}>Send test</button>
+        </div>
+        {emailResult && <pre style={{ whiteSpace: "pre-wrap", fontSize: "0.8125rem", marginTop: "0.75rem", color: "var(--color-text)" }}>{emailResult}</pre>}
+      </form>
 
       <form onSubmit={createPartner} style={{ ...card, marginTop: "2rem" }}>
         <h2 style={{ ...h1, fontSize: "1.125rem" }}>Create partner API key</h2>

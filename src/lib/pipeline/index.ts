@@ -21,7 +21,7 @@ import {
   setTripProgress,
   updateTrip,
 } from "../db";
-import { notifyTripFailed, notifyTripReady } from "../notify";
+import { emailEnabled, notifyTripFailed, notifyTripReady, notifyTripStarted } from "../notify";
 import { locateDestination, placesEnabled, verifyVenue, type LatLng, type VerifyResult } from "../places";
 import { internalHeaders, internalOrigin } from "../security";
 import { buildDays, type DaySkeleton } from "./days";
@@ -176,6 +176,11 @@ export async function runStage(slug: string, stage: PipelineStage): Promise<Pipe
     }));
     await savePipelineState(slug, state);
 
+    // First real start: tell the traveller we're on it, with the link, so they can close the tab.
+    if (stage === "research" && state.attempts.research === 1) {
+      await notifyTripStarted(trip).catch((err) => console.error(`[pipeline ${slug}] started email failed:`, err));
+    }
+
     try {
       switch (stage) {
         case "research":
@@ -218,7 +223,9 @@ async function failTrip(trip: TripRecord, _state: PipelineState, slug: string, d
   const failed = await updateTrip(slug, {
     status: "error",
     errorMessage:
-      "We couldn't finish your plan this time. You haven't lost anything — tap “Try again”, or we'll fix it and email you.",
+      emailEnabled()
+        ? "We couldn't finish your plan this time. You haven't lost anything — tap “Try again”. We've also emailed you a link to come back to."
+        : "We couldn't finish your plan this time. You haven't lost anything — tap “Try again”.",
     progress: { ...(trip.progress ?? { stage: "queued", percent: 0 }), message: "Paused", updatedAt: new Date().toISOString() },
   });
   await notifyTripFailed(failed).catch(() => {});
